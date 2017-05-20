@@ -34,6 +34,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
         <meta-data
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
@@ -41,6 +42,15 @@
             android:name="com.google.android.maps.v2.API_KEY"
             android:value="AIzaSyAPT60rMFT9766nAfEFOg_7XRqKRg5Ew2k" />
 
+        <activity
+            android:name=".LoginActivity"
+            android:label="@string/title_activity_login"
+            android:parentActivityName=".MapActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.njamb.geodrink.MapActivity" />
+        </activity>
     </application>
 
 </manifest>
