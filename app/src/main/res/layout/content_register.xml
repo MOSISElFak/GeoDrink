@@ -5,15 +5,15 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context="com.njamb.geodrink.LoginActivity"
-    tools:showIn="@layout/activity_login">
+    tools:context="com.njamb.geodrink.RegisterActivity"
+    tools:showIn="@layout/activity_register">
 
     <LinearLayout
         android:layout_width="395dp"
         android:layout_height="587dp"
         android:orientation="vertical"
-        tools:layout_editor_absoluteY="8dp"
-        tools:layout_editor_absoluteX="8dp">
+        tools:layout_editor_absoluteX="8dp"
+        tools:layout_editor_absoluteY="8dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -85,6 +85,7 @@
                     android:id="@+id/editText2"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
                     android:layout_weight="1"
                     android:ems="10"
                     android:hint="@string/hint_password"
@@ -95,6 +96,34 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1" />
             </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="2"
+                android:orientation="horizontal">
+
+                <Space
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" />
+
+                <EditText
+                    android:id="@+id/birthday"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_weight="1"
+                    android:ems="10"
+                    android:hint="Birthday date"
+                    android:inputType="date" />
+
+                <Space
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1" />
+            </LinearLayout>
+
         </LinearLayout>
 
         <LinearLayout
@@ -105,11 +134,11 @@
             android:orientation="horizontal">
 
             <Button
-                android:id="@+id/login_login_button"
+                android:id="@+id/register_register_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/login_login_text" />
+                android:text="@string/login_register_text" />
 
             <Space
                 android:layout_width="wrap_content"
@@ -119,12 +148,11 @@
                 android:layout_weight="1" />
 
             <Button
-                android:id="@+id/login_register_button"
+                android:id="@+id/register_cancel_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/login_register_text" />
-
+                android:text="@string/cancel_text" />
         </LinearLayout>
 
     </LinearLayout>

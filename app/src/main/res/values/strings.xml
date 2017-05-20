@@ -6,4 +6,6 @@
     <string name="login_register_text">Register</string>
     <string name="hint_password">Password</string>
     <string name="hint_username">Username</string>
+    <string name="title_activity_register">RegisterActivity</string>
+    <string name="cancel_text">Cancel</string>
 </resources>
