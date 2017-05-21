@@ -1,19 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context="com.njamb.geodrink.Activities.LoginActivity"
     tools:showIn="@layout/activity_login">
-
-    <LinearLayout
-        android:layout_width="395dp"
-        android:layout_height="587dp"
-        android:orientation="vertical"
-        tools:layout_editor_absoluteY="8dp"
-        tools:layout_editor_absoluteX="8dp">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -55,7 +49,7 @@
                     android:layout_weight="1" />
 
                 <EditText
-                    android:id="@+id/editText"
+                    android:id="@+id/login_et_username"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
@@ -82,7 +76,7 @@
                     android:layout_weight="1" />
 
                 <EditText
-                    android:id="@+id/editText2"
+                    android:id="@+id/login_et_password"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
@@ -97,35 +91,35 @@
             </LinearLayout>
         </LinearLayout>
 
-        <LinearLayout
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="right|center"
+        android:layout_marginRight="8dp"
+        android:layout_weight="1"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/login_btn_login"
             android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_gravity="right|center"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:orientation="horizontal">
+            android:text="@string/login_login_text" />
 
-            <Button
-                android:id="@+id/login_login_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/login_login_text" />
+        <Space
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="5dp"
+            android:layout_marginRight="5dp"
+            android:layout_weight="1" />
 
-            <Space
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="5dp"
-                android:layout_marginRight="5dp"
-                android:layout_weight="1" />
-
-            <Button
-                android:id="@+id/login_register_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/login_register_text" />
-
-        </LinearLayout>
+        <Button
+            android:id="@+id/login_btn_register"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/login_register_text" />
 
     </LinearLayout>
-</android.support.constraint.ConstraintLayout>
+
+</LinearLayout>

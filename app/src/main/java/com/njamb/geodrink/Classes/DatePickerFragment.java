@@ -41,6 +41,7 @@ public class DatePickerFragment extends DialogFragment implements DatePickerDial
         stringBuilder.append("/");
         stringBuilder.append(year);
 
+        // Birthday editText on RegisterActivity:
         editText.setText(stringBuilder.toString());
     }
 }

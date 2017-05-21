@@ -1,5 +1,6 @@
 package com.njamb.geodrink.Activities;
 
+import android.app.Activity;
 import android.app.DialogFragment;
 import android.app.FragmentManager;
 import android.os.Bundle;
@@ -109,7 +110,7 @@ public class RegisterActivity extends AppCompatActivity {
 
             @Override
             public void afterTextChanged(Editable s) {
-                
+
             }
         });
 
@@ -138,7 +139,24 @@ public class RegisterActivity extends AppCompatActivity {
         });
 
 
+        register.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
 
+                // TO-DO: Register user into DB.
+
+                setResult(Activity.RESULT_OK);
+                finish();
+            }
+        });
+
+        cancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setResult(Activity.RESULT_CANCELED);
+                finish();
+            }
+        });
     }
 
     // Method that checks if any of the input fields are empty:
