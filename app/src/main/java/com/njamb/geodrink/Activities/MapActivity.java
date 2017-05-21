@@ -1,4 +1,4 @@
-package com.njamb.geodrink;
+package com.njamb.geodrink.Activities;
 
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -16,6 +16,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.njamb.geodrink.R;
 
 public class MapActivity extends AppCompatActivity implements OnMapReadyCallback {
 
