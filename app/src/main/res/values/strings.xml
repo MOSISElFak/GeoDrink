@@ -12,4 +12,7 @@
     <string name="details_upload_photo">Upload photo</string>
     <string name="details_take_photo">Take photo</string>
     <string name="details_return">Return</string>
+    <string name="title_activity_check_in">CheckInActivity</string>
+    <string name="checkin_btn_checkin">Check In</string>
+    <string name="checkin_btn_addphoto">Add Photo</string>
 </resources>
