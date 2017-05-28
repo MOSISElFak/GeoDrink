@@ -1,5 +1,6 @@
 package com.njamb.geodrink.Activities;
 
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -62,6 +63,26 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             return true;
+        }
+
+        switch (id) {
+            case R.id.action_settings:
+                break;
+            case R.id.action_login: {
+                Intent i = new Intent(this, LoginActivity.class);
+                startActivity(i);
+                break;
+            }
+            case R.id.action_checkin: {
+                Intent i = new Intent(this, CheckInActivity.class);
+                startActivity(i);
+                break;
+            }
+            case R.id.action_details: {
+                Intent i = new Intent(this, DetailsActivity.class);
+                startActivity(i);
+                break;
+            }
         }
 
         return super.onOptionsItemSelected(item);

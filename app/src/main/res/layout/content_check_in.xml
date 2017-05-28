@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context="com.njamb.geodrink.CheckInActivity"
+    tools:context="com.njamb.geodrink.Activities.CheckInActivity"
     tools:showIn="@layout/activity_check_in">
 
     <LinearLayout

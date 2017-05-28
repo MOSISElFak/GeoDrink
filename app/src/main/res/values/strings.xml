@@ -1,18 +1,22 @@
 <resources>
     <string name="app_name">GeoDrink</string>
     <string name="action_settings">Settings</string>
-    <string name="title_activity_login">LoginActivity</string>
+    <!--<string name="title_activity_login">LoginActivity</string>-->
+    <string name="login_act_name">Log In</string>
     <string name="login_login_text">Login</string>
     <string name="login_register_text">Register</string>
+    <string name="register_act_name">Register</string>
     <string name="hint_password">Password</string>
     <string name="hint_username">Username</string>
-    <string name="title_activity_register">RegisterActivity</string>
+    <!--<string name="title_activity_register">RegisterActivity</string>-->
     <string name="cancel_text">Cancel</string>
     <string name="title_activity_details_page">DetailsPage</string>
     <string name="details_upload_photo">Upload photo</string>
     <string name="details_take_photo">Take photo</string>
     <string name="details_return">Return</string>
-    <string name="title_activity_check_in">CheckInActivity</string>
+    <!--<string name="title_activity_check_in">CheckInActivity</string>-->
+    <string name="checkin_act_name">Check In</string>
     <string name="checkin_btn_checkin">Check In</string>
     <string name="checkin_btn_addphoto">Add Photo</string>
+    <string name="details_act_name">Details</string>
 </resources>
