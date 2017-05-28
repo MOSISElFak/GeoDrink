@@ -8,4 +8,8 @@
     <string name="hint_username">Username</string>
     <string name="title_activity_register">RegisterActivity</string>
     <string name="cancel_text">Cancel</string>
+    <string name="title_activity_details_page">DetailsPage</string>
+    <string name="details_upload_photo">Upload photo</string>
+    <string name="details_take_photo">Take photo</string>
+    <string name="details_return">Return</string>
 </resources>
