@@ -19,4 +19,6 @@
     <string name="checkin_btn_checkin">Check In</string>
     <string name="checkin_btn_addphoto">Add Photo</string>
     <string name="details_act_name">Details</string>
+    <string name="profile_act_name">Profile Page</string>
+    <string name="btn_upload_picture_txt">Upload picture</string>
 </resources>
