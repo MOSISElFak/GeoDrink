@@ -55,8 +55,8 @@
                     android:layout_gravity="center_vertical"
                     android:layout_weight="1"
                     android:ems="10"
-                    android:hint="@string/hint_username"
-                    android:inputType="textPersonName" />
+                    android:hint="@string/hint_email"
+                    android:inputType="textEmailAddress" />
 
                 <Space
                     android:layout_width="wrap_content"
