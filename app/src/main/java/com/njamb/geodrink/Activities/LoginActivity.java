@@ -48,6 +48,8 @@ public class LoginActivity extends AppCompatActivity {
         login = (Button) findViewById(R.id.login_btn_login);
         register = (Button) findViewById(R.id.login_btn_register);
 
+        lockLoginBtn();
+
         username.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -56,7 +58,7 @@ public class LoginActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                areFieldsEmpty();
+                lockLoginBtn();
             }
 
             @Override
@@ -73,7 +75,7 @@ public class LoginActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                areFieldsEmpty();
+                lockLoginBtn();
             }
 
             @Override
@@ -115,10 +117,19 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     // Method that checks if any of the input fields are empty:
-    private void areFieldsEmpty() {
+    private boolean areFieldsEmpty() {
         if (username.getText().toString().equals("") ||
                 password.getText().toString().equals(""))
         {
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    private void lockLoginBtn() {
+        if (areFieldsEmpty()) {
             login.setEnabled(false);
         }
         else {
@@ -129,6 +140,7 @@ public class LoginActivity extends AppCompatActivity {
     private void loginUser() {
         String email = username.getText().toString();
         String pass = password.getText().toString();
+
         mAuth.signInWithEmailAndPassword(email, pass)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
@@ -141,8 +153,7 @@ public class LoginActivity extends AppCompatActivity {
                             intent.putExtra("userId", user.getUid());
                             LoginActivity.this.startActivity(intent);
 //                            Toast.makeText(LoginActivity.this, "Logged in", Toast.LENGTH_SHORT).show();
-                        }
-                        else {
+                        } else {
                             Log.w(TAG, "signInWithEmail:failure", task.getException());
                             Toast.makeText(LoginActivity.this, "Authentication failed.",
                                     Toast.LENGTH_SHORT).show();
