@@ -112,9 +112,9 @@ public class ProfileActivity extends AppCompatActivity {
         // TODO: fetch profile pic: is this ok?
         fetchProfilePicture();
         // TODO: progress bar/dialog
-        username.setText(user.username);
-        email.setText(user.email);
-        birthday.setText(user.birthday);
+        username.setText("Username: " + user.username);
+        email.setText("Email: " + user.email);
+        birthday.setText("Birthday: " + user.birthday);
     }
 
     private void choosePictureFromGalery() {
