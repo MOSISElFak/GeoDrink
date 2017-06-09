@@ -66,8 +66,25 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         }
 
         switch (id) {
-            case R.id.action_settings:
+            case R.id.action_settings: {
+                // To-Do: Add SettingsActivity.
                 break;
+            }
+            case R.id.action_search: {
+                // To-Do: Search field (hide icons), show only magnifying glass (quick search).
+                // On next click on it (thorough search) - new activity.
+                break;
+            }
+            case R.id.action_add: {
+                // To-Do: Add bluetooth activity to add a friend.
+                break;
+            }
+            case R.id.action_profile: {
+                // To-Do: Proveriti zasto puca aplikacija
+//                Intent i = new Intent(this, ProfileActivity.class);
+//                startActivity(i);
+                break;
+            }
             case R.id.action_login: {
                 Intent i = new Intent(this, LoginActivity.class);
                 startActivity(i);
