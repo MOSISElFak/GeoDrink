@@ -17,12 +17,14 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.firebase.auth.FirebaseAuth;
 import com.njamb.geodrink.R;
 
 public class MapActivity extends AppCompatActivity implements OnMapReadyCallback {
 
     private GoogleMap map;
     private SupportMapFragment mapFragment;
+    private String userId = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,6 +37,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
 //        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
 //        fab.setOnClickListener(new View.OnClickListener() {
@@ -67,27 +71,32 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
         switch (id) {
             case R.id.action_settings: {
-                // To-Do: Add SettingsActivity.
+                // ToDo: Add SettingsActivity.
                 break;
             }
             case R.id.action_search: {
-                // To-Do: Search field (hide icons), show only magnifying glass (quick search).
+                // ToDo: Search field (hide icons), show only magnifying glass (quick search).
                 // On next click on it (thorough search) - new activity.
                 break;
             }
             case R.id.action_add: {
-                // To-Do: Add bluetooth activity to add a friend.
+                // ToDo: Add bluetooth activity to add a friend.
                 break;
             }
             case R.id.action_profile: {
                 // TODO: Proveriti zasto puca aplikacija
-//                Intent i = new Intent(this, ProfileActivity.class);
-//                startActivity(i);
+                if (userId != null) {
+                    Intent i = new Intent(this, ProfileActivity.class);
+                    i.putExtra("userId", userId);
+                    startActivity(i);
+                }
+                else {
+                    startLoginActivity();
+                }
                 break;
             }
             case R.id.action_login: {
-                Intent i = new Intent(this, LoginActivity.class);
-                startActivity(i);
+                startLoginActivity();
                 break;
             }
             case R.id.action_checkin: {
@@ -120,5 +129,10 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             return;
         }
         map.setMyLocationEnabled(true);
+    }
+
+    private void startLoginActivity() {
+        Intent i = new Intent(this, LoginActivity.class);
+        startActivity(i);
     }
 }
