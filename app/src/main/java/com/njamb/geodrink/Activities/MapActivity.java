@@ -80,7 +80,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 break;
             }
             case R.id.action_profile: {
-                // To-Do: Proveriti zasto puca aplikacija
+                // TODO: Proveriti zasto puca aplikacija
 //                Intent i = new Intent(this, ProfileActivity.class);
 //                startActivity(i);
                 break;
