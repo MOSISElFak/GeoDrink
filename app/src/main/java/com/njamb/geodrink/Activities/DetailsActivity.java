@@ -11,11 +11,19 @@ import com.njamb.geodrink.R;
 public class DetailsActivity extends AppCompatActivity {
 
     @Override
+    public boolean onSupportNavigateUp() {
+        onBackPressed();
+        return true;
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_details_page);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         Button returnBtn = (Button) findViewById(R.id.details_btn_return);
         returnBtn.setOnClickListener(new View.OnClickListener() {

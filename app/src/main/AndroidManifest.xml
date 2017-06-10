@@ -56,7 +56,7 @@
         <activity
             android:name=".Activities.RegisterActivity"
             android:label="@string/register_act_name"
-            android:parentActivityName=".Activities.MapActivity"
+            android:parentActivityName=".Activities.LoginActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -80,8 +80,10 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.njamb.geodrink.Activities.MapActivity" />
         </activity>
-        <activity android:name=".Activities.ProfileActivity"
-            android:label="@string/profile_act_name"></activity>
+        <activity
+            android:name=".Activities.ProfileActivity"
+            android:label="@string/profile_act_name"
+            android:parentActivityName=".Activities.MapActivity"/>
     </application>
 
 </manifest>
