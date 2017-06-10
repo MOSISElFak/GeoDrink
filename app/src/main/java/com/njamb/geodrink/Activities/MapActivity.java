@@ -18,6 +18,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.njamb.geodrink.R;
 
 public class MapActivity extends AppCompatActivity implements OnMapReadyCallback {
@@ -38,8 +39,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-
 //        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
 //        fab.setOnClickListener(new View.OnClickListener() {
 //            @Override
@@ -48,6 +47,15 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 //                        .setAction("Action", null).show();
 //            }
 //        });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        // overhead?
+        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+        userId = user != null ? user.getUid() : null;
     }
 
     @Override
