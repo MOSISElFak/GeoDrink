@@ -47,11 +47,11 @@ public class ProfileActivity extends AppCompatActivity {
 
     private String userId;
 
-    @Override
-    public boolean onSupportNavigateUp() {
-        onBackPressed();
-        return true;
-    }
+//    @Override
+//    public boolean onSupportNavigateUp() {
+//        onBackPressed();
+//        return true;
+//    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,12 +69,21 @@ public class ProfileActivity extends AppCompatActivity {
         username = (TextView) findViewById(R.id.profile_username);
         email = (TextView) findViewById(R.id.profile_email);
         birthday = (TextView) findViewById(R.id.profile_birthday);
-        Button uploadPic = (Button) findViewById(R.id.profile_add_pic);
 
+        Button uploadPic = (Button) findViewById(R.id.profile_add_pic);
         uploadPic.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 choosePictureFromGalery();
+            }
+        });
+
+        Button logoutBtn = (Button) findViewById(R.id.profile_logout_btn);
+        logoutBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                FirebaseAuth.getInstance().signOut();
+                finish();
             }
         });
     }

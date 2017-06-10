@@ -23,4 +23,5 @@
     <string name="details_act_name">Details</string>
     <string name="profile_act_name">Profile Page</string>
     <string name="btn_upload_picture_txt">Upload picture</string>
+    <string name="btn_profile_logout">Logout</string>
 </resources>
