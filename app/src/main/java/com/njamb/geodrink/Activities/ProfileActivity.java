@@ -1,10 +1,8 @@
 package com.njamb.geodrink.Activities;
 
 import android.content.Intent;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.net.Uri;
-import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -36,7 +34,7 @@ import java.io.IOException;
 
 public class ProfileActivity extends AppCompatActivity {
     private static final String TAG = "ProfileActivity";
-    private static final int SELECT_IMAGE = 1;
+    private static final int SELECT_IMAGE_REQUEST = 1;
 
     private ImageView profileImg;
     private TextView username;
@@ -63,7 +61,7 @@ public class ProfileActivity extends AppCompatActivity {
         Bundle bundle = getIntent().getExtras();
         userId = bundle.getString("userId");
 
-        mDatabase = FirebaseDatabase.getInstance().getReference("users/" + userId);
+        mDatabase = FirebaseDatabase.getInstance().getReference(String.format("users/%s", userId));
 
         profileImg = (ImageView) findViewById(R.id.profile_image);
         username = (TextView) findViewById(R.id.profile_username);
@@ -74,7 +72,7 @@ public class ProfileActivity extends AppCompatActivity {
         uploadPic.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                choosePictureFromGalery();
+                choosePictureFromGallery();
             }
         });
 
@@ -110,8 +108,8 @@ public class ProfileActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (resultCode == RESULT_OK) {
-            if (requestCode == SELECT_IMAGE) {
+        if (requestCode == SELECT_IMAGE_REQUEST) {
+            if (resultCode == RESULT_OK) {
                 if (data != null) {
                     // TODO: <<BUG>> when choosing another pic, old is shown (new is uploaded)
                     setProfileImage(data.getData());
@@ -129,16 +127,21 @@ public class ProfileActivity extends AppCompatActivity {
         // TODO: fetch profile pic: is this ok?
         fetchProfilePicture();
         // TODO: progress bar/dialog
-        username.setText("Username: " + user.username);
-        email.setText("Email: " + user.email);
-        birthday.setText("Birthday: " + user.birthday);
+        username.setText(String.format("Username: %s", user.username));
+        email.setText(String.format("Email: %s", user.email));
+        birthday.setText(String.format("Birthday: %s", user.birthday));
     }
 
-    private void choosePictureFromGalery() {
-        Intent intent = new Intent();
+    private void choosePictureFromGallery() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("image/*");
-        intent.setAction(Intent.ACTION_GET_CONTENT);
-        startActivityForResult(Intent.createChooser(intent, "Select Picture"), SELECT_IMAGE);
+        Intent chooser = Intent.createChooser(intent, "Select Picture");
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            startActivityForResult(chooser, SELECT_IMAGE_REQUEST);
+        }
+        else {
+            Toast.makeText(this, "No available apps for this action.", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void uploadProfilePicture() {
@@ -154,7 +157,7 @@ public class ProfileActivity extends AppCompatActivity {
         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
         byte[] data = baos.toByteArray();
 
-        final String imageUrl = "images/" + userId + ".jpg";
+        final String imageUrl = String.format("images/%s.jpg", userId);
         StorageReference imageRef = FirebaseStorage.getInstance().getReference().child(imageUrl);
         UploadTask uploadTask = imageRef.putBytes(data);
 
@@ -172,7 +175,7 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     private void fetchProfilePicture() {
-        String imageUrl = "images/" + userId + ".jpg";
+        String imageUrl = String.format("images/%s.jpg", userId);
         StorageReference imageRef = FirebaseStorage.getInstance().getReference().child(imageUrl);
 
         File localFile = null;
