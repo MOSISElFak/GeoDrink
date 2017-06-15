@@ -111,9 +111,10 @@ public class ProfileActivity extends AppCompatActivity {
         if (requestCode == SELECT_IMAGE_REQUEST) {
             if (resultCode == RESULT_OK) {
                 if (data != null) {
-                    // TODO: <<BUG>> when choosing another pic, old is shown (new is uploaded)
-                    setProfileImage(data.getData());
-                    uploadProfilePicture();
+                    // TODO: <<BUG>> ValueListener se okida kad se nesto promeni
+                    Uri imageUri = data.getData();
+                    setProfileImage(imageUri);
+                    uploadProfilePicture(imageUri);
                 }
             }
         }
@@ -144,22 +145,10 @@ public class ProfileActivity extends AppCompatActivity {
         }
     }
 
-    private void uploadProfilePicture() {
-        // TODO: can this be simpler?
-        profileImg.setDrawingCacheEnabled(true);
-        profileImg.buildDrawingCache();
-        profileImg.measure(View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
-                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
-        profileImg.layout(0, 0, profileImg.getMeasuredWidth(), profileImg.getMeasuredHeight());
-        Bitmap bitmap = profileImg.getDrawingCache();
-
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, baos);
-        byte[] data = baos.toByteArray();
-
+    private void uploadProfilePicture(Uri imageUri) {
         final String imageUrl = String.format("images/%s.jpg", userId);
         StorageReference imageRef = FirebaseStorage.getInstance().getReference().child(imageUrl);
-        UploadTask uploadTask = imageRef.putBytes(data);
+        UploadTask uploadTask = imageRef.putFile(imageUri);
 
         uploadTask.addOnFailureListener(new OnFailureListener() {
             @Override
@@ -175,6 +164,7 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     private void fetchProfilePicture() {
+        // TODO - switch to glide
         String imageUrl = String.format("images/%s.jpg", userId);
         StorageReference imageRef = FirebaseStorage.getInstance().getReference().child(imageUrl);
 
