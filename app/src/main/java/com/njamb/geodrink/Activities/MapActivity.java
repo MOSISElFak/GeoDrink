@@ -50,10 +50,9 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
+    protected void onStart() {
+        super.onStart();
 
-        // overhead?
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         userId = user != null ? user.getUid() : null;
     }
@@ -92,7 +91,6 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 break;
             }
             case R.id.action_profile: {
-                // TODO: Proveriti zasto puca aplikacija
                 if (userId != null) {
                     Intent i = new Intent(this, ProfileActivity.class);
                     i.putExtra("userId", userId);

@@ -1,7 +1,6 @@
 package com.njamb.geodrink.Activities;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -13,6 +12,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
@@ -21,16 +21,11 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.njamb.geodrink.Classes.User;
 import com.njamb.geodrink.R;
-
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.IOException;
 
 public class ProfileActivity extends AppCompatActivity {
     private static final String TAG = "ProfileActivity";
@@ -45,11 +40,6 @@ public class ProfileActivity extends AppCompatActivity {
 
     private String userId;
 
-//    @Override
-//    public boolean onSupportNavigateUp() {
-//        onBackPressed();
-//        return true;
-//    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,11 +74,6 @@ public class ProfileActivity extends AppCompatActivity {
                 finish();
             }
         });
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
 
         mDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -111,7 +96,6 @@ public class ProfileActivity extends AppCompatActivity {
         if (requestCode == SELECT_IMAGE_REQUEST) {
             if (resultCode == RESULT_OK) {
                 if (data != null) {
-                    // TODO: <<BUG>> ValueListener se okida kad se nesto promeni
                     Uri imageUri = data.getData();
                     setProfileImage(imageUri);
                     uploadProfilePicture(imageUri);
@@ -125,9 +109,9 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     private void fillProfile(User user) {
-        // TODO: fetch profile pic: is this ok?
-        fetchProfilePicture();
         // TODO: progress bar/dialog
+        // TODO: image is small on the first load because placeholder is small !!!!
+        Glide.with(this).load(user.profileUrl).into(profileImg);
         username.setText(String.format("Username: %s", user.username));
         email.setText(String.format("Email: %s", user.email));
         birthday.setText(String.format("Birthday: %s", user.birthday));
@@ -153,41 +137,16 @@ public class ProfileActivity extends AppCompatActivity {
         uploadTask.addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception exception) {
-                // Handle unsuccessful uploads
+                Toast.makeText(ProfileActivity.this, "Upload failed!", Toast.LENGTH_SHORT).show();
             }
         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                @SuppressWarnings("VisibleForTests")
+                String imageUrl = taskSnapshot.getDownloadUrl().toString();
                 addProfilePictureLinkToDatabase(imageUrl);
             }
         });
-    }
-
-    private void fetchProfilePicture() {
-        // TODO - switch to glide
-        String imageUrl = String.format("images/%s.jpg", userId);
-        StorageReference imageRef = FirebaseStorage.getInstance().getReference().child(imageUrl);
-
-        File localFile = null;
-        try {
-            localFile = File.createTempFile("images", "jpg");
-
-            final File finalLocalFile = localFile;
-            imageRef.getFile(localFile).addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
-                @Override
-                public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
-                    // Local temp file has been created
-                    setProfileImage(Uri.fromFile(finalLocalFile));
-                }
-            }).addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception exception) {
-                    // Handle any errors
-                }
-            });
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     private void addProfilePictureLinkToDatabase(String url) {
