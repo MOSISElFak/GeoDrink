@@ -105,12 +105,12 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     private void setProfileImage(Uri uri) {
-        profileImg.setImageURI(uri);
+        //profileImg.setImageURI(uri);
+        Glide.with(this).load(uri).into(profileImg);
     }
 
     private void fillProfile(User user) {
         // TODO: progress bar/dialog
-        // TODO: image is small on the first load because placeholder is small !!!!
         Glide.with(this).load(user.profileUrl).into(profileImg);
         username.setText(String.format("Username: %s", user.username));
         email.setText(String.format("Email: %s", user.email));
