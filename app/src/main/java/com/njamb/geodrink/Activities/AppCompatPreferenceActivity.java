@@ -111,7 +111,7 @@ public abstract class AppCompatPreferenceActivity extends PreferenceActivity {
                 onBackPressed();
                 break;
         }
-        return true;
+        return super.onOptionsItemSelected(item);
     }
 
     private AppCompatDelegate getDelegate() {
