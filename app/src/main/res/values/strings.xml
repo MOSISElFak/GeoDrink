@@ -24,4 +24,5 @@
     <string name="profile_act_name">Profile Page</string>
     <string name="btn_upload_picture_txt">Upload picture</string>
     <string name="btn_profile_logout">Logout</string>
+    <string name="add_friend_act_lbl">Add Friend</string>
 </resources>

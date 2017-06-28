@@ -16,7 +16,8 @@
     <uses-feature
         android:glEsVersion="0x00020000"
         android:required="true" />
-    <uses-feature android:name="android.hardware.camera"
+    <uses-feature
+        android:name="android.hardware.camera"
         android:required="true" />
 
     <application
@@ -84,6 +85,10 @@
         <activity
             android:name=".Activities.ProfileActivity"
             android:label="@string/profile_act_name"
+            android:parentActivityName=".Activities.MapActivity" />
+        <activity
+            android:name=".Activities.AddFriendActivity"
+            android:label="@string/add_friend_act_lbl"
             android:parentActivityName=".Activities.MapActivity"/>
     </application>
 

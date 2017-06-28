@@ -87,7 +87,9 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
                 break;
             }
             case R.id.action_add: {
-                // ToDo: Add bluetooth activity to add a friend.
+                Intent i = new Intent(this, AddFriendActivity.class);
+                i.putExtra("userId", userId);
+                startActivity(i);
                 break;
             }
             case R.id.action_profile: {
