@@ -13,6 +13,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.Manifest;
 
+import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -71,14 +72,9 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-
         switch (id) {
             case R.id.action_settings: {
-                // ToDo: Add SettingsActivity.
+                startActivity(new Intent(this, SettingsActivity.class));
                 break;
             }
             case R.id.action_search: {

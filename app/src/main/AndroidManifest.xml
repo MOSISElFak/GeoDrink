@@ -92,6 +92,10 @@
             android:name=".Activities.AddFriendActivity"
             android:label="@string/add_friend_act_lbl"
             android:parentActivityName=".Activities.MapActivity"/>
+        <activity
+            android:name=".Activities.SettingsActivity"
+            android:label="@string/settings_act_lbl"
+            android:parentActivityName=".Activities.MapActivity"/>
     </application>
 
 </manifest>

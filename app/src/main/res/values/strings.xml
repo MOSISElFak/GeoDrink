@@ -32,4 +32,8 @@
     <string name="no_devices">No devices found</string>
     <string name="scanning">Scanning…</string>
     <string name="finish_scanning">Choose device</string>
+    <string name="general_setting_title">General settings</string>
+    <string name="service_pref_title">Service</string>
+    <string name="service_pref_summary"><![CDATA[Tracking location & sending notifications]]></string>
+    <string name="settings_act_lbl">Settings</string>
 </resources>

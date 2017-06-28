@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory
+        android:title="@string/general_setting_title"
+        android:key="pref_key_general_settings">
+        <SwitchPreference
+            android:key="pref_service"
+            android:defaultValue="true"
+            android:title="@string/service_pref_title"
+            android:summary="@string/service_pref_summary"/>
+    </PreferenceCategory>
+</PreferenceScreen>
