@@ -237,6 +237,8 @@ public class AddFriendActivity extends AppCompatActivity {
                     sendMessage("connected");
 
                     try {
+                        // TODO: won't connect with other device
+                        // TODO: implement friendship
                         is = mSocket.getInputStream();
                         os = mSocket.getOutputStream();
 
