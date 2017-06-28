@@ -127,6 +127,10 @@ public class AddFriendActivity extends AppCompatActivity {
                 if (resultCode == RESULT_OK) {
                     getPairedDevices();
                 }
+                else {
+                    Toast.makeText(this, "Bluetooth not enabled", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
                 break;
         }
     }
@@ -167,7 +171,7 @@ public class AddFriendActivity extends AppCompatActivity {
     private AdapterView.OnItemClickListener mListener = new AdapterView.OnItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-            mAdapter.cancelDiscovery();
+            if (mAdapter.isDiscovering()) mAdapter.cancelDiscovery();
 
             String item = (String) parent.getItemAtPosition(position);
             connect(item);
