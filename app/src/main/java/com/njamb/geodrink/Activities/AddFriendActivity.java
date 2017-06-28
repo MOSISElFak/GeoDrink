@@ -7,10 +7,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -48,7 +48,6 @@ public class AddFriendActivity extends AppCompatActivity {
             Toast.makeText(this, "Device does not support bluetooth", Toast.LENGTH_SHORT).show();
             finish();
         }
-
         mUserId = getIntent().getExtras().getString("userId");
 
         Button btnScan = (Button) findViewById(R.id.btn_scan);
@@ -97,8 +96,7 @@ public class AddFriendActivity extends AppCompatActivity {
         if (!mAdapter.isEnabled()) {
             Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
-        }
-        else {
+        } else {
             getPairedDevices();
         }
     }
@@ -107,11 +105,11 @@ public class AddFriendActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
 
-        if (mAdapter.isDiscovering()) {
+        if (mAdapter != null && mAdapter.isDiscovering()) { // Kotlin - mAdapter?.isDiscovering()
             mAdapter.cancelDiscovery();
         }
 
-        if (mAdapter.isEnabled()) {
+        if (mAdapter != null && mAdapter.isEnabled()) {
             mAdapter.disable();
         }
 
@@ -126,8 +124,7 @@ public class AddFriendActivity extends AppCompatActivity {
             case REQUEST_ENABLE_BT:
                 if (resultCode == RESULT_OK) {
                     getPairedDevices();
-                }
-                else {
+                } else {
                     Toast.makeText(this, "Bluetooth not enabled", Toast.LENGTH_SHORT).show();
                     finish();
                 }
@@ -151,8 +148,7 @@ public class AddFriendActivity extends AppCompatActivity {
             for (BluetoothDevice device : pairedDevices) {
                 pairedAdapter.add(device.getName() + "\n" + device.getAddress());
             }
-        }
-        else {
+        } else {
             pairedAdapter.add(getString(R.string.no_devices));
         }
     }
@@ -160,7 +156,7 @@ public class AddFriendActivity extends AppCompatActivity {
     private void connect(String item) {
         if (item.equals(getString(R.string.no_devices))) return;
 
-        String address = item.substring(item.length()-17);
+        String address = item.substring(item.length() - 17);
         Toast.makeText(this, "connect to " + address, Toast.LENGTH_SHORT).show();
         BluetoothDevice device = mAdapter.getRemoteDevice(address);
 
@@ -251,8 +247,7 @@ public class AddFriendActivity extends AppCompatActivity {
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                }
-                else {
+                } else {
                     sendMessage("mSocket null");
                 }
             } catch (IOException e) {
