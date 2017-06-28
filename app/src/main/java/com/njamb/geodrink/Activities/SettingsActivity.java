@@ -15,12 +15,11 @@ import com.njamb.geodrink.R;
 import java.util.List;
 
 
-public class SettingsActivity extends PreferenceActivity {
+public class SettingsActivity extends AppCompatPreferenceActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // TODO: add action bar
         getFragmentManager()
                 .beginTransaction()
                 .replace(android.R.id.content, new GeneralSettingsFragment())
