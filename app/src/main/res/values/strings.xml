@@ -25,4 +25,11 @@
     <string name="btn_upload_picture_txt">Upload picture</string>
     <string name="btn_profile_logout">Logout</string>
     <string name="add_friend_act_lbl">Add Friend</string>
+    <string name="other_devices_lbl">Other available devices</string>
+    <string name="paired_devices_lbl">Paired devices</string>
+    <string name="btn_discoverability">Turn on discoverability</string>
+    <string name="btn_scan">Scan</string>
+    <string name="no_devices">No devices found</string>
+    <string name="scanning">Scanning…</string>
+    <string name="finish_scanning">Choose device</string>
 </resources>
