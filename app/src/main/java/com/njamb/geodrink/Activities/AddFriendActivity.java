@@ -30,17 +30,22 @@ import com.njamb.geodrink.R;
 
 import java.util.Set;
 
+// TODO: update ListViews after pairing?
+
 public class AddFriendActivity extends AppCompatActivity {
     private static final String TAG = "AddFriendActivity";
     private static final int REQUEST_ENABLE_BT = 1;
 
     private BluetoothAdapter mAdapter = null;
+    private BluetoothService mBtService = null;
+
     private ArrayAdapter<String> pairedAdapter;
     private ArrayAdapter<String> otherAdapter;
+
     private String mUserId;
     private String mUsername;
+
     private ProgressDialog mProgressDialog;
-    private BluetoothService mBtService = null;
 
 
     @Override
@@ -50,9 +55,11 @@ public class AddFriendActivity extends AppCompatActivity {
 
         mAdapter = BluetoothAdapter.getDefaultAdapter();
         if (mAdapter == null) {
-            Toast.makeText(this, "Device does not support bluetooth", Toast.LENGTH_SHORT).show();
+            showToast("Device does not support bluetooth");
             finish();
         }
+
+        // Get User ID & User's username
         mUserId = getIntent().getExtras().getString("userId");
         FirebaseDatabase.getInstance()
                 .getReference(String.format("users/%s/username", mUserId))
@@ -61,13 +68,10 @@ public class AddFriendActivity extends AppCompatActivity {
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         mUsername = (String) dataSnapshot.getValue();
                     }
-
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-
-                    }
+                    @Override public void onCancelled(DatabaseError databaseError) {}
                 });
 
+        // Button for starting discovery process
         Button btnScan = (Button) findViewById(R.id.btn_scan);
         btnScan.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -77,6 +81,7 @@ public class AddFriendActivity extends AppCompatActivity {
             }
         });
 
+        // Button for enabling discoverability
         Button btnDiscover = (Button) findViewById(R.id.btn_discover);
         btnDiscover.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -90,11 +95,13 @@ public class AddFriendActivity extends AppCompatActivity {
             }
         });
 
+        // ArrayAdapter & ListView for paired devices
         pairedAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
         ListView paired = (ListView) findViewById(R.id.paired_devices);
         paired.setAdapter(pairedAdapter);
         paired.setOnItemClickListener(mListener);
 
+        // ArrayAdapter & ListView for other (non-paired) devices
         otherAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
         ListView other = (ListView) findViewById(R.id.other_devices);
         other.setAdapter(otherAdapter);
@@ -107,6 +114,7 @@ public class AddFriendActivity extends AppCompatActivity {
         filter = new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
         this.registerReceiver(mReceiver, filter);
 
+        // "my" bluetooth service
         mBtService = new BluetoothService(this, mHandler);
     }
 
@@ -117,8 +125,11 @@ public class AddFriendActivity extends AppCompatActivity {
         if (!mAdapter.isEnabled()) {
             Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
-        } else {
-            if (mBtService != null) mBtService.start();
+        }
+        else {
+            if (mBtService != null) {
+                mBtService.start();
+            }
             getPairedDevices();
         }
     }
@@ -127,7 +138,9 @@ public class AddFriendActivity extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
 
-        if (mBtService != null) mBtService.stop();
+        if (mBtService != null) {
+            mBtService.stop();
+        }
 
         if (mAdapter != null && mAdapter.isDiscovering()) { // Kotlin - mAdapter?.isDiscovering()
             mAdapter.cancelDiscovery();
@@ -149,8 +162,9 @@ public class AddFriendActivity extends AppCompatActivity {
             case REQUEST_ENABLE_BT:
                 if (resultCode == RESULT_OK) {
                     getPairedDevices();
-                } else {
-                    Toast.makeText(this, "Bluetooth not enabled", Toast.LENGTH_SHORT).show();
+                }
+                else {
+                    showToast("Bluetooth not enabled");
                     finish();
                 }
                 break;
@@ -187,13 +201,7 @@ public class AddFriendActivity extends AppCompatActivity {
         mBtService.connect(device);
 
         mProgressDialog = ProgressDialog.show(this, "Connecting",
-                "Trying to connect to " + device.getName(), true, false,
-                new DialogInterface.OnCancelListener() {
-                    @Override
-                    public void onCancel(DialogInterface dialog) {
-                        Toast.makeText(AddFriendActivity.this, "Cancel", Toast.LENGTH_SHORT).show();
-                    }
-                });
+                "Trying to connect to " + device.getName(), true, false);
     }
 
     private AdapterView.OnItemClickListener mListener = new AdapterView.OnItemClickListener() {
@@ -227,11 +235,17 @@ public class AddFriendActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    private void addFriend(String friendId) {
+    private void addFriend(final String friendId) {
+        // TODO: add as array or object, not field
         FirebaseDatabase.getInstance()
                 .getReference(String.format("users/%s/friends", mUserId))
                 .setValue(friendId);
-        Toast.makeText(this, "You are now friends", Toast.LENGTH_SHORT).show();
+        showToast("You are now friends");
+        finish();
+    }
+
+    private void showToast(final String msg) {
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
     }
 
     private Handler mHandler = new Handler() {
@@ -239,10 +253,15 @@ public class AddFriendActivity extends AppCompatActivity {
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case Constants.MESSAGE_TOAST: {
-                    Toast.makeText(AddFriendActivity.this, (String) msg.obj, Toast.LENGTH_SHORT).show();
+                    showToast((String)msg.obj);
                     break;
                 }
                 case Constants.MESSAGE_USERID_USERNAME: {
+                    /*
+                    * First, one user is sending friend request in form 'userId:username'.
+                    * After that, other user accepts request & sends reply with his userId,
+                    * or refuses & sends "no".
+                    */
                     String[] userIdUsername = ((String)msg.obj).split(":");
                     String userId = userIdUsername[0];
                     if (userIdUsername.length == 2) {
@@ -253,22 +272,22 @@ public class AddFriendActivity extends AppCompatActivity {
                             addFriend(userId);
                         }
                         else {
-                            Toast.makeText(AddFriendActivity.this, "Friendship request declined",
-                                    Toast.LENGTH_SHORT).show();
+                            showToast("Friendship request declined");
                         }
                     }
                     break;
                 }
                 case Constants.MESSAGE_CONNECTED: {
                     mProgressDialog.dismiss();
-                    Toast.makeText(AddFriendActivity.this, "Wait for user to respond", Toast.LENGTH_SHORT).show();
+                    showToast("Wait for user to respond");
+
                     // send string 'userId:username'
                     mBtService.write(String.format("%s:%s", mUserId, mUsername).getBytes());
                     break;
                 }
                 case Constants.MESSAGE_CONNECTION_FAILED: {
                     mProgressDialog.dismiss();
-                    Toast.makeText(AddFriendActivity.this, "connection failed", Toast.LENGTH_SHORT).show();
+                    showToast("connection failed");
                 }
             }
         }
