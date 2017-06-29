@@ -2,14 +2,15 @@ package com.njamb.geodrink.Activities;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.AdapterView;
@@ -18,25 +19,31 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.njamb.geodrink.Classes.BluetoothService;
+import com.njamb.geodrink.Classes.Constants;
 import com.njamb.geodrink.R;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Set;
 import java.util.UUID;
 
 public class AddFriendActivity extends AppCompatActivity {
     private static final String TAG = "AddFriendActivity";
     private static final int REQUEST_ENABLE_BT = 1;
-    private static final UUID MY_UUID = UUID.fromString("bf6f67ba-910c-4e82-b35b-621887fcbf0c");
 
     private BluetoothAdapter mAdapter = null;
     private ArrayAdapter<String> pairedAdapter;
     private ArrayAdapter<String> otherAdapter;
     private String mUserId;
+    private String mUsername;
+    private String mMyResponse = null;
+    private String mFriendResponse = null;
+    private String mFriendId;
+    private BluetoothService mBtService = null;
 
-    private ConnectThread mConnectThread = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +56,19 @@ public class AddFriendActivity extends AppCompatActivity {
             finish();
         }
         mUserId = getIntent().getExtras().getString("userId");
+        FirebaseDatabase.getInstance()
+                .getReference(String.format("users/%s/username", mUserId))
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        mUsername = (String) dataSnapshot.getValue();
+                    }
+
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+
+                    }
+                });
 
         Button btnScan = (Button) findViewById(R.id.btn_scan);
         btnScan.setOnClickListener(new View.OnClickListener() {
@@ -87,6 +107,8 @@ public class AddFriendActivity extends AppCompatActivity {
         // Register for broadcasts when discovery has finished
         filter = new IntentFilter(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
         this.registerReceiver(mReceiver, filter);
+
+        mBtService = new BluetoothService(this, mHandler);
     }
 
     @Override
@@ -97,7 +119,19 @@ public class AddFriendActivity extends AppCompatActivity {
             Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
             startActivityForResult(enableIntent, REQUEST_ENABLE_BT);
         } else {
+            if (mBtService != null) mBtService.start();
             getPairedDevices();
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        if (mBtService != null) mBtService.stop();
+
+        if (mAdapter != null && mAdapter.isDiscovering()) { // Kotlin - mAdapter?.isDiscovering()
+            mAdapter.cancelDiscovery();
         }
     }
 
@@ -105,16 +139,8 @@ public class AddFriendActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
 
-        if (mAdapter != null && mAdapter.isDiscovering()) { // Kotlin - mAdapter?.isDiscovering()
-            mAdapter.cancelDiscovery();
-        }
-
         if (mAdapter != null && mAdapter.isEnabled()) {
             mAdapter.disable();
-        }
-
-        if (mConnectThread != null) {
-            mConnectThread.cancel();
         }
     }
 
@@ -157,11 +183,10 @@ public class AddFriendActivity extends AppCompatActivity {
         if (item.equals(getString(R.string.no_devices))) return;
 
         String address = item.substring(item.length() - 17);
-        Toast.makeText(this, "connect to " + address, Toast.LENGTH_SHORT).show();
         BluetoothDevice device = mAdapter.getRemoteDevice(address);
 
-        mConnectThread = new ConnectThread(this, mHandler, device, mUserId);
-        mConnectThread.start();
+        mBtService.connect(device);
+        mBtService.setData(String.format("%s:%s", mUserId, mUsername));
     }
 
     private AdapterView.OnItemClickListener mListener = new AdapterView.OnItemClickListener() {
@@ -174,10 +199,74 @@ public class AddFriendActivity extends AppCompatActivity {
         }
     };
 
+    private void displayAddFriendDialog(String username) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Add friend")
+                .setMessage(String.format("Do you want to make %s your friend?", username))
+                .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        setMyResponse("no");
+                        mBtService.write(mMyResponse.getBytes());
+                    }
+                })
+                .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        setMyResponse("yes");
+                        mBtService.write(mMyResponse.getBytes());
+                    }
+                });
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
+    private void addFriend() {
+        FirebaseDatabase.getInstance()
+                .getReference(String.format("users/%s/friends", mUserId))
+                .setValue(mFriendId);
+        Toast.makeText(this, "You are now friends", Toast.LENGTH_SHORT).show();
+    }
+
+    private void setMyResponse(String r) {
+        mMyResponse = r;
+        if (mFriendResponse != null) {
+            compareResponses();
+        }
+    }
+
+    private void setFriendResponse(String r) {
+        mFriendResponse = r;
+        if (mMyResponse != null) {
+            compareResponses();
+        }
+    }
+
+    private void compareResponses() {
+        if (mMyResponse.equals(mFriendResponse)) {
+            addFriend();
+        }
+        else {
+            Toast.makeText(AddFriendActivity.this, "Friendship request declined", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
-            Toast.makeText(AddFriendActivity.this, (String) msg.obj, Toast.LENGTH_SHORT).show();
+            if (msg.what == Constants.MESSAGE_TOAST) {
+                Toast.makeText(AddFriendActivity.this, (String) msg.obj, Toast.LENGTH_SHORT).show();
+            }
+            else if (msg.what == Constants.MESSAGE_USERID_USERNAME) {
+                String[] usedIdUsername = ((String)msg.obj).split(":");
+                mFriendId = usedIdUsername[0];
+                displayAddFriendDialog(usedIdUsername[1]);
+            }
+            else if (msg.what == Constants.MESSAGE_FRIEND_RESPONSE) {
+                String friendResponse = (String) msg.obj;
+                Toast.makeText(AddFriendActivity.this, friendResponse, Toast.LENGTH_SHORT).show();
+                setFriendResponse(friendResponse);
+            }
         }
     };
 
@@ -204,71 +293,4 @@ public class AddFriendActivity extends AppCompatActivity {
             }
         }
     };
-
-
-    private class ConnectThread extends Thread {
-        Handler mHandler;
-        BluetoothDevice mDevice;
-        String mMsg;
-        BluetoothSocket mSocket = null;
-
-        public ConnectThread(Context context, Handler handler,
-                             BluetoothDevice device, String msg) {
-            mHandler = handler;
-            mDevice = device;
-            mMsg = msg;
-        }
-
-        @Override
-        public void run() {
-            InputStream is;
-            OutputStream os;
-            try {
-                mSocket = mDevice.createRfcommSocketToServiceRecord(MY_UUID);
-                sendMessage("mSocket created");
-            } catch (IOException e) {
-                sendMessage("mSocket not created");
-                e.printStackTrace();
-            }
-            try {
-                if (mSocket != null) {
-                    mSocket.connect();
-
-                    sendMessage("connected");
-
-                    try {
-                        // TODO: won't connect with other device
-                        // TODO: implement friendship
-                        is = mSocket.getInputStream();
-                        os = mSocket.getOutputStream();
-
-                        os.write(mMsg.getBytes());
-                        sendMessage("Message sent");
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                } else {
-                    sendMessage("mSocket null");
-                }
-            } catch (IOException e) {
-                sendMessage("not connected: " + e.getMessage());
-                e.printStackTrace();
-            }
-        }
-
-        public void cancel() {
-            try {
-                mSocket.close();
-                sendMessage("mSocket closed");
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        private void sendMessage(String s) {
-            Message msg = new Message();
-            msg.obj = s;
-            mHandler.sendMessage(msg);
-        }
-    }
 }
