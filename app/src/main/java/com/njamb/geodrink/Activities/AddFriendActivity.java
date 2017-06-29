@@ -1,5 +1,6 @@
 package com.njamb.geodrink.Activities;
 
+import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.content.BroadcastReceiver;
@@ -38,6 +39,7 @@ public class AddFriendActivity extends AppCompatActivity {
     private ArrayAdapter<String> otherAdapter;
     private String mUserId;
     private String mUsername;
+    private ProgressDialog mProgressDialog;
     private BluetoothService mBtService = null;
 
 
@@ -183,7 +185,15 @@ public class AddFriendActivity extends AppCompatActivity {
         BluetoothDevice device = mAdapter.getRemoteDevice(address);
 
         mBtService.connect(device);
-        // TODO: progress bar
+
+        mProgressDialog = ProgressDialog.show(this, "Connecting",
+                "Trying to connect to " + device.getName(), true, false,
+                new DialogInterface.OnCancelListener() {
+                    @Override
+                    public void onCancel(DialogInterface dialog) {
+                        Toast.makeText(AddFriendActivity.this, "Cancel", Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 
     private AdapterView.OnItemClickListener mListener = new AdapterView.OnItemClickListener() {
@@ -250,8 +260,15 @@ public class AddFriendActivity extends AppCompatActivity {
                     break;
                 }
                 case Constants.MESSAGE_CONNECTED: {
+                    mProgressDialog.dismiss();
+                    Toast.makeText(AddFriendActivity.this, "Wait for user to respond", Toast.LENGTH_SHORT).show();
                     // send string 'userId:username'
                     mBtService.write(String.format("%s:%s", mUserId, mUsername).getBytes());
+                    break;
+                }
+                case Constants.MESSAGE_CONNECTION_FAILED: {
+                    mProgressDialog.dismiss();
+                    Toast.makeText(AddFriendActivity.this, "connection failed", Toast.LENGTH_SHORT).show();
                 }
             }
         }
