@@ -7,5 +7,5 @@ package com.njamb.geodrink.Classes;
 public interface Constants {
     public static final int MESSAGE_TOAST = 1;
     public static final int MESSAGE_USERID_USERNAME = 2;
-    public static final int MESSAGE_FRIEND_RESPONSE = 3;
+    public static final int MESSAGE_CONNECTED = 3;
 }

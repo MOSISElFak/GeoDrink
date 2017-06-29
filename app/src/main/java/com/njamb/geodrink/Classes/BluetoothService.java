@@ -31,7 +31,6 @@ public class BluetoothService {
     private ConnectThread mConnectThread;
     private ConnectedThread mConnectedThread;
     private int mState;
-    private String mData;
 
     // Constants that indicate the current connection state
     public static final int STATE_NONE = 0;       // we're doing nothing
@@ -56,10 +55,6 @@ public class BluetoothService {
         msg.obj = s;
         msg.what = msgWhat;
         mHandler.sendMessage(msg);
-    }
-
-    public synchronized void setData(String s) {
-        mData = s;
     }
 
     /**
@@ -343,6 +338,7 @@ public class BluetoothService {
 
             // Start the connected thread
             connected(mmSocket, mmDevice);
+            sendMessage(null, Constants.MESSAGE_CONNECTED);
         }
 
         public void cancel() {
@@ -387,16 +383,13 @@ public class BluetoothService {
             byte[] buffer = new byte[1024];
             int bytes;
 
-            write(mData.getBytes());
             // Keep listening to the InputStream while connected
             while (mState == STATE_CONNECTED) {
                 try {
                     // Read from the InputStream
                     bytes = mmInStream.read(buffer);
                     if (bytes > 0) {
-                        sendMessage(new String(buffer, 0, bytes), bytes < 4
-                                ? Constants.MESSAGE_FRIEND_RESPONSE
-                                : Constants.MESSAGE_USERID_USERNAME);
+                        sendMessage(new String(buffer, 0, bytes), Constants.MESSAGE_USERID_USERNAME);
                     }
                 } catch (IOException e) {
                     Log.e(TAG, "disconnected", e);

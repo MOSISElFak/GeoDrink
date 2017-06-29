@@ -28,7 +28,6 @@ import com.njamb.geodrink.Classes.Constants;
 import com.njamb.geodrink.R;
 
 import java.util.Set;
-import java.util.UUID;
 
 public class AddFriendActivity extends AppCompatActivity {
     private static final String TAG = "AddFriendActivity";
@@ -39,9 +38,6 @@ public class AddFriendActivity extends AppCompatActivity {
     private ArrayAdapter<String> otherAdapter;
     private String mUserId;
     private String mUsername;
-    private String mMyResponse = null;
-    private String mFriendResponse = null;
-    private String mFriendId;
     private BluetoothService mBtService = null;
 
 
@@ -102,6 +98,7 @@ public class AddFriendActivity extends AppCompatActivity {
         other.setAdapter(otherAdapter);
         other.setOnItemClickListener(mListener);
 
+        // Register for broadcasts when a device is discovered
         IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
         this.registerReceiver(mReceiver, filter);
         // Register for broadcasts when discovery has finished
@@ -186,7 +183,7 @@ public class AddFriendActivity extends AppCompatActivity {
         BluetoothDevice device = mAdapter.getRemoteDevice(address);
 
         mBtService.connect(device);
-        mBtService.setData(String.format("%s:%s", mUserId, mUsername));
+        // TODO: progress bar
     }
 
     private AdapterView.OnItemClickListener mListener = new AdapterView.OnItemClickListener() {
@@ -199,73 +196,63 @@ public class AddFriendActivity extends AppCompatActivity {
         }
     };
 
-    private void displayAddFriendDialog(String username) {
+    private void displayAddFriendDialog(final String userId, final String username) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Add friend")
                 .setMessage(String.format("Do you want to make %s your friend?", username))
                 .setNegativeButton("No", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        setMyResponse("no");
-                        mBtService.write(mMyResponse.getBytes());
+                        mBtService.write("no".getBytes());
                     }
                 })
                 .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        setMyResponse("yes");
-                        mBtService.write(mMyResponse.getBytes());
+                        mBtService.write(mUserId.getBytes());
+                        addFriend(userId);
                     }
                 });
         AlertDialog dialog = builder.create();
         dialog.show();
     }
 
-    private void addFriend() {
+    private void addFriend(String friendId) {
         FirebaseDatabase.getInstance()
                 .getReference(String.format("users/%s/friends", mUserId))
-                .setValue(mFriendId);
+                .setValue(friendId);
         Toast.makeText(this, "You are now friends", Toast.LENGTH_SHORT).show();
-    }
-
-    private void setMyResponse(String r) {
-        mMyResponse = r;
-        if (mFriendResponse != null) {
-            compareResponses();
-        }
-    }
-
-    private void setFriendResponse(String r) {
-        mFriendResponse = r;
-        if (mMyResponse != null) {
-            compareResponses();
-        }
-    }
-
-    private void compareResponses() {
-        if (mMyResponse.equals(mFriendResponse)) {
-            addFriend();
-        }
-        else {
-            Toast.makeText(AddFriendActivity.this, "Friendship request declined", Toast.LENGTH_SHORT).show();
-        }
     }
 
     private Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
-            if (msg.what == Constants.MESSAGE_TOAST) {
-                Toast.makeText(AddFriendActivity.this, (String) msg.obj, Toast.LENGTH_SHORT).show();
-            }
-            else if (msg.what == Constants.MESSAGE_USERID_USERNAME) {
-                String[] usedIdUsername = ((String)msg.obj).split(":");
-                mFriendId = usedIdUsername[0];
-                displayAddFriendDialog(usedIdUsername[1]);
-            }
-            else if (msg.what == Constants.MESSAGE_FRIEND_RESPONSE) {
-                String friendResponse = (String) msg.obj;
-                Toast.makeText(AddFriendActivity.this, friendResponse, Toast.LENGTH_SHORT).show();
-                setFriendResponse(friendResponse);
+            switch (msg.what) {
+                case Constants.MESSAGE_TOAST: {
+                    Toast.makeText(AddFriendActivity.this, (String) msg.obj, Toast.LENGTH_SHORT).show();
+                    break;
+                }
+                case Constants.MESSAGE_USERID_USERNAME: {
+                    String[] userIdUsername = ((String)msg.obj).split(":");
+                    String userId = userIdUsername[0];
+                    if (userIdUsername.length == 2) {
+                        displayAddFriendDialog(userId, userIdUsername[1]);
+                    }
+                    else {
+                        if (!userId.equals("no")) {
+                            addFriend(userId);
+                        }
+                        else {
+                            Toast.makeText(AddFriendActivity.this, "Friendship request declined",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                    break;
+                }
+                case Constants.MESSAGE_CONNECTED: {
+                    // send string 'userId:username'
+                    mBtService.write(String.format("%s:%s", mUserId, mUsername).getBytes());
+                }
             }
         }
     };
