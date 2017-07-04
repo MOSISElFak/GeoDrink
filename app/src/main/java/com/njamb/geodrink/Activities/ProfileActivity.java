@@ -19,6 +19,7 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.engine.GlideException;
 import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.Target;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -124,11 +125,11 @@ public class ProfileActivity extends AppCompatActivity {
         pb.setVisibility(View.VISIBLE);
         Glide.with(this)
                 .load(user.profileUrl)
+                .apply(RequestOptions.errorOf(R.mipmap.geodrink_blue_logo))
                 .listener(new RequestListener<Drawable>() {
                     @Override
                     public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
                         pb.setVisibility(View.GONE);
-                        profileImg.setImageResource(R.mipmap.geodrink_blue_logo);
                         return false;
                     }
 

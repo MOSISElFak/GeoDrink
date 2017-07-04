@@ -21,7 +21,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
     private GoogleMap map;
     private SupportMapFragment mapFragment;
-    private String userId = null;
+
+    private FirebaseAuth mAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -34,6 +35,8 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        mAuth = FirebaseAuth.getInstance();
 
 //        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
 //        fab.setOnClickListener(new View.OnClickListener() {
@@ -49,8 +52,22 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     protected void onStart() {
         super.onStart();
 
-        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-        userId = user != null ? user.getUid() : null;
+        checkIfUserLoggedIn();
+//        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+//        userId = user != null ? user.getUid() : null;
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        checkIfUserLoggedIn();
+    }
+
+    private void checkIfUserLoggedIn() {
+        if (mAuth.getCurrentUser() == null) {
+            startLoginActivity();
+        }
     }
 
     @Override
@@ -79,25 +96,20 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
             }
             case R.id.action_add: {
                 Intent i = new Intent(this, AddFriendActivity.class);
-                i.putExtra("userId", userId);
+                i.putExtra("userId", mAuth.getCurrentUser().getUid());
                 startActivity(i);
                 break;
             }
             case R.id.action_profile: {
-                if (userId != null) {
-                    Intent i = new Intent(this, ProfileActivity.class);
-                    i.putExtra("userId", userId);
-                    startActivity(i);
-                }
-                else {
-                    startLoginActivity();
-                }
+                Intent i = new Intent(this, ProfileActivity.class);
+                i.putExtra("userId", mAuth.getCurrentUser().getUid());
+                startActivity(i);
                 break;
             }
-            case R.id.action_login: {
-                startLoginActivity();
-                break;
-            }
+//            case R.id.action_login: {
+//                startLoginActivity();
+//                break;
+//            }
             case R.id.action_checkin: {
                 Intent i = new Intent(this, CheckInActivity.class);
                 startActivity(i);

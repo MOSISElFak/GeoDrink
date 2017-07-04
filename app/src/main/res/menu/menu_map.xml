@@ -32,12 +32,12 @@
         android:title="@string/action_add_friend"
         app:showAsAction="ifRoom"
         android:icon="@drawable/ic_add" />
-    <item
+    <!--<item
         android:id="@+id/action_login"
         android:orderInCategory="100"
         android:title="Login"
         app:showAsAction="never"
-        />
+        />-->
     <item
         android:id="@+id/action_details"
         android:orderInCategory="100"
