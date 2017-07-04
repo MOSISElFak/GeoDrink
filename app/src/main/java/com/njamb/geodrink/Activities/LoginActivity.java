@@ -1,7 +1,9 @@
 package com.njamb.geodrink.Activities;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -10,6 +12,7 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -30,6 +33,8 @@ public class LoginActivity extends AppCompatActivity {
     EditText password;
     Button login;
     Button register;
+
+    private ProgressDialog pd;
 
     private FirebaseAuth mAuth;
 
@@ -56,6 +61,8 @@ public class LoginActivity extends AppCompatActivity {
         password = (EditText) findViewById(R.id.login_et_password);
         login = (Button) findViewById(R.id.login_btn_login);
         register = (Button) findViewById(R.id.login_btn_register);
+
+        configProgressDialog();
 
         lockLoginBtn();
 
@@ -109,6 +116,12 @@ public class LoginActivity extends AppCompatActivity {
         });
     }
 
+    private void configProgressDialog() {
+        pd = new ProgressDialog(this, R.style.TransparentProgressDialogStyle);
+        pd.setIndeterminate(true);
+        pd.setCancelable(false);
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -150,17 +163,21 @@ public class LoginActivity extends AppCompatActivity {
         String email = username.getText().toString();
         String pass = password.getText().toString();
 
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+        pd.show();
         mAuth.signInWithEmailAndPassword(email, pass)
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
+                        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                        pd.dismiss();
+
                         if (task.isSuccessful()) {
                             Log.d(TAG, "signInWithEmail:success");
                             FirebaseUser user = mAuth.getCurrentUser();
                             Intent intent = new Intent(LoginActivity.this, ProfileActivity.class);
                             intent.putExtra("userId", user.getUid());
                             LoginActivity.this.startActivity(intent);
-//                            Toast.makeText(LoginActivity.this, "Logged in", Toast.LENGTH_SHORT).show();
                         } else {
                             Log.w(TAG, "signInWithEmail:failure", task.getException());
                             Toast.makeText(LoginActivity.this, "Authentication failed.",
