@@ -19,7 +19,7 @@
         android:layout_marginTop="16dp"
         android:orientation="horizontal">
 
-        <LinearLayout
+        <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_marginLeft="16dp"
@@ -28,13 +28,21 @@
             android:gravity="center"
             android:orientation="vertical">
 
+            <!-- TODO: this should be in image center -->
+            <ProgressBar
+                android:id="@+id/progressbar_profile_img"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:indeterminate="true"
+                android:visibility="visible"/>
+
             <ImageView
                 android:id="@+id/profile_image"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                app:srcCompat="@mipmap/geodrink_blue_logo" />
-
-        </LinearLayout>
+                android:contentDescription="@string/profile_img_desc"/>
+            <!--app:srcCompat="@mipmap/geodrink_blue_logo"-->
+        </RelativeLayout>
 
     </LinearLayout>
 

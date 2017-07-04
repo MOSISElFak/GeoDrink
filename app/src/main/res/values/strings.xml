@@ -36,4 +36,5 @@
     <string name="service_pref_title">Service</string>
     <string name="service_pref_summary"><![CDATA[Tracking location & sending notifications]]></string>
     <string name="settings_act_lbl">Settings</string>
+    <string name="profile_img_desc">Profile picture</string>
 </resources>

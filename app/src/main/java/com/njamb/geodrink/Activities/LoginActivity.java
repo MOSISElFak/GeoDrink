@@ -3,7 +3,6 @@ package com.njamb.geodrink.Activities;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -27,7 +26,7 @@ import com.njamb.geodrink.R;
 public class LoginActivity extends AppCompatActivity {
     private static final String TAG = "LoginActivity";
 
-    static int REGISTER = 1;
+    static int REQUEST_REGISTER = 1;
 
     EditText username;
     EditText password;
@@ -104,7 +103,7 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Intent registerActivity = new Intent(LoginActivity.this, RegisterActivity.class);
-                startActivityForResult(registerActivity, REGISTER);
+                startActivityForResult(registerActivity, REQUEST_REGISTER);
             }
         });
 
@@ -118,6 +117,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private void configProgressDialog() {
         pd = new ProgressDialog(this, R.style.TransparentProgressDialogStyle);
+        pd.setProgressStyle(android.R.style.Widget_ProgressBar_Small);
         pd.setIndeterminate(true);
         pd.setCancelable(false);
     }
@@ -127,7 +127,7 @@ public class LoginActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (resultCode == Activity.RESULT_OK) {
-            // TO-DO: after user is registered, make toast (successful registration)
+            // TODO: after user is registered, make toast (successful registration)
             // & return to the map.
             // After registration, user is logged in automatically.
 
