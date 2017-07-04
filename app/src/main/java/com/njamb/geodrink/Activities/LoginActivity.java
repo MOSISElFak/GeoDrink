@@ -39,9 +39,8 @@ public class LoginActivity extends AppCompatActivity {
 
 
     @Override
-    public boolean onSupportNavigateUp() {
-        onBackPressed();
-        return true;
+    public void onBackPressed() {
+        finishAffinity();
     }
 
     @Override
@@ -52,9 +51,10 @@ public class LoginActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(false);
 
         mAuth = FirebaseAuth.getInstance();
+        if (mAuth.getCurrentUser() != null) finish(); // TODO: how to remove this hack?
 
         username = (EditText) findViewById(R.id.login_et_username);
         password = (EditText) findViewById(R.id.login_et_password);
@@ -181,10 +181,11 @@ public class LoginActivity extends AppCompatActivity {
 
                         if (task.isSuccessful()) {
                             Log.d(TAG, "signInWithEmail:success");
-                            FirebaseUser user = mAuth.getCurrentUser();
-                            Intent intent = new Intent(LoginActivity.this, ProfileActivity.class);
-                            intent.putExtra("userId", user.getUid());
-                            LoginActivity.this.startActivity(intent);
+//                            FirebaseUser user = mAuth.getCurrentUser();
+//                            Intent intent = new Intent(LoginActivity.this, ProfileActivity.class);
+//                            intent.putExtra("userId", user.getUid());
+//                            LoginActivity.this.startActivity(intent);
+                            finish();
                         } else {
                             Log.w(TAG, "signInWithEmail:failure", task.getException());
                             Toast.makeText(LoginActivity.this, "Authentication failed.",
