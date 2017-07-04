@@ -60,6 +60,13 @@ public class LoginActivity extends AppCompatActivity {
         password = (EditText) findViewById(R.id.login_et_password);
         login = (Button) findViewById(R.id.login_btn_login);
         register = (Button) findViewById(R.id.login_btn_register);
+        Button btnResetPass = (Button) findViewById(R.id.btn_rst_pass);
+        btnResetPass.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(LoginActivity.this, ResetPasswordActivity.class));
+            }
+        });
 
         configProgressDialog();
 

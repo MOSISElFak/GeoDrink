@@ -37,4 +37,6 @@
     <string name="service_pref_summary"><![CDATA[Tracking location & sending notifications]]></string>
     <string name="settings_act_lbl">Settings</string>
     <string name="profile_img_desc">Profile picture</string>
+    <string name="rst_pass_act_lbl">Reset password</string>
+    <string name="btn_send_rst_pass_text">Send</string>
 </resources>
