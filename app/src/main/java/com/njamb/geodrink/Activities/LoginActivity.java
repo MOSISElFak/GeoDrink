@@ -12,6 +12,8 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -37,6 +39,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
 
+    private boolean shouldClear = false;
 
     @Override
     public boolean onSupportNavigateUp() {
@@ -80,12 +83,12 @@ public class LoginActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                lockLoginBtn();
+                clearAndRemove();
             }
 
             @Override
             public void afterTextChanged(Editable s) {
-
+                lockLoginBtn();
             }
         });
 
@@ -97,12 +100,12 @@ public class LoginActivity extends AppCompatActivity {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                lockLoginBtn();
+                clearAndRemove();
             }
 
             @Override
             public void afterTextChanged(Editable s) {
-
+                lockLoginBtn();
             }
         });
 
@@ -120,6 +123,16 @@ public class LoginActivity extends AppCompatActivity {
                 loginUser();
             }
         });
+    }
+
+    private void clearAndRemove() {
+        if (shouldClear) {
+            username.setError(null);
+            password.setError(null);
+            username.getText().clear();
+            password.getText().clear();
+            shouldClear = false;
+        }
     }
 
     private void configProgressDialog() {
@@ -187,11 +200,17 @@ public class LoginActivity extends AppCompatActivity {
                             LoginActivity.this.startActivity(intent);
                         } else {
                             Log.w(TAG, "signInWithEmail:failure", task.getException());
-                            Toast.makeText(LoginActivity.this, "Authentication failed.",
-                                    Toast.LENGTH_SHORT).show();
+
+                            showError();
                         }
                     }
                 });
     }
 
+
+    private void showError() {
+        ((EditText) findViewById(R.id.login_et_username)).setError("Wrong username or password.");
+        ((EditText) findViewById(R.id.login_et_password)).setError("Wrong username or password.");
+        shouldClear = true;
+    }
 }
