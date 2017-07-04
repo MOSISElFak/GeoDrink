@@ -39,8 +39,8 @@ public class AddFriendActivity extends AppCompatActivity {
     private BluetoothAdapter mAdapter = null;
     private BluetoothService mBtService = null;
 
-    private ArrayAdapter<String> pairedAdapter;
-    private ArrayAdapter<String> otherAdapter;
+    private ArrayAdapter<String> mPairedAdapter;
+    private ArrayAdapter<String> mOtherAdapter;
 
     private String mUserId;
     private String mUsername;
@@ -96,15 +96,15 @@ public class AddFriendActivity extends AppCompatActivity {
         });
 
         // ArrayAdapter & ListView for paired devices
-        pairedAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
+        mPairedAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
         ListView paired = (ListView) findViewById(R.id.paired_devices);
-        paired.setAdapter(pairedAdapter);
+        paired.setAdapter(mPairedAdapter);
         paired.setOnItemClickListener(mListener);
 
         // ArrayAdapter & ListView for other (non-paired) devices
-        otherAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
+        mOtherAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
         ListView other = (ListView) findViewById(R.id.other_devices);
-        other.setAdapter(otherAdapter);
+        other.setAdapter(mOtherAdapter);
         other.setOnItemClickListener(mListener);
 
         // Register for broadcasts when a device is discovered
@@ -175,20 +175,20 @@ public class AddFriendActivity extends AppCompatActivity {
         findViewById(R.id.text_other_devices).setVisibility(View.VISIBLE);
         if (mAdapter.isDiscovering()) mAdapter.cancelDiscovery();
 
-        otherAdapter.clear();
+        mOtherAdapter.clear();
         mAdapter.startDiscovery();
     }
 
     private void getPairedDevices() {
         findViewById(R.id.text_paired_devices).setVisibility(View.VISIBLE);
         Set<BluetoothDevice> pairedDevices = mAdapter.getBondedDevices();
-        pairedAdapter.clear();
+        mPairedAdapter.clear();
         if (pairedDevices.size() > 0) {
             for (BluetoothDevice device : pairedDevices) {
-                pairedAdapter.add(device.getName() + "\n" + device.getAddress());
+                mPairedAdapter.add(device.getName() + "\n" + device.getAddress());
             }
         } else {
-            pairedAdapter.add(getString(R.string.no_devices));
+            mPairedAdapter.add(getString(R.string.no_devices));
         }
     }
 
@@ -304,14 +304,14 @@ public class AddFriendActivity extends AppCompatActivity {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 // If it's already paired, skip it, because it's been listed already
                 if (device.getBondState() != BluetoothDevice.BOND_BONDED) {
-                    otherAdapter.add(device.getName() + "\n" + device.getAddress());
+                    mOtherAdapter.add(device.getName() + "\n" + device.getAddress());
                 }
                 // When discovery is finished, change the Activity title
             } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED.equals(action)) {
                 getSupportActionBar().setSubtitle(R.string.finish_scanning);
-                if (otherAdapter.getCount() == 0) {
+                if (mOtherAdapter.getCount() == 0) {
                     String noDevices = getResources().getText(R.string.no_devices).toString();
-                    otherAdapter.add(noDevices);
+                    mOtherAdapter.add(noDevices);
                 }
             }
         }

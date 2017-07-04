@@ -50,11 +50,12 @@ public class BluetoothService {
         mHandler = handler;
     }
 
-    private void sendMessage(String s, int msgWhat) {
+    private void sendMessage(String s, int msgWhat, long delay) {
         Message msg = new Message();
         msg.obj = s;
         msg.what = msgWhat;
-        mHandler.sendMessage(msg);
+        mHandler.sendMessageDelayed(msg, delay);
+//        mHandler.sendMessage(msg);
     }
 
     /**
@@ -196,7 +197,7 @@ public class BluetoothService {
     private void connectionFailed() {
         mState = STATE_NONE;
 
-        sendMessage(null, Constants.MESSAGE_CONNECTION_FAILED);
+        sendMessage(null, Constants.MESSAGE_CONNECTION_FAILED, 0);
         // Start the service over to restart listening mode
         BluetoothService.this.start();
     }
@@ -339,7 +340,7 @@ public class BluetoothService {
 
             // Start the connected thread
             connected(mmSocket, mmDevice);
-            sendMessage(null, Constants.MESSAGE_CONNECTED);
+            sendMessage(null, Constants.MESSAGE_CONNECTED, 1000/*ms*/);
         }
 
         public void cancel() {
@@ -390,7 +391,7 @@ public class BluetoothService {
                     // Read from the InputStream
                     bytes = mmInStream.read(buffer);
                     if (bytes > 0) {
-                        sendMessage(new String(buffer, 0, bytes), Constants.MESSAGE_USERID_USERNAME);
+                        sendMessage(new String(buffer, 0, bytes), Constants.MESSAGE_USERID_USERNAME, 0);
                     }
                 } catch (IOException e) {
                     Log.e(TAG, "disconnected", e);
