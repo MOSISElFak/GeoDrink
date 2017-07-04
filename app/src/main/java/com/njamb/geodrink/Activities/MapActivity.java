@@ -1,11 +1,15 @@
 package com.njamb.geodrink.Activities;
 
 import android.Manifest;
+import android.app.SearchManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -74,6 +78,30 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_map, menu);
+
+        SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
+        MenuItem searchBar = menu.findItem(R.id.action_search);
+
+        SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchBar);
+        searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+        searchView.setIconifiedByDefault(true);
+
+        // TODO: Videti sta treba uraditi sa iskomentarisanim kodom ispod.
+//        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+//            @Override
+//            public boolean onQueryTextSubmit(String query) {
+//                // TODO: if only 1 query displayed, automatically filter for that person
+//                // TODO: else: open new activity with provided searches for user to select to show on map
+//                return false;
+//            }
+//
+//            @Override
+//            public boolean onQueryTextChange(String newText) {
+//                // TODO: filter through friends list and display only those who match newText
+//                return false;
+//            }
+//        });
+
         return true;
     }
 

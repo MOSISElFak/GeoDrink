@@ -6,19 +6,20 @@
         android:id="@+id/action_search"
         android:orderInCategory="100"
         android:title="Search"
-        app:showAsAction="always"
+        app:showAsAction="always|collapseActionView"
+        app:actionViewClass="android.support.v7.widget.SearchView"
         android:icon="@drawable/ic_search" />
     <item
         android:id="@+id/action_profile"
         android:orderInCategory="100"
         android:title="Profile"
-        app:showAsAction="always"
+        app:showAsAction="ifRoom"
         android:icon="@drawable/ic_account" />
     <item
         android:id="@+id/action_checkin"
         android:orderInCategory="100"
         android:title="Check In"
-        app:showAsAction="always"
+        app:showAsAction="ifRoom"
         android:icon="@drawable/ic_pin" />
     <item
         android:id="@+id/action_settings"
