@@ -3,6 +3,7 @@ package com.njamb.geodrink.Activities;
 import android.app.Activity;
 import android.app.DialogFragment;
 import android.app.FragmentManager;
+import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -12,6 +13,7 @@ import android.text.InputType;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -38,15 +40,17 @@ public class RegisterActivity extends AppCompatActivity {
     Button register;
     Button cancel;
 
+    private ProgressDialog pd;
+
     private FirebaseAuth mAuth;
     private DatabaseReference mDatabase;
 
 
-    @Override
-    public boolean onSupportNavigateUp() {
-        onBackPressed();
-        return true;
-    }
+//    @Override
+//    public boolean onSupportNavigateUp() {
+//        onBackPressed();
+//        return true;
+//    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,6 +71,8 @@ public class RegisterActivity extends AppCompatActivity {
         birthday = (EditText) findViewById(R.id.register_et_birthday);
         register = (Button) findViewById(R.id.register_btn_register);
         cancel = (Button) findViewById(R.id.register_btn_cancel);
+
+        configProgressDialog();
 
         // If any input field is empty -> disable 'register' button:
         areFieldsEmpty();
@@ -169,7 +175,8 @@ public class RegisterActivity extends AppCompatActivity {
         register.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // TODO: add progress dialog/bar
+                getWindow().addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                pd.show();
                 registerUser();
             }
         });
@@ -183,12 +190,19 @@ public class RegisterActivity extends AppCompatActivity {
         });
     }
 
+    private void configProgressDialog() {
+        pd = new ProgressDialog(this, R.style.TransparentProgressDialogStyle);
+        pd.setProgressStyle(android.R.style.Widget_ProgressBar_Small);
+        pd.setIndeterminate(true);
+        pd.setCancelable(false);
+    }
+
     // Method that checks if any of the input fields are empty:
     private void areFieldsEmpty() {
-        if (username.getText().toString().equals("") ||
-                password.getText().toString().equals("") ||
-                email.getText().toString().equals("") ||
-                birthday.getText().toString().equals(""))
+        if (username.getText().toString().trim().equals("") ||
+                password.getText().toString().trim().equals("") ||
+                email.getText().toString().trim().equals("") ||
+                birthday.getText().toString().trim().equals(""))
         {
             register.setEnabled(false);
         }
@@ -204,6 +218,9 @@ public class RegisterActivity extends AppCompatActivity {
                 .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
+                        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
+                        pd.dismiss();
+
                         if (task.isSuccessful()) {
                             Log.d(TAG, "createUserWithEmail:success");
                             FirebaseUser user = mAuth.getCurrentUser();
