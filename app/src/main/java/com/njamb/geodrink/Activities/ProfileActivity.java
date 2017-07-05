@@ -7,6 +7,8 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -32,6 +34,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.njamb.geodrink.Classes.FriendListAdapter;
 import com.njamb.geodrink.Classes.User;
 import com.njamb.geodrink.R;
 
@@ -43,12 +46,14 @@ public class ProfileActivity extends AppCompatActivity {
     private TextView username;
     private TextView email;
     private TextView birthday;
+    private RecyclerView mRecyclerView;
 
     private ProgressBar pb;
 
     private DatabaseReference mDatabase;
 
     private String userId;
+    private FriendListAdapter mAdapter;
 
 
     @Override
@@ -67,6 +72,9 @@ public class ProfileActivity extends AppCompatActivity {
         username = (TextView) findViewById(R.id.profile_username);
         email = (TextView) findViewById(R.id.profile_email);
         birthday = (TextView) findViewById(R.id.profile_birthday);
+
+        mRecyclerView = (RecyclerView) findViewById(R.id.friends_list);
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         pb = (ProgressBar) findViewById(R.id.progressbar_profile_img);
 
@@ -91,6 +99,7 @@ public class ProfileActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 User user = dataSnapshot.getValue(User.class);
+
                 fillProfile(user);
             }
 
@@ -117,12 +126,15 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     private void setProfileImage(Uri uri) {
-        //profileImg.setImageURI(uri);
         Glide.with(this).load(uri).into(profileImg);
     }
 
     private void fillProfile(User user) {
         pb.setVisibility(View.VISIBLE);
+
+        mAdapter = new FriendListAdapter(ProfileActivity.this, mRecyclerView, user);
+        mRecyclerView.setAdapter(mAdapter);
+
         Glide.with(this)
                 .load(user.profileUrl)
                 .apply(RequestOptions.errorOf(R.mipmap.geodrink_blue_logo))

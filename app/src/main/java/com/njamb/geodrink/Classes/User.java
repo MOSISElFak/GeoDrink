@@ -2,16 +2,17 @@ package com.njamb.geodrink.Classes;
 
 import com.google.firebase.database.IgnoreExtraProperties;
 
-/**
- * Created by stefan on 7.6.17..
- */
+import java.util.HashMap;
+
 
 @IgnoreExtraProperties
 public class User {
+    public String fullName;
     public String username;
     public String email;
     public String birthday;
     public String profileUrl;
+    public HashMap<String, Boolean> friends = new HashMap<>();
 
     public User() {}
 
