@@ -340,7 +340,7 @@ public class BluetoothService {
 
             // Start the connected thread
             connected(mmSocket, mmDevice);
-            sendMessage(null, Constants.MESSAGE_CONNECTED, 1000/*ms*/);
+            sendMessage(null, Constants.MESSAGE_CONNECTED, 1000/*ms*/); // Sometimes this is not enough
         }
 
         public void cancel() {
