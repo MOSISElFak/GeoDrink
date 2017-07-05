@@ -228,10 +228,9 @@ public class AddFriendActivity extends AppCompatActivity {
     }
 
     private void addFriend(final String friendId) {
-        // TODO: add as array or object, not field
         FirebaseDatabase.getInstance()
-                .getReference(String.format("users/%s/friends", mUserId))
-                .setValue(friendId);
+                .getReference(String.format("users/%s/friends/%s", mUserId, friendId))
+                .setValue(true);
         showToast("You are now friends");
         finish();
     }
