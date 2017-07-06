@@ -19,7 +19,6 @@ import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Toast;
 
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
@@ -66,7 +65,7 @@ public class MapActivity extends AppCompatActivity
     private FirebaseAuth mAuth;
 
     // Map
-    private GoogleMap map;
+    private GoogleMap mMap = null;
     private SupportMapFragment mapFragment;
     private Circle mCircle;
     private BiMap<String, Marker> mPoiMarkers = HashBiMap.create();
@@ -187,7 +186,7 @@ public class MapActivity extends AppCompatActivity
 //            @Override
 //            public boolean onQueryTextSubmit(String query) {
 //                // TODO: if only 1 query displayed, automatically filter for that person
-//                // TODO: else: open new activity with provided searches for user to select to show on map
+//                // TODO: else: open new activity with provided searches for user to select to show on mMap
 //                return false;
 //            }
 //
@@ -251,11 +250,11 @@ public class MapActivity extends AppCompatActivity
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
-        this.map = googleMap;
-        map.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+        mMap = googleMap;
+        mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
 
         mGeoQueryUsers = mGeoFireUsers.queryAtLocation(mLocation, 1000/*km*/);
-        mGeoQueryUsers.addGeoQueryEventListener(new UsersGeoQueryListener(map));
+        mGeoQueryUsers.addGeoQueryEventListener(new UsersGeoQueryListener(mMap));
 
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                 && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -266,7 +265,7 @@ public class MapActivity extends AppCompatActivity
 
             return;
         }
-        map.setMyLocationEnabled(true);
+        mMap.setMyLocationEnabled(true);
 
         LocationServices.getFusedLocationProviderClient(this)
                 .getLastLocation()
@@ -274,14 +273,13 @@ public class MapActivity extends AppCompatActivity
                     @Override
                     public void onSuccess(Location location) {
                         LatLng center = new LatLng(location.getLatitude(), location.getLongitude());
-                        map.animateCamera(CameraUpdateFactory.newLatLngZoom(center, map.getCameraPosition().zoom));
-                        mCircle = map.addCircle(
+                        mCircle = mMap.addCircle(
                                 new CircleOptions()
                                         .center(center)
                                         .radius(mRange * 1000/*m*/)
                         );
-                        mCircle.setFillColor(Color.argb(60, 255, 0, 0));
-                        mCircle.setStrokeColor(Color.argb(60, 255, 0, 0));
+                        mCircle.setFillColor(Color.argb(30, 255, 0, 0));
+                        mCircle.setStrokeColor(Color.argb(50, 255, 0, 0));
                     }
                 });
         startBackgroundServiceIfEnabled();
@@ -305,8 +303,8 @@ public class MapActivity extends AppCompatActivity
     public void onKeyEntered(String key, GeoLocation location) {
         MarkerOptions markerOptions = new MarkerOptions();
         markerOptions.position(new LatLng(location.latitude, location.longitude));
-        if (map != null) {
-            Marker marker = map.addMarker(markerOptions);
+        if (mMap != null) {
+            Marker marker = mMap.addMarker(markerOptions);
             marker.setTag("Place " + key);
             mPoiMarkers.put(key, marker);
         }
@@ -337,12 +335,18 @@ public class MapActivity extends AppCompatActivity
     public void onLocationChanged(Location location) {
         double lat = location.getLatitude();
         double lng = location.getLongitude();
+        LatLng center = new LatLng(lat, lng);
         if (mCircle != null) {
-            mCircle.setCenter(new LatLng(lat, lng));
+            mCircle.setCenter(center);
         }
         mGeoQueryPlaces.setCenter(new GeoLocation(lat, lng));
         if (mGeoQueryUsers != null) mGeoQueryUsers.setCenter(new GeoLocation(lat, lng));
         mLocation = new GeoLocation(lat, lng);
+
+        if (mMap != null) {
+            float currZoom = mMap.getCameraPosition().zoom;
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(center, Math.max(15.0f, currZoom)));
+        }
     }
 
     @Override
