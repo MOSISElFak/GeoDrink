@@ -19,6 +19,7 @@ import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
@@ -143,7 +144,8 @@ public class MapActivity extends AppCompatActivity
 
         checkIfUserLoggedIn();
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
             // here to request the missing permissions, and then overriding
@@ -273,9 +275,13 @@ public class MapActivity extends AppCompatActivity
                     public void onSuccess(Location location) {
                         LatLng center = new LatLng(location.getLatitude(), location.getLongitude());
                         map.animateCamera(CameraUpdateFactory.newLatLngZoom(center, map.getCameraPosition().zoom));
-                        mCircle = map.addCircle(new CircleOptions().center(center).radius(mRange));
+                        mCircle = map.addCircle(
+                                new CircleOptions()
+                                        .center(center)
+                                        .radius(mRange * 1000/*m*/)
+                        );
                         mCircle.setFillColor(Color.argb(60, 255, 0, 0));
-                        mCircle.setStrokeColor(Color.argb(100, 255, 255, 255));
+                        mCircle.setStrokeColor(Color.argb(60, 255, 0, 0));
                     }
                 });
         startBackgroundServiceIfEnabled();

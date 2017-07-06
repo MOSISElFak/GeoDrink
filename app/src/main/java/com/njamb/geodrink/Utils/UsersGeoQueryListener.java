@@ -44,6 +44,8 @@ public class UsersGeoQueryListener implements GeoQueryEventListener {
 
     @Override
     public void onKeyMoved(String key, GeoLocation location) {
+        if (key.equals(userId)) return;
+
         mPoiMarkers.get(key).setPosition(new LatLng(location.latitude, location.longitude));
         //.setAnchor((float) location.latitude, (float) location.longitude);
     }
