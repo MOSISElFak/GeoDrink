@@ -12,6 +12,7 @@ public class User {
     public String email;
     public String birthday;
     public String profileUrl;
+    public Coordinates location;
     public HashMap<String, Boolean> friends = new HashMap<>();
 
     public User() {}

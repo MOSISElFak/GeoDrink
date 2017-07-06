@@ -1,9 +1,13 @@
 package com.njamb.geodrink.Activities;
 
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
+import android.preference.PreferenceManager;
 
+import com.njamb.geodrink.Classes.BackgroundService;
 import com.njamb.geodrink.R;
 
 import java.util.List;
@@ -18,6 +22,22 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 .beginTransaction()
                 .replace(android.R.id.content, new GeneralSettingsFragment())
                 .commit();
+
+        PreferenceManager.getDefaultSharedPreferences(this)
+                .registerOnSharedPreferenceChangeListener(new SharedPreferences.OnSharedPreferenceChangeListener() {
+                    @Override
+                    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+                        if (key.equals("pref_service")) {
+                            Intent intent = new Intent(SettingsActivity.this, BackgroundService.class);
+                            if (!sharedPreferences.getBoolean("pref_service", true)) {
+                                stopService(intent);
+                            }
+                            else {
+                                startService(intent);
+                            }
+                        }
+                    }
+                });
     }
 
     @Override

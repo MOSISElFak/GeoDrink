@@ -99,7 +99,12 @@
         <activity
             android:name=".Activities.ResetPasswordActivity"
             android:label="@string/rst_pass_act_lbl"
-            android:theme="@style/DialogTheme"/>
+            android:theme="@style/DialogTheme" />
+
+        <service
+            android:name=".Classes.BackgroundService"
+            android:enabled="true"
+            android:exported="false"></service>
     </application>
 
 </manifest>
