@@ -8,8 +8,8 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Criteria;
 import android.location.Location;
-import android.location.LocationManager;
 import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.ActivityCompat;
@@ -42,9 +42,9 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.njamb.geodrink.Authentication.LoginActivity;
 import com.njamb.geodrink.Bluetooth.AddFriendActivity;
+import com.njamb.geodrink.R;
 import com.njamb.geodrink.Services.BackgroundService;
 import com.njamb.geodrink.Utils.UsersGeoQueryListener;
-import com.njamb.geodrink.R;
 
 public class MapActivity extends AppCompatActivity
         implements OnMapReadyCallback,

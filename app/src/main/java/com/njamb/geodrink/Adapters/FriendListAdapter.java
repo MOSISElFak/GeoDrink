@@ -14,9 +14,9 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.njamb.geodrink.ViewHolders.FriendViewHolder;
 import com.njamb.geodrink.Models.User;
 import com.njamb.geodrink.R;
+import com.njamb.geodrink.ViewHolders.FriendViewHolder;
 
 import java.util.ArrayList;
 
