@@ -22,6 +22,12 @@
         app:showAsAction="ifRoom"
         android:icon="@drawable/ic_pin" />
     <item
+        android:id="@+id/action_radius"
+        android:orderInCategory="100"
+        android:title="Change Radius"
+        app:showAsAction="ifRoom"
+        />
+    <item
         android:id="@+id/action_settings"
         android:orderInCategory="100"
         android:title="@string/action_settings"

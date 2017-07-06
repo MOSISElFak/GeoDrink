@@ -12,6 +12,7 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.constraint.ConstraintLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -19,6 +20,10 @@ import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.SeekBar;
 
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
@@ -78,6 +83,8 @@ public class MapActivity extends AppCompatActivity
     private double mRange = 1 /*km*/;
     private LocationManager mLocationManager;
     private String mLocationProvider;
+    private final double step = 0.5;
+    private SeekBar seekBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -126,6 +133,28 @@ public class MapActivity extends AppCompatActivity
 //                        .setAction("Action", null).show();
 //            }
 //        });
+
+        seekBar = (SeekBar) findViewById(R.id.seekBar2);
+        seekBar.setVisibility(View.INVISIBLE);
+        seekBar.setMax(10);
+        seekBar.setProgress(1);
+
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                mRange = progress + step;
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                drawTheRedCircle();
+            }
+        });
     }
 
     @Override
@@ -161,6 +190,37 @@ public class MapActivity extends AppCompatActivity
     protected void onPause() {
         super.onPause();
         mLocationManager.removeUpdates(this);
+    }
+
+    private void drawTheRedCircle() {
+        if (ActivityCompat.checkSelfPermission(getBaseContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getBaseContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        if (mCircle != null) {
+            mCircle.remove();
+        }
+        LocationServices.getFusedLocationProviderClient(getBaseContext())
+                .getLastLocation()
+                .addOnSuccessListener(new OnSuccessListener<Location>() {
+                    @Override
+                    public void onSuccess(Location location) {
+                        LatLng center = new LatLng(location.getLatitude(), location.getLongitude());
+                        mCircle = mMap.addCircle(
+                                new CircleOptions()
+                                        .center(center)
+                                        .radius((mRange * 500/*m*/) / 2)
+                        );
+                        mCircle.setFillColor(Color.argb(30, 255, 0, 0));
+                        mCircle.setStrokeColor(Color.argb(50, 255, 0, 0));
+                    }
+                });
     }
 
     private void checkIfUserLoggedIn() {
@@ -217,6 +277,17 @@ public class MapActivity extends AppCompatActivity
                 // On next click on it (thorough search) - new activity.
                 break;
             }
+            case R.id.action_radius: {
+                seekBar.setVisibility(seekBar.getVisibility() == View.VISIBLE ?
+                        View.INVISIBLE : View.VISIBLE);
+                if (item.getTitle().toString().toLowerCase().equals("change radius")) {
+                    item.setTitle("Done Changing");
+                }
+                else {
+                    item.setTitle("Change Radius");
+                }
+                break;
+            }
             case R.id.action_add: {
                 Intent i = new Intent(this, AddFriendActivity.class);
                 i.putExtra("userId", mAuth.getCurrentUser().getUid());
@@ -251,9 +322,10 @@ public class MapActivity extends AppCompatActivity
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+        mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);;
 
-        mGeoQueryUsers = mGeoFireUsers.queryAtLocation(mLocation, 1000/*km*/);
+//        mGeoQueryUsers = mGeoFireUsers.queryAtLocation(mLocation, 1000/*km*/);
+        mGeoQueryUsers = mGeoFireUsers.queryAtLocation(mLocation, (mRange * 500/*km*/) / 2);
         mGeoQueryUsers.addGeoQueryEventListener(new UsersGeoQueryListener(mMap));
 
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
@@ -266,22 +338,26 @@ public class MapActivity extends AppCompatActivity
             return;
         }
         mMap.setMyLocationEnabled(true);
+        if (mCircle != null) {
+            mCircle.remove();
+        }
+//        LocationServices.getFusedLocationProviderClient(this)
+//                .getLastLocation()
+//                .addOnSuccessListener(new OnSuccessListener<Location>() {
+//                    @Override
+//                    public void onSuccess(Location location) {
+//                        LatLng center = new LatLng(location.getLatitude(), location.getLongitude());
+//                        mCircle = mMap.addCircle(
+//                                new CircleOptions()
+//                                        .center(center)
+//                                        .radius((mRange * 500/*m*/) / 2)
+//                        );
+//                        mCircle.setFillColor(Color.argb(30, 255, 0, 0));
+//                        mCircle.setStrokeColor(Color.argb(50, 255, 0, 0));
+//                    }
+//                });
+        drawTheRedCircle();
 
-        LocationServices.getFusedLocationProviderClient(this)
-                .getLastLocation()
-                .addOnSuccessListener(new OnSuccessListener<Location>() {
-                    @Override
-                    public void onSuccess(Location location) {
-                        LatLng center = new LatLng(location.getLatitude(), location.getLongitude());
-                        mCircle = mMap.addCircle(
-                                new CircleOptions()
-                                        .center(center)
-                                        .radius(mRange * 1000/*m*/)
-                        );
-                        mCircle.setFillColor(Color.argb(30, 255, 0, 0));
-                        mCircle.setStrokeColor(Color.argb(50, 255, 0, 0));
-                    }
-                });
         startBackgroundServiceIfEnabled();
     }
 
