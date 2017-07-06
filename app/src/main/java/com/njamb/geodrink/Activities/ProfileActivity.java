@@ -34,8 +34,8 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
-import com.njamb.geodrink.Classes.FriendListAdapter;
-import com.njamb.geodrink.Classes.User;
+import com.njamb.geodrink.Adapters.FriendListAdapter;
+import com.njamb.geodrink.Models.User;
 import com.njamb.geodrink.R;
 
 public class ProfileActivity extends AppCompatActivity {

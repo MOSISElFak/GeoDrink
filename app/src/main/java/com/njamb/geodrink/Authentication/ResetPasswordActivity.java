@@ -1,4 +1,4 @@
-package com.njamb.geodrink.Activities;
+package com.njamb.geodrink.Authentication;
 
 import android.app.ProgressDialog;
 import android.support.annotation.NonNull;

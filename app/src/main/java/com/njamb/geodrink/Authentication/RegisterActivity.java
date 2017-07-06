@@ -1,4 +1,4 @@
-package com.njamb.geodrink.Activities;
+package com.njamb.geodrink.Authentication;
 
 import android.app.Activity;
 import android.app.DialogFragment;
@@ -25,8 +25,8 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.njamb.geodrink.Classes.DatePickerFragment;
-import com.njamb.geodrink.Classes.User;
+import com.njamb.geodrink.Fragments.DatePickerFragment;
+import com.njamb.geodrink.Models.User;
 import com.njamb.geodrink.R;
 
 public class RegisterActivity extends AppCompatActivity {

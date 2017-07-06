@@ -7,7 +7,7 @@ import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 
-import com.njamb.geodrink.Classes.BackgroundService;
+import com.njamb.geodrink.Services.BackgroundService;
 import com.njamb.geodrink.R;
 
 import java.util.List;

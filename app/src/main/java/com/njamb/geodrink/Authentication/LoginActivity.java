@@ -1,4 +1,4 @@
-package com.njamb.geodrink.Activities;
+package com.njamb.geodrink.Authentication;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -12,8 +12,6 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -22,7 +20,6 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.njamb.geodrink.R;
 
 public class LoginActivity extends AppCompatActivity {

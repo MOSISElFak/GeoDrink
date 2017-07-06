@@ -1,4 +1,4 @@
-package com.njamb.geodrink.Classes;
+package com.njamb.geodrink.Bluetooth;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;

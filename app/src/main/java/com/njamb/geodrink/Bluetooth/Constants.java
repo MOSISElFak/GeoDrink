@@ -1,4 +1,4 @@
-package com.njamb.geodrink.Classes;
+package com.njamb.geodrink.Bluetooth;
 
 /**
  * Created by stefan on 29.6.17..

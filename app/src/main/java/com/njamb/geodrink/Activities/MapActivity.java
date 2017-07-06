@@ -19,7 +19,6 @@ import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Toast;
 
 import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
@@ -41,8 +40,10 @@ import com.google.common.collect.HashBiMap;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
-import com.njamb.geodrink.Classes.BackgroundService;
-import com.njamb.geodrink.Classes.UsersGeoQueryListener;
+import com.njamb.geodrink.Authentication.LoginActivity;
+import com.njamb.geodrink.Bluetooth.AddFriendActivity;
+import com.njamb.geodrink.Services.BackgroundService;
+import com.njamb.geodrink.Utils.UsersGeoQueryListener;
 import com.njamb.geodrink.R;
 
 public class MapActivity extends AppCompatActivity

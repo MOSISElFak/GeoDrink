@@ -1,4 +1,4 @@
-package com.njamb.geodrink.Activities;
+package com.njamb.geodrink.Bluetooth;
 
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;
@@ -24,8 +24,6 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.njamb.geodrink.Classes.BluetoothService;
-import com.njamb.geodrink.Classes.Constants;
 import com.njamb.geodrink.R;
 
 import java.util.Set;

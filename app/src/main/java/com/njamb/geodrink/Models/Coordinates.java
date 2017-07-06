@@ -1,4 +1,4 @@
-package com.njamb.geodrink.Classes;
+package com.njamb.geodrink.Models;
 
 import com.google.android.gms.maps.model.LatLng;
 

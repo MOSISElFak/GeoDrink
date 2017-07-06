@@ -1,4 +1,4 @@
-package com.njamb.geodrink.Classes;
+package com.njamb.geodrink.Services;
 
 import android.app.Service;
 import android.content.Context;
@@ -21,6 +21,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.njamb.geodrink.Models.Coordinates;
 
 public class BackgroundService extends Service implements GeoQueryEventListener {
     private static final String TAG = "BackgroundService";

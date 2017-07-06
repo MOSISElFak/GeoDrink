@@ -49,7 +49,7 @@
             android:value="AIzaSyAPT60rMFT9766nAfEFOg_7XRqKRg5Ew2k" />
 
         <activity
-            android:name=".Activities.LoginActivity"
+            android:name=".Authentication.LoginActivity"
             android:label="@string/login_act_name"
             android:parentActivityName=".Activities.MapActivity"
             android:theme="@style/AppTheme.NoActionBar">
@@ -58,9 +58,9 @@
                 android:value="com.njamb.geodrink.Activities.MapActivity" />
         </activity>
         <activity
-            android:name=".Activities.RegisterActivity"
+            android:name=".Authentication.RegisterActivity"
             android:label="@string/register_act_name"
-            android:parentActivityName=".Activities.LoginActivity"
+            android:parentActivityName=".Authentication.LoginActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -89,7 +89,7 @@
             android:label="@string/profile_act_name"
             android:parentActivityName=".Activities.MapActivity" />
         <activity
-            android:name=".Activities.AddFriendActivity"
+            android:name=".Bluetooth.AddFriendActivity"
             android:label="@string/add_friend_act_lbl"
             android:parentActivityName=".Activities.MapActivity" />
         <activity
@@ -97,12 +97,12 @@
             android:label="@string/settings_act_lbl"
             android:parentActivityName=".Activities.MapActivity" />
         <activity
-            android:name=".Activities.ResetPasswordActivity"
+            android:name=".Authentication.ResetPasswordActivity"
             android:label="@string/rst_pass_act_lbl"
             android:theme="@style/DialogTheme" />
 
         <service
-            android:name=".Classes.BackgroundService"
+            android:name=".Services.BackgroundService"
             android:enabled="true"
             android:exported="false"></service>
     </application>

@@ -1,4 +1,4 @@
-package com.njamb.geodrink.Classes;
+package com.njamb.geodrink.Fragments;
 
 import android.app.DatePickerDialog;
 import android.app.Dialog;
@@ -7,7 +7,7 @@ import android.os.Bundle;
 import android.widget.DatePicker;
 import android.widget.EditText;
 
-import com.njamb.geodrink.Activities.RegisterActivity;
+import com.njamb.geodrink.Authentication.RegisterActivity;
 import com.njamb.geodrink.R;
 
 import java.util.Calendar;
