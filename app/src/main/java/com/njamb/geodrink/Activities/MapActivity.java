@@ -2,8 +2,12 @@ package com.njamb.geodrink.Activities;
 
 import android.Manifest;
 import android.app.SearchManager;
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Criteria;
@@ -11,9 +15,10 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.preference.PreferenceManager;
-import android.support.constraint.ConstraintLayout;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
@@ -21,8 +26,6 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.SeekBar;
 
 import com.firebase.geofire.GeoFire;
@@ -34,6 +37,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.Circle;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
@@ -49,7 +53,7 @@ import com.njamb.geodrink.Authentication.LoginActivity;
 import com.njamb.geodrink.Bluetooth.AddFriendActivity;
 import com.njamb.geodrink.R;
 import com.njamb.geodrink.Services.BackgroundService;
-import com.njamb.geodrink.Utils.UsersGeoQueryListener;
+import com.njamb.geodrink.Services.UsersService;
 
 public class MapActivity extends AppCompatActivity
         implements OnMapReadyCallback,
@@ -75,16 +79,16 @@ public class MapActivity extends AppCompatActivity
     private Circle mCircle;
     private BiMap<String, Marker> mPoiMarkers = HashBiMap.create();
 
-    // GeoFire
-    private GeoFire mGeoFireUsers;
     private GeoFire mGeoFirePlaces;
-    private GeoQuery mGeoQueryUsers = null;
     private GeoQuery mGeoQueryPlaces;
     private double mRange = 1 /*km*/;
     private LocationManager mLocationManager;
     private String mLocationProvider;
     private final double step = 0.5;
     private SeekBar seekBar;
+
+    private UsersService mUsersService = null;
+    private boolean mBound = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -101,7 +105,6 @@ public class MapActivity extends AppCompatActivity
         mAuth = FirebaseAuth.getInstance();
 
         mGeoFirePlaces = new GeoFire(FirebaseDatabase.getInstance().getReference().child("placesGeoFire"));
-        mGeoFireUsers = new GeoFire(FirebaseDatabase.getInstance().getReference().child("usersGeoFire"));
         mGeoQueryPlaces = mGeoFirePlaces
                 .queryAtLocation(new GeoLocation(mLocation.latitude, mLocation.longitude), mRange);
         mGeoQueryPlaces.addGeoQueryEventListener(this);
@@ -155,6 +158,18 @@ public class MapActivity extends AppCompatActivity
                 drawTheRedCircle();
             }
         });
+
+        registerForActions();
+    }
+
+    private void registerForActions() {
+        LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(this);
+        IntentFilter filter = new IntentFilter(UsersService.ACTION_ADD_MARKER);
+        localBroadcastManager.registerReceiver(mReceiver, filter);
+        filter = new IntentFilter(UsersService.ACTION_REMOVE_MARKER);
+        localBroadcastManager.registerReceiver(mReceiver, filter);
+        filter = new IntentFilter(UsersService.ACTION_REPOSITION_MARKER);
+        localBroadcastManager.registerReceiver(mReceiver, filter);
     }
 
     @Override
@@ -162,8 +177,12 @@ public class MapActivity extends AppCompatActivity
         super.onStart();
 
         checkIfUserLoggedIn();
-//        FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-//        userId = user != null ? user.getUid() : null;
+
+        Intent intent = new Intent(this, UsersService.class);
+        intent.putExtra("lat", mLocation.latitude)
+                .putExtra("lng", mLocation.longitude)
+                .putExtra("rad", mRange*0.25); // TODO: ovo ne valja ovako
+        bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
     }
 
     @Override
@@ -190,6 +209,23 @@ public class MapActivity extends AppCompatActivity
     protected void onPause() {
         super.onPause();
         mLocationManager.removeUpdates(this);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        if (mBound) {
+            unbindService(mConnection);
+            mBound = false;
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        unregisterReceiver(mReceiver);
     }
 
     private void drawTheRedCircle() {
@@ -221,6 +257,7 @@ public class MapActivity extends AppCompatActivity
                         mCircle.setStrokeColor(Color.argb(50, 255, 0, 0));
                     }
                 });
+        if (mUsersService != null) mUsersService.setRadius(mRange*0.25);
     }
 
     private void checkIfUserLoggedIn() {
@@ -324,10 +361,6 @@ public class MapActivity extends AppCompatActivity
         mMap = googleMap;
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);;
 
-//        mGeoQueryUsers = mGeoFireUsers.queryAtLocation(mLocation, 1000/*km*/);
-        mGeoQueryUsers = mGeoFireUsers.queryAtLocation(mLocation, (mRange * 500/*km*/) / 2);
-        mGeoQueryUsers.addGeoQueryEventListener(new UsersGeoQueryListener(mMap));
-
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                 && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
@@ -338,24 +371,6 @@ public class MapActivity extends AppCompatActivity
             return;
         }
         mMap.setMyLocationEnabled(true);
-        if (mCircle != null) {
-            mCircle.remove();
-        }
-//        LocationServices.getFusedLocationProviderClient(this)
-//                .getLastLocation()
-//                .addOnSuccessListener(new OnSuccessListener<Location>() {
-//                    @Override
-//                    public void onSuccess(Location location) {
-//                        LatLng center = new LatLng(location.getLatitude(), location.getLongitude());
-//                        mCircle = mMap.addCircle(
-//                                new CircleOptions()
-//                                        .center(center)
-//                                        .radius((mRange * 500/*m*/) / 2)
-//                        );
-//                        mCircle.setFillColor(Color.argb(30, 255, 0, 0));
-//                        mCircle.setStrokeColor(Color.argb(50, 255, 0, 0));
-//                    }
-//                });
         drawTheRedCircle();
 
         startBackgroundServiceIfEnabled();
@@ -416,8 +431,9 @@ public class MapActivity extends AppCompatActivity
             mCircle.setCenter(center);
         }
         mGeoQueryPlaces.setCenter(new GeoLocation(lat, lng));
-        if (mGeoQueryUsers != null) mGeoQueryUsers.setCenter(new GeoLocation(lat, lng));
         mLocation = new GeoLocation(lat, lng);
+
+        if (mUsersService != null) mUsersService.setLocation(new GeoLocation(lat, lng));
 
         if (mMap != null) {
             float currZoom = mMap.getCameraPosition().zoom;
@@ -449,4 +465,68 @@ public class MapActivity extends AppCompatActivity
     public boolean onMarkerClick(Marker marker) {
         return false;
     }
+
+    private void addMarkerOnMap(String key, LatLng position) {
+        if (mMap == null) return;
+
+        // TODO: update tag or whatever
+        MarkerOptions markerOptions = new MarkerOptions();
+        markerOptions.position(position);
+        if (mMap != null) {
+            Marker marker = mMap.addMarker(markerOptions);
+            marker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+            marker.setTag(key);
+            mPoiMarkers.put(key, marker);
+        }
+    }
+
+    private void removeMarkerFromMap(String key) {
+        if (mMap == null) return;
+
+        Marker marker = mPoiMarkers.remove(key);
+        if (marker != null) marker.remove();
+    }
+
+    private void repositionMarkerOnMap(String key, LatLng position) {
+        mPoiMarkers.get(key).setPosition(position);
+    }
+
+
+    private ServiceConnection mConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName className, IBinder service) {
+            UsersService.UsersBinder binder = (UsersService.UsersBinder) service;
+            mUsersService = binder.getService();
+            mBound = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {
+            mBound = false;
+        }
+    };
+
+    private BroadcastReceiver mReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (!mBound) return;
+
+            String action = intent.getAction();
+            if (UsersService.ACTION_ADD_MARKER.equals(action)) {
+                double lat = intent.getDoubleExtra("lat", 0);
+                double lng = intent.getDoubleExtra("lng", 0);
+                String key = intent.getStringExtra("key");
+                addMarkerOnMap(key, new LatLng(lat, lng));
+            }
+            else if (UsersService.ACTION_REMOVE_MARKER.equals(action)) {
+                removeMarkerFromMap(intent.getStringExtra("key"));
+            }
+            else if (UsersService.ACTION_REPOSITION_MARKER.equals(action)) {
+                double lat = intent.getDoubleExtra("lat", 0);
+                double lng = intent.getDoubleExtra("lng", 0);
+                String key = intent.getStringExtra("key");
+                repositionMarkerOnMap(key, new LatLng(lat, lng));
+            }
+        }
+    };
 }

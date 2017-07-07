@@ -104,7 +104,11 @@
         <service
             android:name=".Services.BackgroundService"
             android:enabled="true"
-            android:exported="false"></service>
+            android:exported="false" />
+        <service
+            android:name=".Services.UsersService"
+            android:enabled="true"
+            android:exported="true"></service>
     </application>
 
 </manifest>
