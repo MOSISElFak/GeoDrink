@@ -11,7 +11,6 @@ import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
@@ -29,16 +28,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.SeekBar;
-import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
-import com.firebase.geofire.GeoFire;
 import com.firebase.geofire.GeoLocation;
-import com.firebase.geofire.GeoQuery;
-import com.firebase.geofire.GeoQueryEventListener;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -60,6 +54,7 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.njamb.geodrink.Authentication.LoginActivity;
 import com.njamb.geodrink.Bluetooth.AddFriendActivity;
+import com.njamb.geodrink.Models.User;
 import com.njamb.geodrink.R;
 import com.njamb.geodrink.Services.BackgroundService;
 import com.njamb.geodrink.Services.UsersService;
@@ -72,7 +67,6 @@ public class MapActivity extends AppCompatActivity
     // Const
     private static final String TAG = "MapActivity";
     public static final int REQUEST_LOCATION_PERMISSION = 1;
-    private final String locationPermission = Manifest.permission.ACCESS_FINE_LOCATION;
 
     // My location
     private GeoLocation mLocation = new GeoLocation(0, 0);
@@ -86,14 +80,16 @@ public class MapActivity extends AppCompatActivity
     private Circle mCircle;
     private BiMap<String, Marker> mPoiMarkers = HashBiMap.create();
 
-//    private GeoFire mGeoFirePlaces;
-//    private GeoQuery mGeoQueryPlaces;
     private double mRange = 1 /*km*/;
     private LocationManager mLocationManager;
     private String mLocationProvider;
     private final double step = 0.5;
     private SeekBar seekBar;
 
+    // User
+    private User mUser = null;
+
+    // Users service
     private UsersService mUsersService = null;
     private boolean mBound = false;
 
@@ -129,15 +125,6 @@ public class MapActivity extends AppCompatActivity
         if (loc != null) {
             onLocationChanged(loc);
         }
-
-//        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-//        fab.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-//                        .setAction("Action", null).show();
-//            }
-//        });
 
         seekBar = (SeekBar) findViewById(R.id.seekBar2);
         seekBar.setVisibility(View.INVISIBLE);
@@ -177,6 +164,8 @@ public class MapActivity extends AppCompatActivity
         super.onStart();
 
         checkIfUserLoggedIn();
+
+        getCurrentUser();
 
         registerForActions();
 
@@ -229,6 +218,22 @@ public class MapActivity extends AppCompatActivity
             mMap.clear();
             mPoiMarkers.clear();
         }
+    }
+
+    private void getCurrentUser() {
+        if (mUser != null) return;
+
+        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        FirebaseDatabase.getInstance()
+                .getReference(String.format("users/%s", userId))
+                .addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        mUser = dataSnapshot.getValue(User.class);
+                    }
+
+                    @Override public void onCancelled(DatabaseError databaseError) {}
+                });
     }
 
     private void drawTheRedCircle() {
@@ -427,7 +432,7 @@ public class MapActivity extends AppCompatActivity
         return false;
     }
 
-    private void addMarkerOnMap(String key, LatLng position) {
+    private void addUserMarkerOnMap(String key, LatLng position) {
         if (mMap == null) return;
 
         MarkerOptions markerOptions = new MarkerOptions();
@@ -436,9 +441,11 @@ public class MapActivity extends AppCompatActivity
             final Marker marker = mMap.addMarker(markerOptions);
             marker.setTag(key);
             setUserMarkerTitle(marker);
+            marker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
             mPoiMarkers.put(key, marker);
 
-            // TODO: show profile img only if friend
+            if (!mUser.friends.containsKey(key)) return;
+            // If user is friend show profile img
             FirebaseDatabase.getInstance()
                     .getReference(String.format("users/%s/profileUrl", key))
                     .addListenerForSingleValueEvent(new ValueEventListener() {
@@ -508,7 +515,7 @@ public class MapActivity extends AppCompatActivity
                 double lat = intent.getDoubleExtra("lat", 0);
                 double lng = intent.getDoubleExtra("lng", 0);
                 String key = intent.getStringExtra("key");
-                addMarkerOnMap(key, new LatLng(lat, lng));
+                addUserMarkerOnMap(key, new LatLng(lat, lng));
             }
             else if (UsersService.ACTION_REMOVE_MARKER.equals(action)) {
                 removeMarkerFromMap(intent.getStringExtra("key"));
