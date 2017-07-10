@@ -157,6 +157,14 @@ public class MapActivity extends AppCompatActivity
                 startActivity(i);
             }
         });
+
+        FloatingActionButton fabFilter = (FloatingActionButton) findViewById(R.id.fab_filter);
+        fabFilter.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(MapActivity.this, "Filter", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void registerForActions() {
