@@ -34,10 +34,33 @@
         android:id="@+id/seekBar2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|center"
+        android:layout_gravity="top|center"
         android:layout_marginLeft="64dp"
         android:layout_marginRight="64dp"
         android:padding="24dp"
         android:visibility="visible" />
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp">
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/fab_filter"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="5dp"
+            android:src="@drawable/ic_tune_filter"
+            app:backgroundTint="#EEEEEE" />
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/fab_add_place"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/fab_filter"
+            android:src="@drawable/ic_add_location"
+            app:backgroundTint="#ff0000" />
+    </RelativeLayout>
 
 </FrameLayout>

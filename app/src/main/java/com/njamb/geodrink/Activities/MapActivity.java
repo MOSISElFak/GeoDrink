@@ -18,6 +18,7 @@ import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.MenuItemCompat;
@@ -28,6 +29,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.SeekBar;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.SimpleTarget;
@@ -87,11 +89,12 @@ public class MapActivity extends AppCompatActivity
     private SeekBar seekBar;
 
     // User
-    private User mUser = null;
+//    private User mUser = null;
 
     // Users service
     private UsersService mUsersService = null;
     private boolean mBound = false;
+    private String uid;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -147,6 +150,15 @@ public class MapActivity extends AppCompatActivity
                 drawTheRedCircle();
             }
         });
+
+        FloatingActionButton fabAddPlace = (FloatingActionButton) findViewById(R.id.fab_add_place);
+        fabAddPlace.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent i = new Intent(MapActivity.this, CheckInActivity.class);
+                startActivity(i);
+            }
+        });
     }
 
     private void registerForActions() {
@@ -163,17 +175,20 @@ public class MapActivity extends AppCompatActivity
     protected void onStart() {
         super.onStart();
 
-        checkIfUserLoggedIn();
+        if (FirebaseAuth.getInstance().getCurrentUser() == null) {
+            startLoginActivity();
+        }
+        else {
+//            getCurrentUser();
 
-        getCurrentUser();
+            registerForActions();
 
-        registerForActions();
-
-        Intent intent = new Intent(this, UsersService.class);
-        intent.putExtra("lat", mLocation.latitude)
-                .putExtra("lng", mLocation.longitude)
-                .putExtra("rad", mRange*0.25); // TODO: ovo ne valja ovako
-        bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+            Intent intent = new Intent(this, UsersService.class);
+            intent.putExtra("lat", mLocation.latitude)
+                    .putExtra("lng", mLocation.longitude)
+                    .putExtra("rad", mRange * 0.25); // TODO: ovo ne valja ovako
+            bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+        }
     }
 
     @Override
@@ -220,21 +235,21 @@ public class MapActivity extends AppCompatActivity
         }
     }
 
-    private void getCurrentUser() {
-        if (mUser != null) return;
-
-        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        FirebaseDatabase.getInstance()
-                .getReference(String.format("users/%s", userId))
-                .addValueEventListener(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        mUser = dataSnapshot.getValue(User.class);
-                    }
-
-                    @Override public void onCancelled(DatabaseError databaseError) {}
-                });
-    }
+//    private void getCurrentUser() {
+//        if (mUser != null) return;
+//
+//        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+//        FirebaseDatabase.getInstance()
+//                .getReference(String.format("users/%s", userId))
+//                .addValueEventListener(new ValueEventListener() {
+//                    @Override
+//                    public void onDataChange(DataSnapshot dataSnapshot) {
+//                        mUser = dataSnapshot.getValue(User.class);
+//                    }
+//
+//                    @Override public void onCancelled(DatabaseError databaseError) {}
+//                });
+//    }
 
     private void drawTheRedCircle() {
         if (ActivityCompat.checkSelfPermission(getBaseContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getBaseContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -349,11 +364,11 @@ public class MapActivity extends AppCompatActivity
 //                startLoginActivity();
 //                break;
 //            }
-            case R.id.action_checkin: {
-                Intent i = new Intent(this, CheckInActivity.class);
-                startActivity(i);
-                break;
-            }
+//            case R.id.action_checkin: {
+//                Intent i = new Intent(this, CheckInActivity.class);
+//                startActivity(i);
+//                break;
+//            }
             case R.id.action_details: {
                 Intent i = new Intent(this, DetailsActivity.class);
                 startActivity(i);
@@ -390,9 +405,9 @@ public class MapActivity extends AppCompatActivity
     }
 
     private void startBackgroundServiceIfEnabled() {
-        boolean enableService = PreferenceManager.getDefaultSharedPreferences(this)
+        boolean serviceEnabled = PreferenceManager.getDefaultSharedPreferences(this)
                 .getBoolean("pref_service", true);
-        if (enableService) {
+        if (serviceEnabled) {
             Intent intent = new Intent(this, BackgroundService.class);
             startService(intent);
         }
@@ -432,7 +447,7 @@ public class MapActivity extends AppCompatActivity
         return false;
     }
 
-    private void addUserMarkerOnMap(String key, LatLng position) {
+    private void addUserMarkerOnMap(final String key, LatLng position) {
         if (mMap == null) return;
 
         MarkerOptions markerOptions = new MarkerOptions();
@@ -444,27 +459,41 @@ public class MapActivity extends AppCompatActivity
             marker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
             mPoiMarkers.put(key, marker);
 
-            if (!mUser.friends.containsKey(key)) return;
-            // If user is friend show profile img
+            uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
             FirebaseDatabase.getInstance()
-                    .getReference(String.format("users/%s/profileUrl", key))
+                    .getReference(String.format("users/%s/friends/%s", uid, key))
                     .addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
-                            Glide.with(MapActivity.this)
-                                 .asBitmap()
-                                 .load(dataSnapshot.getValue())
-                                 .into(new SimpleTarget<Bitmap>(32,32) {
-                                    @Override
-                                    public void onResourceReady(Bitmap resource, Transition<? super Bitmap> transition) {
-                                        marker.setIcon(BitmapDescriptorFactory.fromBitmap(resource));
-                                    }
-                                 });
+                            if (dataSnapshot.getValue() != null) {
+                                addUserPhotoOnMarker(key, marker);
+                            }
                         }
 
                         @Override public void onCancelled(DatabaseError databaseError) {}
                     });
         }
+    }
+
+    private void addUserPhotoOnMarker(String key, final Marker marker) {
+        FirebaseDatabase.getInstance()
+                .getReference(String.format("users/%s/profileUrl", key))
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        Glide.with(MapActivity.this)
+                                .asBitmap()
+                                .load(dataSnapshot.getValue())
+                                .into(new SimpleTarget<Bitmap>(32,32) {
+                                    @Override
+                                    public void onResourceReady(Bitmap resource, Transition<? super Bitmap> transition) {
+                                        marker.setIcon(BitmapDescriptorFactory.fromBitmap(resource));
+                                    }
+                                });
+                    }
+
+                    @Override public void onCancelled(DatabaseError databaseError) {}
+                });
     }
 
     private void removeMarkerFromMap(String key) {
