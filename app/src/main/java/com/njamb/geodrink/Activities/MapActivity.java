@@ -56,14 +56,19 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.njamb.geodrink.Authentication.LoginActivity;
 import com.njamb.geodrink.Bluetooth.AddFriendActivity;
+import com.njamb.geodrink.Fragments.FilterDialogFragment;
 import com.njamb.geodrink.Models.MarkerTagModel;
 import com.njamb.geodrink.R;
 import com.njamb.geodrink.Services.BackgroundService;
 import com.njamb.geodrink.Services.UsersService;
+import com.njamb.geodrink.Utils.FilterHelper;
+
+import java.util.ArrayList;
 
 public class MapActivity extends AppCompatActivity
         implements OnMapReadyCallback,
-        LocationListener {
+        LocationListener,
+        FilterDialogFragment.OnCompleteListener{
 
     // Const
     private static final String TAG = "MapActivity";
@@ -162,7 +167,8 @@ public class MapActivity extends AppCompatActivity
         fabFilter.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(MapActivity.this, "Filter", Toast.LENGTH_SHORT).show();
+                FilterDialogFragment fdf = new FilterDialogFragment();
+                fdf.show(getFragmentManager(), "filter");
             }
         });
     }
@@ -512,6 +518,26 @@ public class MapActivity extends AppCompatActivity
 
     private void repositionMarkerOnMap(String key, LatLng position) {
         mPoiMarkers.get(key).setPosition(position);
+    }
+
+    @Override
+    public void onComplete(ArrayList<String> checked) {
+        FilterHelper fh = FilterHelper.getInstance(mPoiMarkers);
+
+        if (checked.contains("Range")) turnOnRangeFilter();
+        else turnOffRangeFilter();
+
+        fh.setUsersVisibility(checked.contains("Users"));
+        fh.setFriendsVisibility(checked.contains("Friends"));
+        fh.setPlacesVisibility(checked.contains("Places"));
+    }
+
+    private void turnOnRangeFilter() {
+        // TODO: display range seek bar & red circle
+    }
+
+    private void turnOffRangeFilter() {
+        // TODO: hide range seek bar & red circle & set range to big value
     }
 
     private ServiceConnection mConnection = new ServiceConnection() {

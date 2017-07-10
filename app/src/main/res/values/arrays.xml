@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <array name="df_filter_items">
+        <item>Range</item>
+        <item>Users</item>
+        <item>Friends</item>
+        <item>Places</item>
+    </array>
+</resources>
