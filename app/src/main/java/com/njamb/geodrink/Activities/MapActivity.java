@@ -56,14 +56,13 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.njamb.geodrink.Authentication.LoginActivity;
 import com.njamb.geodrink.Bluetooth.AddFriendActivity;
-import com.njamb.geodrink.Models.User;
+import com.njamb.geodrink.Models.MarkerTagModel;
 import com.njamb.geodrink.R;
 import com.njamb.geodrink.Services.BackgroundService;
 import com.njamb.geodrink.Services.UsersService;
 
 public class MapActivity extends AppCompatActivity
         implements OnMapReadyCallback,
-        GoogleMap.OnMarkerClickListener,
         LocationListener {
 
     // Const
@@ -73,8 +72,9 @@ public class MapActivity extends AppCompatActivity
     // My location
     private GeoLocation mLocation = new GeoLocation(0, 0);
 
-    // Firebase auth
+    // Firebase
     private FirebaseAuth mAuth;
+    private FirebaseDatabase mDatabase;
 
     // Map
     private GoogleMap mMap = null;
@@ -88,13 +88,10 @@ public class MapActivity extends AppCompatActivity
     private final double step = 0.5;
     private SeekBar seekBar;
 
-    // User
-//    private User mUser = null;
-
     // Users service
     private UsersService mUsersService = null;
     private boolean mBound = false;
-    private String uid;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -109,6 +106,7 @@ public class MapActivity extends AppCompatActivity
         setSupportActionBar(toolbar);
 
         mAuth = FirebaseAuth.getInstance();
+        mDatabase = FirebaseDatabase.getInstance();
 
         mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         Criteria criteria = new Criteria();
@@ -175,12 +173,10 @@ public class MapActivity extends AppCompatActivity
     protected void onStart() {
         super.onStart();
 
-        if (FirebaseAuth.getInstance().getCurrentUser() == null) {
+        if (mAuth.getCurrentUser() == null) {
             startLoginActivity();
         }
         else {
-//            getCurrentUser();
-
             registerForActions();
 
             Intent intent = new Intent(this, UsersService.class);
@@ -234,22 +230,6 @@ public class MapActivity extends AppCompatActivity
             mPoiMarkers.clear();
         }
     }
-
-//    private void getCurrentUser() {
-//        if (mUser != null) return;
-//
-//        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-//        FirebaseDatabase.getInstance()
-//                .getReference(String.format("users/%s", userId))
-//                .addValueEventListener(new ValueEventListener() {
-//                    @Override
-//                    public void onDataChange(DataSnapshot dataSnapshot) {
-//                        mUser = dataSnapshot.getValue(User.class);
-//                    }
-//
-//                    @Override public void onCancelled(DatabaseError databaseError) {}
-//                });
-//    }
 
     private void drawTheRedCircle() {
         if (ActivityCompat.checkSelfPermission(getBaseContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getBaseContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -383,6 +363,14 @@ public class MapActivity extends AppCompatActivity
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+        mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
+            @Override
+            public boolean onMarkerClick(Marker marker) {
+                // TODO: show user/place info
+                Toast.makeText(MapActivity.this, marker.getTag().toString(), Toast.LENGTH_LONG).show();
+                return true;
+            }
+        });
 
         if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                 && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -441,12 +429,6 @@ public class MapActivity extends AppCompatActivity
     @Override public void onProviderDisabled(String provider) {}
     //endregion
 
-    @Override
-    public boolean onMarkerClick(Marker marker) {
-        // TODO: show user/place info
-        return false;
-    }
-
     private void addUserMarkerOnMap(final String key, LatLng position) {
         if (mMap == null) return;
 
@@ -454,19 +436,18 @@ public class MapActivity extends AppCompatActivity
         markerOptions.position(position);
         if (mMap != null) {
             final Marker marker = mMap.addMarker(markerOptions);
-            marker.setTag(key);
+            marker.setTag(MarkerTagModel.createUserTag(key, null/*at this moment*/, false));
             setUserMarkerTitle(marker);
             marker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
             mPoiMarkers.put(key, marker);
 
-            uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
-            FirebaseDatabase.getInstance()
-                    .getReference(String.format("users/%s/friends/%s", uid, key))
+            String userId = mAuth.getCurrentUser().getUid();
+            mDatabase.getReference(String.format("users/%s/friends/%s", userId, key))
                     .addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
                             if (dataSnapshot.getValue() != null) {
-                                addUserPhotoOnMarker(key, marker);
+                                addUserPhotoOnMarker(marker);
                             }
                         }
 
@@ -475,9 +456,11 @@ public class MapActivity extends AppCompatActivity
         }
     }
 
-    private void addUserPhotoOnMarker(String key, final Marker marker) {
-        FirebaseDatabase.getInstance()
-                .getReference(String.format("users/%s/profileUrl", key))
+    private void addUserPhotoOnMarker(final Marker marker) {
+        final MarkerTagModel tag = (MarkerTagModel) marker.getTag();
+        assert tag != null;
+        tag.setIsFriend();
+        mDatabase.getReference(String.format("users/%s/profileUrl", tag.id))
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
@@ -496,6 +479,22 @@ public class MapActivity extends AppCompatActivity
                 });
     }
 
+    private void setUserMarkerTitle(final Marker marker) {
+        final MarkerTagModel tag = (MarkerTagModel) marker.getTag();
+        assert tag != null;
+        mDatabase.getReference(String.format("users/%s/fullName", tag.id))
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        String name = (String) dataSnapshot.getValue();
+                        marker.setTitle(name);
+                        tag.name = name;
+                    }
+
+                    @Override public void onCancelled(DatabaseError databaseError) {}
+                });
+    }
+
     private void removeMarkerFromMap(String key) {
         if (mMap == null) return;
 
@@ -505,19 +504,6 @@ public class MapActivity extends AppCompatActivity
 
     private void repositionMarkerOnMap(String key, LatLng position) {
         mPoiMarkers.get(key).setPosition(position);
-    }
-
-    private void setUserMarkerTitle(final Marker marker) {
-        FirebaseDatabase.getInstance()
-                .getReference(String.format("users/%s/fullName", marker.getTag()))
-                .addListenerForSingleValueEvent(new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-                        marker.setTitle((String) dataSnapshot.getValue());
-                    }
-
-                    @Override public void onCancelled(DatabaseError databaseError) {}
-                });
     }
 
     private ServiceConnection mConnection = new ServiceConnection() {
