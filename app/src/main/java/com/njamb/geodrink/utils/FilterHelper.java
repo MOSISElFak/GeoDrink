@@ -55,6 +55,17 @@ public class FilterHelper {
         }
     }
 
+    public void filter(String text) {
+        for (Marker marker : mMarkers.inverse().keySet()) {
+            MarkerTagModel tag = (MarkerTagModel) marker.getTag();
+            assert tag != null;
+            marker.setVisible(tag.previousVisibilityState);
+            if (!tag.name.toLowerCase().contains(text.toLowerCase())) {
+                marker.setVisible(false);
+            }
+        }
+    }
+
 
 
     private interface Strategy {

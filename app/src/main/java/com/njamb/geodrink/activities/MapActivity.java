@@ -76,6 +76,7 @@ public class MapActivity extends AppCompatActivity
     private static final double SEEKBAR_STEP = 100/*m*/;
     private static final int SEEKBAR_MAX_VALUE = 9900/*m*/;
     private static final double DEFAULT_RANGE_VALUE = 500/*m*/;
+    private static final double RANGE_QUERY_DISABLED_DISTANCE = 10000/*km*/;
 
     // My location
     private GeoLocation mLocation = new GeoLocation(0, 0);
@@ -212,7 +213,9 @@ public class MapActivity extends AppCompatActivity
             Intent intent = new Intent(this, PoiService.class);
             intent.putExtra("lat", mLocation.latitude)
                     .putExtra("lng", mLocation.longitude)
-                    .putExtra("rad", mRange/1000/*->km*/);
+                    .putExtra("rad", FilterHelper.rangeQueryEnabled
+                            ? mRange/1000/*->km*/
+                            : RANGE_QUERY_DISABLED_DISTANCE);
             bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
 
             if (mMap != null && mCircle != null && FilterHelper.rangeQueryEnabled) {
@@ -262,6 +265,7 @@ public class MapActivity extends AppCompatActivity
         if (mMap != null) {
             mMap.clear();
             mPoiMarkers.clear();
+            mCircle = null;
         }
     }
 
@@ -295,21 +299,27 @@ public class MapActivity extends AppCompatActivity
         searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
         searchView.setIconifiedByDefault(true);
 
-        // TODO: Videti sta treba uraditi sa iskomentarisanim kodom ispod.
-//        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-//            @Override
-//            public boolean onQueryTextSubmit(String query) {
-//                // TODO: if only 1 query displayed, automatically filter for that person
-//                // TODO: else: open new activity with provided searches for user to select to show on mMap
-//                return false;
-//            }
-//
-//            @Override
-//            public boolean onQueryTextChange(String newText) {
-//                // TODO: filter through friends list and display only those who match newText
-//                return false;
-//            }
-//        });
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                FilterHelper.getInstance(mPoiMarkers).filter(query);
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                FilterHelper.getInstance(mPoiMarkers).filter(newText);
+                return true;
+            }
+        });
+
+        searchView.setOnCloseListener(new SearchView.OnCloseListener() {
+            @Override
+            public boolean onClose() {
+                FilterHelper.getInstance(mPoiMarkers).filter(""); // reset to previous state
+                return true;
+            }
+        });
 
         return true;
     }
@@ -547,18 +557,17 @@ public class MapActivity extends AppCompatActivity
 
     private void turnOnRangeFilter() {
         FilterHelper.rangeQueryEnabled = true;
-        mCircle.setVisible(true);
+        if (mCircle != null) mCircle.setVisible(true);
+        else drawCircleOnMap(new LatLng(mLocation.latitude, mLocation.longitude), mRange);
         mSeekBar.setVisibility(View.VISIBLE);
         mPoiService.setRadius(mRange/1000/*->km*/);
-        // TODO: display range seek bar & red circle
     }
 
     private void turnOffRangeFilter() {
         FilterHelper.rangeQueryEnabled = false;
         mCircle.setVisible(false);
         mSeekBar.setVisibility(View.GONE);
-        mPoiService.setRadius(10000/*km*/); // set to something big
-        // TODO: hide range seek bar & red circle & set range to big value
+        mPoiService.setRadius(RANGE_QUERY_DISABLED_DISTANCE); // set to something big
     }
 
     private ServiceConnection mConnection = new ServiceConnection() {
