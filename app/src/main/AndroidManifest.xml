@@ -102,13 +102,21 @@
             android:theme="@style/DialogTheme" />
 
         <service
-            android:name=".Services.BackgroundService"
+            android:name=".services.BackgroundService"
             android:enabled="true"
             android:exported="false" />
         <service
-            android:name=".Services.UsersService"
+            android:name=".services.PlacesService"
             android:enabled="true"
-            android:exported="true"></service>
+            android:exported="false" />
+        <service
+            android:name=".services.UsersService"
+            android:enabled="true"
+            android:exported="false" />
+        <service
+            android:name=".services.PoiService"
+            android:enabled="true"
+            android:exported="false" />
     </application>
 
 </manifest>

@@ -1,4 +1,4 @@
-package com.njamb.geodrink.Services;
+package com.njamb.geodrink.services;
 
 import android.app.Service;
 import android.content.Context;

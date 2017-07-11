@@ -59,8 +59,10 @@ import com.njamb.geodrink.Bluetooth.AddFriendActivity;
 import com.njamb.geodrink.Fragments.FilterDialogFragment;
 import com.njamb.geodrink.Models.MarkerTagModel;
 import com.njamb.geodrink.R;
-import com.njamb.geodrink.Services.BackgroundService;
-import com.njamb.geodrink.Services.UsersService;
+import com.njamb.geodrink.services.BackgroundService;
+import com.njamb.geodrink.services.PlacesService;
+import com.njamb.geodrink.services.PoiService;
+import com.njamb.geodrink.services.UsersService;
 import com.njamb.geodrink.Utils.FilterHelper;
 
 import java.util.ArrayList;
@@ -93,8 +95,8 @@ public class MapActivity extends AppCompatActivity
     private final double step = 0.5;
     private SeekBar seekBar;
 
-    // Users service
-    private UsersService mUsersService = null;
+    // POI service
+    private PoiService mPoiService = null;
     private boolean mBound = false;
 
 
@@ -175,11 +177,17 @@ public class MapActivity extends AppCompatActivity
 
     private void registerForActions() {
         LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(this);
+
         IntentFilter filter = new IntentFilter(UsersService.ACTION_ADD_MARKER);
         localBroadcastManager.registerReceiver(mReceiver, filter);
+
         filter = new IntentFilter(UsersService.ACTION_REMOVE_MARKER);
         localBroadcastManager.registerReceiver(mReceiver, filter);
+
         filter = new IntentFilter(UsersService.ACTION_REPOSITION_MARKER);
+        localBroadcastManager.registerReceiver(mReceiver, filter);
+
+        filter = new IntentFilter(PlacesService.ACTION_ADD_MARKER);
         localBroadcastManager.registerReceiver(mReceiver, filter);
     }
 
@@ -193,7 +201,7 @@ public class MapActivity extends AppCompatActivity
         else {
             registerForActions();
 
-            Intent intent = new Intent(this, UsersService.class);
+            Intent intent = new Intent(this, PoiService.class);
             intent.putExtra("lat", mLocation.latitude)
                     .putExtra("lng", mLocation.longitude)
                     .putExtra("rad", mRange * 0.25); // TODO: ovo ne valja ovako
@@ -274,7 +282,7 @@ public class MapActivity extends AppCompatActivity
                         mCircle.setStrokeColor(Color.argb(50, 255, 0, 0));
                     }
                 });
-        if (mUsersService != null) mUsersService.setRadius(mRange*0.25);
+        if (mPoiService != null) mPoiService.setRadius(mRange*0.25);
     }
 
     private void checkIfUserLoggedIn() {
@@ -427,7 +435,7 @@ public class MapActivity extends AppCompatActivity
 
         mLocation = new GeoLocation(lat, lng);
 
-        if (mUsersService != null) mUsersService.setLocation(new GeoLocation(lat, lng));
+        if (mPoiService != null) mPoiService.setLocation(new GeoLocation(lat, lng));
 
         if (mMap != null) {
             float currZoom = mMap.getCameraPosition().zoom;
@@ -509,6 +517,10 @@ public class MapActivity extends AppCompatActivity
                 });
     }
 
+    private void addPlaceMarkerOnMap(final String key, LatLng position) {
+        // TODO: add place marker on map
+    }
+
     private void removeMarkerFromMap(String key) {
         if (mMap == null) return;
 
@@ -543,14 +555,18 @@ public class MapActivity extends AppCompatActivity
     private ServiceConnection mConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName className, IBinder service) {
-            UsersService.UsersBinder binder = (UsersService.UsersBinder) service;
-            mUsersService = binder.getService();
-            mBound = true;
+            if (className.getClassName().equals(PoiService.class.getName())) {
+                PoiService.PoiBinder binder = (PoiService.PoiBinder) service;
+                mPoiService = binder.getService();
+                mBound = true;
+            }
         }
 
         @Override
         public void onServiceDisconnected(ComponentName arg0) {
-            mBound = false;
+            if (arg0.getClassName().equals(PoiService.class.getName())) {
+                mBound = false;
+            }
         }
     };
 
@@ -566,10 +582,18 @@ public class MapActivity extends AppCompatActivity
                 String key = intent.getStringExtra("key");
                 addUserMarkerOnMap(key, new LatLng(lat, lng));
             }
+            else if (PlacesService.ACTION_ADD_MARKER.equals(action)) {
+                double lat = intent.getDoubleExtra("lat", 0);
+                double lng = intent.getDoubleExtra("lng", 0);
+                String key = intent.getStringExtra("key");
+                addPlaceMarkerOnMap(key, new LatLng(lat, lng));
+            }
             else if (UsersService.ACTION_REMOVE_MARKER.equals(action)) {
+                // covers place marker removal
                 removeMarkerFromMap(intent.getStringExtra("key"));
             }
             else if (UsersService.ACTION_REPOSITION_MARKER.equals(action)) {
+                // covers place marker repositioning
                 double lat = intent.getDoubleExtra("lat", 0);
                 double lng = intent.getDoubleExtra("lng", 0);
                 String key = intent.getStringExtra("key");

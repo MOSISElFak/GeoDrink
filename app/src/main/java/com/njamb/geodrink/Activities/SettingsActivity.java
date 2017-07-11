@@ -8,7 +8,7 @@ import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 
 import com.njamb.geodrink.R;
-import com.njamb.geodrink.Services.BackgroundService;
+import com.njamb.geodrink.services.BackgroundService;
 
 import java.util.List;
 
@@ -23,21 +23,21 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 .replace(android.R.id.content, new GeneralSettingsFragment())
                 .commit();
 
-        PreferenceManager.getDefaultSharedPreferences(this)
-                .registerOnSharedPreferenceChangeListener(new SharedPreferences.OnSharedPreferenceChangeListener() {
-                    @Override
-                    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-                        if (key.equals("pref_service")) {
-                            Intent intent = new Intent(SettingsActivity.this, BackgroundService.class);
-                            if (!sharedPreferences.getBoolean("pref_service", true)) {
-                                stopService(intent);
-                            }
-                            else {
-                                startService(intent);
-                            }
-                        }
-                    }
-                });
+//        PreferenceManager.getDefaultSharedPreferences(this)
+//                .registerOnSharedPreferenceChangeListener(new SharedPreferences.OnSharedPreferenceChangeListener() {
+//                    @Override
+//                    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+//                        if (key.equals("pref_service")) {
+//                            Intent intent = new Intent(SettingsActivity.this, BackgroundService.class);
+//                            if (!sharedPreferences.getBoolean("pref_service", true)) {
+//                                stopService(intent);
+//                            }
+//                            else {
+//                                startService(intent);
+//                            }
+//                        }
+//                    }
+//                });
     }
 
     @Override
