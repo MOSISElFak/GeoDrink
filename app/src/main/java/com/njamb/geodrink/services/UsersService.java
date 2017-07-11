@@ -15,10 +15,6 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 
 public class UsersService extends Service implements GeoQueryEventListener {
-    public static final String ACTION_ADD_MARKER = "com.njamb.geodrink.addmarker";
-    public static final String ACTION_REMOVE_MARKER = "com.njamb.geodrink.removemarker";
-    public static final String ACTION_REPOSITION_MARKER = "com.njamb.geodrink.repositionmarker";
-
     private final Binder mBinder = new UsersBinder();
 
     private GeoFire mGeoFireUsers;
@@ -61,7 +57,7 @@ public class UsersService extends Service implements GeoQueryEventListener {
     public void onKeyEntered(String key, GeoLocation location) {
         if (key.equals(userId)) return;
 
-        Intent intent = new Intent(UsersService.ACTION_ADD_MARKER);
+        Intent intent = new Intent(PoiService.ACTION_ADD_USER_MARKER);
         intent.putExtra("lat", location.latitude)
                 .putExtra("lng", location.longitude)
                 .putExtra("key", key);
@@ -71,7 +67,7 @@ public class UsersService extends Service implements GeoQueryEventListener {
 
     @Override
     public void onKeyExited(String key) {
-        Intent intent = new Intent(UsersService.ACTION_REMOVE_MARKER);
+        Intent intent = new Intent(PoiService.ACTION_REMOVE_MARKER);
         intent.putExtra("key", key);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
@@ -80,7 +76,7 @@ public class UsersService extends Service implements GeoQueryEventListener {
     public void onKeyMoved(String key, GeoLocation location) {
         if (key.equals(userId)) return;
 
-        Intent intent = new Intent(UsersService.ACTION_REPOSITION_MARKER);
+        Intent intent = new Intent(PoiService.ACTION_REPOSITION_MARKER);
         intent.putExtra("key", key)
                 .putExtra("lat", location.latitude)
                 .putExtra("lng", location.longitude);

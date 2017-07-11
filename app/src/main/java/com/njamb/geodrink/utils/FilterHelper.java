@@ -6,6 +6,11 @@ import com.google.common.collect.BiMap;
 import com.njamb.geodrink.models.MarkerTagModel;
 
 public class FilterHelper {
+    public static boolean usersVisible = true;
+    public static boolean placesVisible = true;
+    public static boolean friendsVisible = true;
+    public static boolean rangeQueryEnabled = true;
+
     private static FilterHelper ourInstance = null;
     private static final Object mutex = new Object();
     private BiMap<String, Marker> mMarkers;
@@ -25,32 +30,53 @@ public class FilterHelper {
     }
 
     public void setUsersVisibility(boolean v) {
-        for (Marker marker : mMarkers.inverse().keySet()) {
-            MarkerTagModel tag = (MarkerTagModel) marker.getTag();
-            assert tag != null;
-            if (tag.isUser) {
-                marker.setVisible(v);
-            }
-        }
+        FilterHelper.usersVisible = v;
+        setVisibility(new UserStrategy(), v);
     }
 
     public void setFriendsVisibility(boolean v) {
+        FilterHelper.friendsVisible = v;
+        setVisibility(new FriendStrategy(), v);
+    }
+
+    public void setPlacesVisibility(boolean v) {
+        FilterHelper.placesVisible = v;
+        setVisibility(new PlaceStrategy(), v);
+    }
+
+    private void setVisibility(Strategy strategy, boolean v) {
         for (Marker marker : mMarkers.inverse().keySet()) {
             MarkerTagModel tag = (MarkerTagModel) marker.getTag();
             assert tag != null;
-            if (tag.isFriend) {
+            if (strategy.is(tag)) {
+                tag.previousVisibilityState = marker.isVisible();
                 marker.setVisible(v);
             }
         }
     }
 
-    public void setPlacesVisibility(boolean v) {
-        for (Marker marker : mMarkers.inverse().keySet()) {
-            MarkerTagModel tag = (MarkerTagModel) marker.getTag();
-            assert tag != null;
-            if (tag.isPlace) {
-                marker.setVisible(v);
-            }
+
+
+    private interface Strategy {
+        boolean is(MarkerTagModel tag);
+    }
+
+    private class UserStrategy implements Strategy {
+        @Override
+        public boolean is(MarkerTagModel tag) {
+            return tag.isUser;
+        }
+    }
+    private class FriendStrategy implements Strategy {
+        @Override
+        public boolean is(MarkerTagModel tag) {
+            return tag.isFriend;
+        }
+    }
+    private class PlaceStrategy implements Strategy {
+        @Override
+        public boolean is(MarkerTagModel tag) {
+            return tag.isPlace;
         }
     }
 }

@@ -60,9 +60,7 @@ import com.njamb.geodrink.fragments.FilterDialogFragment;
 import com.njamb.geodrink.models.MarkerTagModel;
 import com.njamb.geodrink.R;
 import com.njamb.geodrink.services.BackgroundService;
-import com.njamb.geodrink.services.PlacesService;
 import com.njamb.geodrink.services.PoiService;
-import com.njamb.geodrink.services.UsersService;
 import com.njamb.geodrink.utils.FilterHelper;
 
 import java.util.ArrayList;
@@ -92,6 +90,9 @@ public class MapActivity extends AppCompatActivity
     private BiMap<String, Marker> mPoiMarkers = HashBiMap.create();
     private double mRange = DEFAULT_RANGE_VALUE;
 
+    // Seekbar
+    SeekBar mSeekBar;
+
     private LocationManager mLocationManager;
     private String mLocationProvider;
 
@@ -105,16 +106,20 @@ public class MapActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
 
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
-
+        // Load map
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
 
+        // Set Toolbar/Action bar
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        // Get Firebase refs
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance();
 
+        // Location
         mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         Criteria criteria = new Criteria();
         mLocationProvider = mLocationManager.getBestProvider(criteria, false);
@@ -134,19 +139,18 @@ public class MapActivity extends AppCompatActivity
             onLocationChanged(loc);
         }
 
-        SeekBar seekBar = (SeekBar) findViewById(R.id.seekBar2);
-        seekBar.setMax(SEEKBAR_MAX_VALUE);
-        seekBar.setProgress((int)mRange);
-
-        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+        // Slider for range queries
+        mSeekBar = (SeekBar) findViewById(R.id.seekBar2);
+        mSeekBar.setMax(SEEKBAR_MAX_VALUE);
+        mSeekBar.setProgress((int)mRange);
+        mSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 mRange = progress + SEEKBAR_STEP;
                 mCircle.setRadius(mRange);
             }
 
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {}
+            @Override public void onStartTrackingTouch(SeekBar seekBar) {}
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
@@ -154,6 +158,7 @@ public class MapActivity extends AppCompatActivity
             }
         });
 
+        // FAB for adding place (checking in)
         FloatingActionButton fabAddPlace = (FloatingActionButton) findViewById(R.id.fab_add_place);
         fabAddPlace.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -163,6 +168,7 @@ public class MapActivity extends AppCompatActivity
             }
         });
 
+        // FAB for filtering
         FloatingActionButton fabFilter = (FloatingActionButton) findViewById(R.id.fab_filter);
         fabFilter.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -180,16 +186,16 @@ public class MapActivity extends AppCompatActivity
     private void registerForActions() {
         LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(this);
 
-        IntentFilter filter = new IntentFilter(UsersService.ACTION_ADD_MARKER);
+        IntentFilter filter = new IntentFilter(PoiService.ACTION_ADD_USER_MARKER);
         localBroadcastManager.registerReceiver(mReceiver, filter);
 
-        filter = new IntentFilter(UsersService.ACTION_REMOVE_MARKER);
+        filter = new IntentFilter(PoiService.ACTION_REMOVE_MARKER);
         localBroadcastManager.registerReceiver(mReceiver, filter);
 
-        filter = new IntentFilter(UsersService.ACTION_REPOSITION_MARKER);
+        filter = new IntentFilter(PoiService.ACTION_REPOSITION_MARKER);
         localBroadcastManager.registerReceiver(mReceiver, filter);
 
-        filter = new IntentFilter(PlacesService.ACTION_ADD_MARKER);
+        filter = new IntentFilter(PoiService.ACTION_ADD_PLACE_MARKER);
         localBroadcastManager.registerReceiver(mReceiver, filter);
     }
 
@@ -208,6 +214,10 @@ public class MapActivity extends AppCompatActivity
                     .putExtra("lng", mLocation.longitude)
                     .putExtra("rad", mRange/1000/*->km*/);
             bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+
+            if (mMap != null && mCircle != null && FilterHelper.rangeQueryEnabled) {
+                drawCircleOnMap(new LatLng(mLocation.latitude, mLocation.longitude), mRange);
+            }
         }
     }
 
@@ -322,7 +332,7 @@ public class MapActivity extends AppCompatActivity
                 break;
             }
 //            case R.id.action_radius: {
-//                seekBar.setVisibility(seekBar.getVisibility() == View.VISIBLE ?
+//                mSeekBar.setVisibility(mSeekBar.getVisibility() == View.VISIBLE ?
 //                        View.INVISIBLE : View.VISIBLE);
 //                if (item.getTitle().toString().toLowerCase().equals("change radius")) {
 //                    item.setTitle("Done Changing");
@@ -386,21 +396,26 @@ public class MapActivity extends AppCompatActivity
             return;
         }
         mMap.setMyLocationEnabled(true);
+
         LocationServices.getFusedLocationProviderClient(getBaseContext())
                 .getLastLocation()
                 .addOnSuccessListener(new OnSuccessListener<Location>() {
                     @Override
                     public void onSuccess(Location location) {
                         LatLng center = new LatLng(location.getLatitude(), location.getLongitude());
-                        mCircle = mMap.addCircle(
-                                new CircleOptions()
-                                        .center(center)
-                                        .radius(mRange)
-                        );
-                        mCircle.setFillColor(Color.argb(30, 255, 0, 0));
-                        mCircle.setStrokeColor(Color.argb(50, 255, 0, 0));
+                        drawCircleOnMap(center, mRange);
                     }
                 });
+    }
+
+    private void drawCircleOnMap(LatLng center, double radius) {
+        mCircle = mMap.addCircle(
+                new CircleOptions()
+                        .center(center)
+                        .radius(radius)
+        );
+        mCircle.setFillColor(Color.argb(30, 255, 0, 0));
+        mCircle.setStrokeColor(Color.argb(50, 255, 0, 0));
     }
 
     private void startLoginActivity() {
@@ -444,6 +459,7 @@ public class MapActivity extends AppCompatActivity
         if (mMap != null) {
             final Marker marker = mMap.addMarker(markerOptions);
             marker.setTag(MarkerTagModel.createUserTag(key, null/*at this moment*/, false));
+            marker.setVisible(FilterHelper.usersVisible);
             setUserMarkerTitle(marker);
             marker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
             mPoiMarkers.put(key, marker);
@@ -530,10 +546,18 @@ public class MapActivity extends AppCompatActivity
     }
 
     private void turnOnRangeFilter() {
+        FilterHelper.rangeQueryEnabled = true;
+        mCircle.setVisible(true);
+        mSeekBar.setVisibility(View.VISIBLE);
+        mPoiService.setRadius(mRange/1000/*->km*/);
         // TODO: display range seek bar & red circle
     }
 
     private void turnOffRangeFilter() {
+        FilterHelper.rangeQueryEnabled = false;
+        mCircle.setVisible(false);
+        mSeekBar.setVisibility(View.GONE);
+        mPoiService.setRadius(10000/*km*/); // set to something big
         // TODO: hide range seek bar & red circle & set range to big value
     }
 
@@ -561,24 +585,22 @@ public class MapActivity extends AppCompatActivity
             if (!mBound) return;
 
             String action = intent.getAction();
-            if (UsersService.ACTION_ADD_MARKER.equals(action)) {
+            if (PoiService.ACTION_ADD_USER_MARKER.equals(action)) {
                 double lat = intent.getDoubleExtra("lat", 0);
                 double lng = intent.getDoubleExtra("lng", 0);
                 String key = intent.getStringExtra("key");
                 addUserMarkerOnMap(key, new LatLng(lat, lng));
             }
-            else if (PlacesService.ACTION_ADD_MARKER.equals(action)) {
+            else if (PoiService.ACTION_ADD_PLACE_MARKER.equals(action)) {
                 double lat = intent.getDoubleExtra("lat", 0);
                 double lng = intent.getDoubleExtra("lng", 0);
                 String key = intent.getStringExtra("key");
                 addPlaceMarkerOnMap(key, new LatLng(lat, lng));
             }
-            else if (UsersService.ACTION_REMOVE_MARKER.equals(action)) {
-                // covers place marker removal
+            else if (PoiService.ACTION_REMOVE_MARKER.equals(action)) {
                 removeMarkerFromMap(intent.getStringExtra("key"));
             }
-            else if (UsersService.ACTION_REPOSITION_MARKER.equals(action)) {
-                // covers place marker repositioning
+            else if (PoiService.ACTION_REPOSITION_MARKER.equals(action)) {
                 double lat = intent.getDoubleExtra("lat", 0);
                 double lng = intent.getDoubleExtra("lng", 0);
                 String key = intent.getStringExtra("key");

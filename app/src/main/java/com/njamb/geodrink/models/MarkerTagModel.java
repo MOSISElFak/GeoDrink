@@ -1,11 +1,14 @@
 package com.njamb.geodrink.models;
 
+import com.njamb.geodrink.utils.FilterHelper;
+
 public final class MarkerTagModel {
     public boolean isUser;
     public boolean isFriend;
     public boolean isPlace;
     public String id;
     public String name;
+    public boolean previousVisibilityState; /* for filtering only */
     // more?
 
     private MarkerTagModel(boolean u, boolean f, boolean p, String id, String name) {
@@ -14,11 +17,16 @@ public final class MarkerTagModel {
         isPlace = p;
         this.id = id;
         this.name = name;
+        // set previous visibility state to value corresponding to tag type (without too many ifs)
+        previousVisibilityState = (isUser && FilterHelper.usersVisible)
+                || (isFriend && FilterHelper.friendsVisible)
+                || (isPlace && FilterHelper.placesVisible);
     }
 
     public void setIsFriend() {
         isUser = false;
         isFriend = true;
+        previousVisibilityState = FilterHelper.friendsVisible;
     }
 
     public static MarkerTagModel createPlaceTag(String id, String name) {

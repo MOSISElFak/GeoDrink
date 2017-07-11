@@ -15,8 +15,6 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 
 public class PlacesService extends Service implements GeoQueryEventListener {
-    public static final String ACTION_ADD_MARKER = "com.njamb.geodrink.placeaddmarker";
-
     private final Binder mBinder = new PlacesService.PlacesBinder();
 
     private GeoFire mGeoFirePlaces;
@@ -56,7 +54,7 @@ public class PlacesService extends Service implements GeoQueryEventListener {
 
     @Override
     public void onKeyEntered(String key, GeoLocation location) {
-        Intent intent = new Intent(PlacesService.ACTION_ADD_MARKER);
+        Intent intent = new Intent(PoiService.ACTION_ADD_PLACE_MARKER);
         intent.putExtra("lat", location.latitude)
                 .putExtra("lng", location.longitude)
                 .putExtra("key", key);
@@ -66,14 +64,14 @@ public class PlacesService extends Service implements GeoQueryEventListener {
 
     @Override
     public void onKeyExited(String key) {
-        Intent intent = new Intent(UsersService.ACTION_REMOVE_MARKER);
+        Intent intent = new Intent(PoiService.ACTION_REMOVE_MARKER);
         intent.putExtra("key", key);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
     }
 
     @Override
     public void onKeyMoved(String key, GeoLocation location) {
-        Intent intent = new Intent(UsersService.ACTION_REPOSITION_MARKER);
+        Intent intent = new Intent(PoiService.ACTION_REPOSITION_MARKER);
         intent.putExtra("key", key)
                 .putExtra("lat", location.latitude)
                 .putExtra("lng", location.longitude);

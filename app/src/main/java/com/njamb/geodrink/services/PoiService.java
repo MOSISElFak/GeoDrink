@@ -12,6 +12,11 @@ import android.os.IBinder;
 import com.firebase.geofire.GeoLocation;
 
 public class PoiService extends Service {
+    public static final String ACTION_ADD_USER_MARKER = "com.njamb.geodrink.useraddmarker";
+    public static final String ACTION_REMOVE_MARKER = "com.njamb.geodrink.removemarker";
+    public static final String ACTION_REPOSITION_MARKER = "com.njamb.geodrink.repositionmarker";
+    public static final String ACTION_ADD_PLACE_MARKER = "com.njamb.geodrink.placeaddmarker";
+
     private final Binder mBinder = new PoiService.PoiBinder();
 
     private UsersService mUsersService = null;
