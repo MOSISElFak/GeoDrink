@@ -1,14 +1,10 @@
-package com.njamb.geodrink.Activities;
+package com.njamb.geodrink.activities;
 
-import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
-import android.preference.PreferenceManager;
 
 import com.njamb.geodrink.R;
-import com.njamb.geodrink.services.BackgroundService;
 
 import java.util.List;
 

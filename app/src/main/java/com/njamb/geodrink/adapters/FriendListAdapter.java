@@ -1,4 +1,4 @@
-package com.njamb.geodrink.Adapters;
+package com.njamb.geodrink.adapters;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
@@ -14,9 +14,9 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.njamb.geodrink.Models.User;
+import com.njamb.geodrink.models.User;
 import com.njamb.geodrink.R;
-import com.njamb.geodrink.ViewHolders.FriendViewHolder;
+import com.njamb.geodrink.view_holders.FriendViewHolder;
 
 import java.util.ArrayList;
 

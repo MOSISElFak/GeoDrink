@@ -1,4 +1,4 @@
-package com.njamb.geodrink.Activities;
+package com.njamb.geodrink.activities;
 
 import android.Manifest;
 import android.app.SearchManager;
@@ -54,16 +54,16 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.njamb.geodrink.Authentication.LoginActivity;
-import com.njamb.geodrink.Bluetooth.AddFriendActivity;
-import com.njamb.geodrink.Fragments.FilterDialogFragment;
-import com.njamb.geodrink.Models.MarkerTagModel;
+import com.njamb.geodrink.authentication.LoginActivity;
+import com.njamb.geodrink.bluetooth.AddFriendActivity;
+import com.njamb.geodrink.fragments.FilterDialogFragment;
+import com.njamb.geodrink.models.MarkerTagModel;
 import com.njamb.geodrink.R;
 import com.njamb.geodrink.services.BackgroundService;
 import com.njamb.geodrink.services.PlacesService;
 import com.njamb.geodrink.services.PoiService;
 import com.njamb.geodrink.services.UsersService;
-import com.njamb.geodrink.Utils.FilterHelper;
+import com.njamb.geodrink.utils.FilterHelper;
 
 import java.util.ArrayList;
 

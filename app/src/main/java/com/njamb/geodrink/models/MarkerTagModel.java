@@ -1,4 +1,4 @@
-package com.njamb.geodrink.Models;
+package com.njamb.geodrink.models;
 
 public final class MarkerTagModel {
     public boolean isUser;

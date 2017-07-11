@@ -1,4 +1,4 @@
-package com.njamb.geodrink.Activities;
+package com.njamb.geodrink.activities;
 
 import android.content.Intent;
 import android.graphics.Bitmap;

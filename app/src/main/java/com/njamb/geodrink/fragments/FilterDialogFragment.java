@@ -1,8 +1,7 @@
-package com.njamb.geodrink.Fragments;
+package com.njamb.geodrink.fragments;
 
 import android.app.Dialog;
 import android.app.DialogFragment;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v7.app.AlertDialog;

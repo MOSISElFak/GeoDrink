@@ -1,4 +1,4 @@
-package com.njamb.geodrink.Utils;
+package com.njamb.geodrink.utils;
 
 import com.firebase.geofire.GeoLocation;
 import com.firebase.geofire.GeoQueryEventListener;

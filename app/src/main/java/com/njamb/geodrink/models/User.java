@@ -1,4 +1,4 @@
-package com.njamb.geodrink.Models;
+package com.njamb.geodrink.models;
 
 import com.google.firebase.database.IgnoreExtraProperties;
 

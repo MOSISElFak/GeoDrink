@@ -1,9 +1,9 @@
-package com.njamb.geodrink.Utils;
+package com.njamb.geodrink.utils;
 
 
 import com.google.android.gms.maps.model.Marker;
 import com.google.common.collect.BiMap;
-import com.njamb.geodrink.Models.MarkerTagModel;
+import com.njamb.geodrink.models.MarkerTagModel;
 
 public class FilterHelper {
     private static FilterHelper ourInstance = null;

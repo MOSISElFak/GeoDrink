@@ -1,4 +1,4 @@
-package com.njamb.geodrink.Activities;
+package com.njamb.geodrink.activities;
 
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
@@ -34,8 +34,8 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
-import com.njamb.geodrink.Adapters.FriendListAdapter;
-import com.njamb.geodrink.Models.User;
+import com.njamb.geodrink.adapters.FriendListAdapter;
+import com.njamb.geodrink.models.User;
 import com.njamb.geodrink.R;
 
 public class ProfileActivity extends AppCompatActivity {

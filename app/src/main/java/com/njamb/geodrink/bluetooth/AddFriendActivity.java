@@ -1,4 +1,4 @@
-package com.njamb.geodrink.Bluetooth;
+package com.njamb.geodrink.bluetooth;
 
 import android.app.ProgressDialog;
 import android.bluetooth.BluetoothAdapter;

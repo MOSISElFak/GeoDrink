@@ -1,4 +1,4 @@
-package com.njamb.geodrink.Activities;
+package com.njamb.geodrink.activities;
 
 import android.content.res.Configuration;
 import android.os.Bundle;

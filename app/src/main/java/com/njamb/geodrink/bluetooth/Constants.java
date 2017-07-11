@@ -1,4 +1,4 @@
-package com.njamb.geodrink.Bluetooth;
+package com.njamb.geodrink.bluetooth;
 
 /**
  * Created by stefan on 29.6.17..

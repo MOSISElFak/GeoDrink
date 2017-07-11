@@ -1,4 +1,4 @@
-package com.njamb.geodrink.ViewHolders;
+package com.njamb.geodrink.view_holders;
 
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
