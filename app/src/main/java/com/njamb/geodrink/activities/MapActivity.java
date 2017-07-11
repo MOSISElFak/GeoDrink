@@ -75,6 +75,9 @@ public class MapActivity extends AppCompatActivity
     // Const
     private static final String TAG = "MapActivity";
     public static final int REQUEST_LOCATION_PERMISSION = 1;
+    private static final double SEEKBAR_STEP = 100/*m*/;
+    private static final int SEEKBAR_MAX_VALUE = 9900/*m*/;
+    private static final double DEFAULT_RANGE_VALUE = 500/*m*/;
 
     // My location
     private GeoLocation mLocation = new GeoLocation(0, 0);
@@ -85,15 +88,12 @@ public class MapActivity extends AppCompatActivity
 
     // Map
     private GoogleMap mMap = null;
-    private SupportMapFragment mapFragment;
     private Circle mCircle;
     private BiMap<String, Marker> mPoiMarkers = HashBiMap.create();
+    private double mRange = DEFAULT_RANGE_VALUE;
 
-    private double mRange = 1 /*km*/;
     private LocationManager mLocationManager;
     private String mLocationProvider;
-    private final double step = 0.5;
-    private SeekBar seekBar;
 
     // POI service
     private PoiService mPoiService = null;
@@ -105,7 +105,7 @@ public class MapActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
 
-        mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
 
         mapFragment.getMapAsync(this);
 
@@ -134,25 +134,23 @@ public class MapActivity extends AppCompatActivity
             onLocationChanged(loc);
         }
 
-        seekBar = (SeekBar) findViewById(R.id.seekBar2);
-        seekBar.setVisibility(View.INVISIBLE);
-        seekBar.setMax(10);
-        seekBar.setProgress(1);
+        SeekBar seekBar = (SeekBar) findViewById(R.id.seekBar2);
+        seekBar.setMax(SEEKBAR_MAX_VALUE);
+        seekBar.setProgress((int)mRange);
 
         seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                mRange = progress + step;
+                mRange = progress + SEEKBAR_STEP;
+                mCircle.setRadius(mRange);
             }
 
             @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
+            public void onStartTrackingTouch(SeekBar seekBar) {}
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                drawTheRedCircle();
+                if (mPoiService != null) mPoiService.setRadius(mRange/1000/*->km*/);
             }
         });
 
@@ -173,6 +171,10 @@ public class MapActivity extends AppCompatActivity
                 fdf.show(getFragmentManager(), "filter");
             }
         });
+
+        // Start background location service
+        Intent intent = new Intent(this, BackgroundService.class);
+        startService(intent);
     }
 
     private void registerForActions() {
@@ -204,7 +206,7 @@ public class MapActivity extends AppCompatActivity
             Intent intent = new Intent(this, PoiService.class);
             intent.putExtra("lat", mLocation.latitude)
                     .putExtra("lng", mLocation.longitude)
-                    .putExtra("rad", mRange * 0.25); // TODO: ovo ne valja ovako
+                    .putExtra("rad", mRange/1000/*->km*/);
             bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
         }
     }
@@ -253,36 +255,16 @@ public class MapActivity extends AppCompatActivity
         }
     }
 
-    private void drawTheRedCircle() {
-        if (ActivityCompat.checkSelfPermission(getBaseContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(getBaseContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        boolean enableService = PreferenceManager.getDefaultSharedPreferences(this)
+                .getBoolean("pref_service", true);
+        if (!enableService) {
+            stopService(new Intent(this, BackgroundService.class));
+            Toast.makeText(this, "Service stopped", Toast.LENGTH_SHORT).show();
         }
-        if (mCircle != null) {
-            mCircle.remove();
-        }
-        LocationServices.getFusedLocationProviderClient(getBaseContext())
-                .getLastLocation()
-                .addOnSuccessListener(new OnSuccessListener<Location>() {
-                    @Override
-                    public void onSuccess(Location location) {
-                        LatLng center = new LatLng(location.getLatitude(), location.getLongitude());
-                        mCircle = mMap.addCircle(
-                                new CircleOptions()
-                                        .center(center)
-                                        .radius((mRange * 500/*m*/) / 2)
-                        );
-                        mCircle.setFillColor(Color.argb(30, 255, 0, 0));
-                        mCircle.setStrokeColor(Color.argb(50, 255, 0, 0));
-                    }
-                });
-        if (mPoiService != null) mPoiService.setRadius(mRange*0.25);
     }
 
     private void checkIfUserLoggedIn() {
@@ -339,17 +321,17 @@ public class MapActivity extends AppCompatActivity
                 // On next click on it (thorough search) - new activity.
                 break;
             }
-            case R.id.action_radius: {
-                seekBar.setVisibility(seekBar.getVisibility() == View.VISIBLE ?
-                        View.INVISIBLE : View.VISIBLE);
-                if (item.getTitle().toString().toLowerCase().equals("change radius")) {
-                    item.setTitle("Done Changing");
-                }
-                else {
-                    item.setTitle("Change Radius");
-                }
-                break;
-            }
+//            case R.id.action_radius: {
+//                seekBar.setVisibility(seekBar.getVisibility() == View.VISIBLE ?
+//                        View.INVISIBLE : View.VISIBLE);
+//                if (item.getTitle().toString().toLowerCase().equals("change radius")) {
+//                    item.setTitle("Done Changing");
+//                }
+//                else {
+//                    item.setTitle("Change Radius");
+//                }
+//                break;
+//            }
             case R.id.action_add: {
                 Intent i = new Intent(this, AddFriendActivity.class);
                 i.putExtra("userId", mAuth.getCurrentUser().getUid());
@@ -404,23 +386,26 @@ public class MapActivity extends AppCompatActivity
             return;
         }
         mMap.setMyLocationEnabled(true);
-        drawTheRedCircle();
-
-        startBackgroundServiceIfEnabled();
+        LocationServices.getFusedLocationProviderClient(getBaseContext())
+                .getLastLocation()
+                .addOnSuccessListener(new OnSuccessListener<Location>() {
+                    @Override
+                    public void onSuccess(Location location) {
+                        LatLng center = new LatLng(location.getLatitude(), location.getLongitude());
+                        mCircle = mMap.addCircle(
+                                new CircleOptions()
+                                        .center(center)
+                                        .radius(mRange)
+                        );
+                        mCircle.setFillColor(Color.argb(30, 255, 0, 0));
+                        mCircle.setStrokeColor(Color.argb(50, 255, 0, 0));
+                    }
+                });
     }
 
     private void startLoginActivity() {
         Intent i = new Intent(this, LoginActivity.class);
         startActivity(i);
-    }
-
-    private void startBackgroundServiceIfEnabled() {
-        boolean serviceEnabled = PreferenceManager.getDefaultSharedPreferences(this)
-                .getBoolean("pref_service", true);
-        if (serviceEnabled) {
-            Intent intent = new Intent(this, BackgroundService.class);
-            startService(intent);
-        }
     }
 
     @Override

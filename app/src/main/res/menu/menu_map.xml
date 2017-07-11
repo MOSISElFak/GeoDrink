@@ -21,11 +21,11 @@
         android:title="Check In"
         app:showAsAction="ifRoom"
         android:icon="@drawable/ic_pin" />-->
-    <item
+    <!--<item
         android:id="@+id/action_radius"
         android:orderInCategory="100"
         android:title="Change Radius"
-        app:showAsAction="ifRoom"/>
+        app:showAsAction="ifRoom"/>-->
     <item
         android:id="@+id/action_add"
         android:orderInCategory="100"
