@@ -59,7 +59,7 @@ import com.njamb.geodrink.bluetooth.AddFriendActivity;
 import com.njamb.geodrink.fragments.FilterDialogFragment;
 import com.njamb.geodrink.models.MarkerTagModel;
 import com.njamb.geodrink.R;
-import com.njamb.geodrink.services.BackgroundService;
+import com.njamb.geodrink.services.LocationService;
 import com.njamb.geodrink.services.PoiService;
 import com.njamb.geodrink.utils.FilterHelper;
 
@@ -71,6 +71,8 @@ public class MapActivity extends AppCompatActivity
         FilterDialogFragment.OnCompleteListener{
 
     // Const
+    public static final String ACTION_SET_RADIUS = "com.njamb.geodrink.setradius";
+    public static final String ACTION_SET_CENTER = "com.njamb.geodrink.setcenter";
     private static final String TAG = "MapActivity";
     public static final int REQUEST_LOCATION_PERMISSION = 1;
     private static final double SEEKBAR_STEP = 100/*m*/;
@@ -92,14 +94,13 @@ public class MapActivity extends AppCompatActivity
     private double mRange = DEFAULT_RANGE_VALUE;
 
     // Seekbar
-    SeekBar mSeekBar;
+    private SeekBar mSeekBar;
 
     private LocationManager mLocationManager;
     private String mLocationProvider;
 
-    // POI service
-    private PoiService mPoiService = null;
-    private boolean mBound = false;
+    // Local broadcast manager
+    LocalBroadcastManager localBroadcastManager;
 
 
     @Override
@@ -119,6 +120,9 @@ public class MapActivity extends AppCompatActivity
         // Get Firebase refs
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance();
+
+        // Local broadcast manager
+        localBroadcastManager = LocalBroadcastManager.getInstance(this);
 
         // Location
         mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
@@ -155,7 +159,7 @@ public class MapActivity extends AppCompatActivity
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                if (mPoiService != null) mPoiService.setRadius(mRange/1000/*->km*/);
+                sendBroadcastForRadiusChange(mRange/1000/*->km*/);
             }
         });
 
@@ -179,14 +183,13 @@ public class MapActivity extends AppCompatActivity
             }
         });
 
+        registerForActions();
+
         // Start background location service
-        Intent intent = new Intent(this, BackgroundService.class);
-        startService(intent);
+        startService(new Intent(this, LocationService.class));
     }
 
     private void registerForActions() {
-        LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(this);
-
         IntentFilter filter = new IntentFilter(PoiService.ACTION_ADD_USER_MARKER);
         localBroadcastManager.registerReceiver(mReceiver, filter);
 
@@ -208,17 +211,9 @@ public class MapActivity extends AppCompatActivity
             startLoginActivity();
         }
         else {
-            registerForActions();
+            startPoiService();
 
-            Intent intent = new Intent(this, PoiService.class);
-            intent.putExtra("lat", mLocation.latitude)
-                    .putExtra("lng", mLocation.longitude)
-                    .putExtra("rad", FilterHelper.rangeQueryEnabled
-                            ? mRange/1000/*->km*/
-                            : RANGE_QUERY_DISABLED_DISTANCE);
-            bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
-
-            if (mMap != null && mCircle != null && FilterHelper.rangeQueryEnabled) {
+            if (mMap != null && FilterHelper.rangeQueryEnabled) {
                 drawCircleOnMap(new LatLng(mLocation.latitude, mLocation.longitude), mRange);
             }
         }
@@ -255,12 +250,7 @@ public class MapActivity extends AppCompatActivity
     protected void onStop() {
         super.onStop();
 
-        if (mBound) {
-            unbindService(mConnection);
-            mBound = false;
-        }
-
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(mReceiver);
+        sendBroadcastForCenterChange(0, 0); // hack
 
         if (mMap != null) {
             mMap.clear();
@@ -273,10 +263,12 @@ public class MapActivity extends AppCompatActivity
     protected void onDestroy() {
         super.onDestroy();
 
+        localBroadcastManager.unregisterReceiver(mReceiver);
+
         boolean enableService = PreferenceManager.getDefaultSharedPreferences(this)
                 .getBoolean("pref_service", true);
         if (!enableService) {
-            stopService(new Intent(this, BackgroundService.class));
+            stopService(new Intent(this, LocationService.class));
             Toast.makeText(this, "Service stopped", Toast.LENGTH_SHORT).show();
         }
     }
@@ -285,6 +277,17 @@ public class MapActivity extends AppCompatActivity
         if (mAuth.getCurrentUser() == null) {
             startLoginActivity();
         }
+    }
+
+    private void startPoiService() {
+        double rad = FilterHelper.rangeQueryEnabled
+                ? mRange/1000/*->km*/
+                : RANGE_QUERY_DISABLED_DISTANCE;
+        Intent intent = new Intent(this, PoiService.class);
+        intent.putExtra("lat", mLocation.latitude)
+                .putExtra("lng", mLocation.longitude)
+                .putExtra("rad", rad);
+        startService(intent);
     }
 
     @Override
@@ -433,6 +436,19 @@ public class MapActivity extends AppCompatActivity
         startActivity(i);
     }
 
+    private void sendBroadcastForCenterChange(double lat, double lng) {
+        Intent intent = new Intent(MapActivity.ACTION_SET_CENTER);
+        intent.putExtra("lat", lat)
+                .putExtra("lng", lng);
+        localBroadcastManager.sendBroadcast(intent);
+    }
+
+    private void sendBroadcastForRadiusChange(double rad) {
+        Intent intent = new Intent(MapActivity.ACTION_SET_RADIUS)
+                .putExtra("rad", rad);
+        localBroadcastManager.sendBroadcast(intent);
+    }
+
     @Override
     public void onLocationChanged(Location location) {
         double lat = location.getLatitude();
@@ -445,7 +461,7 @@ public class MapActivity extends AppCompatActivity
 
         mLocation = new GeoLocation(lat, lng);
 
-        if (mPoiService != null) mPoiService.setLocation(new GeoLocation(lat, lng));
+        sendBroadcastForCenterChange(lat, lng);
 
         if (mMap != null) {
             float currZoom = mMap.getCameraPosition().zoom;
@@ -560,39 +576,19 @@ public class MapActivity extends AppCompatActivity
         if (mCircle != null) mCircle.setVisible(true);
         else drawCircleOnMap(new LatLng(mLocation.latitude, mLocation.longitude), mRange);
         mSeekBar.setVisibility(View.VISIBLE);
-        mPoiService.setRadius(mRange/1000/*->km*/);
+        sendBroadcastForRadiusChange(mRange/1000/*->km*/);
     }
 
     private void turnOffRangeFilter() {
         FilterHelper.rangeQueryEnabled = false;
         mCircle.setVisible(false);
         mSeekBar.setVisibility(View.GONE);
-        mPoiService.setRadius(RANGE_QUERY_DISABLED_DISTANCE); // set to something big
+        sendBroadcastForRadiusChange(RANGE_QUERY_DISABLED_DISTANCE); // set to something big
     }
-
-    private ServiceConnection mConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName className, IBinder service) {
-            if (className.getClassName().equals(PoiService.class.getName())) {
-                PoiService.PoiBinder binder = (PoiService.PoiBinder) service;
-                mPoiService = binder.getService();
-                mBound = true;
-            }
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName arg0) {
-            if (arg0.getClassName().equals(PoiService.class.getName())) {
-                mBound = false;
-            }
-        }
-    };
 
     private BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (!mBound) return;
-
             String action = intent.getAction();
             if (PoiService.ACTION_ADD_USER_MARKER.equals(action)) {
                 double lat = intent.getDoubleExtra("lat", 0);

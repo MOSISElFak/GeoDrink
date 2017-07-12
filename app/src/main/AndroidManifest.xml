@@ -102,15 +102,15 @@
             android:theme="@style/DialogTheme" />
 
         <service
-            android:name=".services.BackgroundService"
+            android:name=".services.LocationService"
             android:enabled="true"
             android:exported="false" />
         <service
-            android:name=".services.PlacesService"
+            android:name=".utils.PlacesGeoFire"
             android:enabled="true"
             android:exported="false" />
         <service
-            android:name=".services.UsersService"
+            android:name=".utils.UsersGeoFire"
             android:enabled="true"
             android:exported="false" />
         <service

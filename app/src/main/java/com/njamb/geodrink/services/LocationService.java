@@ -8,32 +8,23 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.firebase.geofire.GeoFire;
-import com.firebase.geofire.GeoLocation;
-import com.firebase.geofire.GeoQuery;
-import com.firebase.geofire.GeoQueryEventListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.njamb.geodrink.models.Coordinates;
+import com.njamb.geodrink.utils.UsersGeoFire;
 
-public class BackgroundService extends Service implements GeoQueryEventListener {
-    private static final String TAG = "BackgroundService";
-    private static final double RANGE = 0.5 /*km*/;
+public class LocationService extends Service {
+    private static final String TAG = "LocationService";
     private static final int LOCATION_INTERVAL = 1000 /*ms*/;
     private static final float LOCATION_DISTANCE = 100f /*m*/;
-    
-    private FirebaseAuth mAuth = FirebaseAuth.getInstance();
-    private DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
-    private GeoFire mGeoFirePlaces = new GeoFire(mDatabase.child("placesGeoFire"));
-    private GeoFire mGeoFireUsers = new GeoFire(mDatabase.child("usersGeoFire"));
-    private GeoQuery mGeoQuery = mGeoFirePlaces.queryAtLocation(new GeoLocation(0, 0), RANGE);
+
     private NotificationCompat.Builder mNotificationBuilder;
 
     private LocationManager mLocationManager;
@@ -42,12 +33,13 @@ public class BackgroundService extends Service implements GeoQueryEventListener 
             new BackgroundLocationListener(LocationManager.NETWORK_PROVIDER)
     };
 
-    public BackgroundService() {
+    public LocationService() {
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
+
         return START_STICKY;
     }
 
@@ -72,9 +64,6 @@ public class BackgroundService extends Service implements GeoQueryEventListener 
         } catch (IllegalArgumentException ex) {
             Log.e(TAG, "gps provider does not exist " + ex.getMessage());
         }
-
-        mAuth = FirebaseAuth.getInstance();
-        mGeoQuery.addGeoQueryEventListener(this);
     }
 
     @Override
@@ -90,6 +79,8 @@ public class BackgroundService extends Service implements GeoQueryEventListener 
                 }
             }
         }
+
+        stopService(new Intent(this, PoiService.class));
     }
 
     private void initializeLocationManager() {
@@ -100,19 +91,16 @@ public class BackgroundService extends Service implements GeoQueryEventListener 
     }
 
     @Override
-    public void onKeyEntered(String key, GeoLocation location) {
-        // TODO: Display notification when new place nearby
-    }
-
-    @Override
     public IBinder onBind(Intent intent) {
-        throw new UnsupportedOperationException("Not yet implemented");
+        throw new UnsupportedOperationException("It's not bounded service");
     }
 
 
     /* BACKGROUND LOCATION LISTENER */
     private class BackgroundLocationListener implements LocationListener {
         private Location mLastLocation;
+        private DatabaseReference mDatabase = FirebaseDatabase.getInstance().getReference();
+        private FirebaseAuth mAuth = FirebaseAuth.getInstance();
 
         public BackgroundLocationListener(String provider) {
             setLastLocation(new Location(provider));
@@ -122,23 +110,30 @@ public class BackgroundService extends Service implements GeoQueryEventListener 
             mLastLocation = newLoc;
             double lat = mLastLocation.getLatitude();
             double lng = mLastLocation.getLongitude();
-            mGeoQuery.setCenter(new GeoLocation(lat, lng));
             FirebaseUser user = mAuth.getCurrentUser();
             if (user != null) {
                 try {
                     Coordinates newLocation = new Coordinates(lat, lng);
-                    mDatabase.child("users").child(user.getUid()).child("location")
+                    mDatabase.child(String.format("users/%s/location", user.getUid()))
                             .setValue(newLocation);
-                    mGeoFireUsers.setLocation(user.getUid(), new GeoLocation(lat, lng));
+                    setGeoFireUserLocation(user.getUid(), lat, lng);
                 } catch (Exception e) {
-                    Log.e("EXC", e.getMessage());
+                    Log.e(TAG, e.getMessage());
                 }
             }
         }
 
+        private void setGeoFireUserLocation(String id, double lat, double lng) {
+            Intent intent = new Intent(UsersGeoFire.ACTION_SET_LOCATION);
+            intent.putExtra("id", id)
+                    .putExtra("lat", lat)
+                    .putExtra("lng", lng);
+            LocalBroadcastManager.getInstance(LocationService.this).sendBroadcast(intent);
+        }
+
         @Override
         public void onLocationChanged(Location location) {
-            Toast.makeText(BackgroundService.this, "Location changed", Toast.LENGTH_SHORT).show();
+            Toast.makeText(LocationService.this, "Location changed", Toast.LENGTH_SHORT).show();
             setLastLocation(location);
         }
 
@@ -150,15 +145,4 @@ public class BackgroundService extends Service implements GeoQueryEventListener 
         @Override public void onProviderDisabled(String provider) {}
         //endregion
     }
-
-
-    //region Unused GeoQueryEventListener methods
-    @Override public void onKeyExited(String key) {}
-
-    @Override public void onKeyMoved(String key, GeoLocation location) {}
-
-    @Override public void onGeoQueryReady() {}
-
-    @Override public void onGeoQueryError(DatabaseError error) {}
-    //endregion
 }
