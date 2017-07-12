@@ -3,20 +3,15 @@ package com.njamb.geodrink.activities;
 import android.Manifest;
 import android.app.SearchManager;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
-import android.location.LocationManager;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
@@ -67,7 +62,6 @@ import java.util.ArrayList;
 
 public class MapActivity extends AppCompatActivity
         implements OnMapReadyCallback,
-        LocationListener,
         FilterDialogFragment.OnCompleteListener{
 
     // Const
@@ -96,11 +90,8 @@ public class MapActivity extends AppCompatActivity
     // Seekbar
     private SeekBar mSeekBar;
 
-    private LocationManager mLocationManager;
-    private String mLocationProvider;
-
     // Local broadcast manager
-    LocalBroadcastManager localBroadcastManager;
+    private LocalBroadcastManager localBroadcastManager;
 
 
     @Override
@@ -123,26 +114,6 @@ public class MapActivity extends AppCompatActivity
 
         // Local broadcast manager
         localBroadcastManager = LocalBroadcastManager.getInstance(this);
-
-        // Location
-        mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        Criteria criteria = new Criteria();
-        mLocationProvider = mLocationManager.getBestProvider(criteria, false);
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-        Location loc = mLocationManager.getLastKnownLocation(mLocationProvider);
-        if (loc != null) {
-            onLocationChanged(loc);
-        }
 
         // Slider for range queries
         mSeekBar = (SeekBar) findViewById(R.id.seekBar2);
@@ -201,6 +172,9 @@ public class MapActivity extends AppCompatActivity
 
         filter = new IntentFilter(PoiService.ACTION_ADD_PLACE_MARKER);
         localBroadcastManager.registerReceiver(mReceiver, filter);
+
+        filter = new IntentFilter(MapActivity.ACTION_SET_CENTER);
+        localBroadcastManager.registerReceiver(mReceiver, filter);
     }
 
     @Override
@@ -224,26 +198,6 @@ public class MapActivity extends AppCompatActivity
         super.onResume();
 
         checkIfUserLoggedIn();
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-        mLocationManager.requestLocationUpdates(mLocationProvider, 400, 1.0f, this);
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-
-        mLocationManager.removeUpdates(this);
     }
 
     @Override
@@ -344,17 +298,6 @@ public class MapActivity extends AppCompatActivity
                 // On next click on it (thorough search) - new activity.
                 break;
             }
-//            case R.id.action_radius: {
-//                mSeekBar.setVisibility(mSeekBar.getVisibility() == View.VISIBLE ?
-//                        View.INVISIBLE : View.VISIBLE);
-//                if (item.getTitle().toString().toLowerCase().equals("change radius")) {
-//                    item.setTitle("Done Changing");
-//                }
-//                else {
-//                    item.setTitle("Change Radius");
-//                }
-//                break;
-//            }
             case R.id.action_add: {
                 Intent i = new Intent(this, AddFriendActivity.class);
                 i.putExtra("userId", mAuth.getCurrentUser().getUid());
@@ -367,15 +310,6 @@ public class MapActivity extends AppCompatActivity
                 startActivity(i);
                 break;
             }
-//            case R.id.action_login: {
-//                startLoginActivity();
-//                break;
-//            }
-//            case R.id.action_checkin: {
-//                Intent i = new Intent(this, CheckInActivity.class);
-//                startActivity(i);
-//                break;
-//            }
             case R.id.action_details: {
                 Intent i = new Intent(this, DetailsActivity.class);
                 startActivity(i);
@@ -409,19 +343,11 @@ public class MapActivity extends AppCompatActivity
             return;
         }
         mMap.setMyLocationEnabled(true);
-
-        LocationServices.getFusedLocationProviderClient(getBaseContext())
-                .getLastLocation()
-                .addOnSuccessListener(new OnSuccessListener<Location>() {
-                    @Override
-                    public void onSuccess(Location location) {
-                        LatLng center = new LatLng(location.getLatitude(), location.getLongitude());
-                        drawCircleOnMap(center, mRange);
-                    }
-                });
     }
 
     private void drawCircleOnMap(LatLng center, double radius) {
+        if (mMap == null) return;
+
         mCircle = mMap.addCircle(
                 new CircleOptions()
                         .center(center)
@@ -448,34 +374,6 @@ public class MapActivity extends AppCompatActivity
                 .putExtra("rad", rad);
         localBroadcastManager.sendBroadcast(intent);
     }
-
-    @Override
-    public void onLocationChanged(Location location) {
-        double lat = location.getLatitude();
-        double lng = location.getLongitude();
-        LatLng center = new LatLng(lat, lng);
-
-        if (mCircle != null) {
-            mCircle.setCenter(center);
-        }
-
-        mLocation = new GeoLocation(lat, lng);
-
-        sendBroadcastForCenterChange(lat, lng);
-
-        if (mMap != null) {
-            float currZoom = mMap.getCameraPosition().zoom;
-            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(center, Math.max(15.0f, currZoom)));
-        }
-    }
-
-    //region Unused methods
-    @Override public void onStatusChanged(String provider, int status, Bundle extras) {}
-
-    @Override public void onProviderEnabled(String provider) {}
-
-    @Override public void onProviderDisabled(String provider) {}
-    //endregion
 
     private void addUserMarkerOnMap(final String key, LatLng position) {
         if (mMap == null) return;
@@ -610,6 +508,21 @@ public class MapActivity extends AppCompatActivity
                 double lng = intent.getDoubleExtra("lng", 0);
                 String key = intent.getStringExtra("key");
                 repositionMarkerOnMap(key, new LatLng(lat, lng));
+            }
+            else if (MapActivity.ACTION_SET_CENTER.equals(action)) {
+                double lat = intent.getDoubleExtra("lat", 0);
+                double lng = intent.getDoubleExtra("lng", 0);
+                LatLng center = new LatLng(lat, lng);
+
+                if (mCircle != null) mCircle.setCenter(center);
+                else drawCircleOnMap(center, mRange);
+
+                mLocation = new GeoLocation(lat, lng);
+
+                if (mMap != null) {
+                    float currZoom = mMap.getCameraPosition().zoom;
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(center, Math.max(15.0f, currZoom)));
+                }
             }
         }
     };

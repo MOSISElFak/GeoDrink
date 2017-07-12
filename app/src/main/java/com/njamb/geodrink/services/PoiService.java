@@ -45,16 +45,18 @@ public class PoiService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
 
-        double lat = intent.getDoubleExtra("lat", 0);
-        double lng = intent.getDoubleExtra("lng", 0);
-        double rad = intent.getDoubleExtra("rad", 0.25/*km*/);
-        GeoLocation loc = new GeoLocation(lat, lng);
+        if (intent != null) {
+            double lat = intent.getDoubleExtra("lat", 0);
+            double lng = intent.getDoubleExtra("lng", 0);
+            double rad = intent.getDoubleExtra("rad", 0.25/*km*/);
+            GeoLocation loc = new GeoLocation(lat, lng);
 
-        mUsersGeoFire.setCenter(loc);
-        mUsersGeoFire.setRadius(rad);
+            mUsersGeoFire.setCenter(loc);
+            mUsersGeoFire.setRadius(rad);
 
-        mPlacesGeoFire.setCenter(loc);
-        mPlacesGeoFire.setRadius(rad);
+            mPlacesGeoFire.setCenter(loc);
+            mPlacesGeoFire.setRadius(rad);
+        }
 
         return START_STICKY;
     }
