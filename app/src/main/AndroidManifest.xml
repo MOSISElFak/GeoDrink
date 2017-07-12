@@ -79,7 +79,8 @@
             android:name=".activities.CheckInActivity"
             android:label="@string/checkin_act_name"
             android:parentActivityName=".activities.MapActivity"
-            android:theme="@style/AppTheme.NoActionBar">
+            android:theme="@style/AppTheme.NoActionBar"
+            android:windowSoftInputMode="adjustPan">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.njamb.geodrink.activities.MapActivity" />

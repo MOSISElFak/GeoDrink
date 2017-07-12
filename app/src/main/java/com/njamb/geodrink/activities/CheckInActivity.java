@@ -6,17 +6,21 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
-
 import com.njamb.geodrink.R;
 
 public class CheckInActivity extends AppCompatActivity {
     private static final int REQUEST_IMAGE_CAPTURE = 1;
+    private static final String CHANGE_LOC_NAME = "Change Name";
+    private static final String DONE_CHANGING_LOC_NAME = "Done Changing";
 
     private ImageView imageView;
-
+    private Button checkInBtn;
 
     @Override
     public boolean onSupportNavigateUp() {
@@ -45,6 +49,46 @@ public class CheckInActivity extends AppCompatActivity {
                 }
             }
         });
+
+        final Button changeLocNameBtn = (Button) findViewById(R.id.checkIn_btn_changeLocName);
+        changeLocNameBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                EditText etName = (EditText) findViewById(R.id.checkin_et_location);
+
+                if (changeLocNameBtn.getText().toString().equals(CHANGE_LOC_NAME)) {
+                    etName.setEnabled(true);
+                    changeLocNameBtn.setText(DONE_CHANGING_LOC_NAME);
+                }
+                else {
+                    etName.setEnabled(false);
+                    changeLocNameBtn.setText(CHANGE_LOC_NAME);
+                }
+
+                enableDisableBtn();
+            }
+        });
+
+        checkInBtn = (Button) findViewById(R.id.checkin_btn_checkin);
+        enableDisableBtn();
+
+        EditText etName = (EditText) findViewById(R.id.checkin_et_location);
+        etName.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                enableDisableBtn();
+            }
+        });
     }
 
     @Override
@@ -56,7 +100,29 @@ public class CheckInActivity extends AppCompatActivity {
                 Bundle extras = data.getExtras();
                 Bitmap imageBitmap = (Bitmap) extras.get("data");
                 imageView.setImageBitmap(imageBitmap);
+
+                enableDisableBtn();
             }
+        }
+    }
+
+    // TODO: Dodati i proveru za pica. Da li je nesto selektovao ili je prazno.
+    private boolean checkIfShouldEnable() {
+        EditText etName = (EditText) findViewById(R.id.checkin_et_location);
+        ImageView ivPhoto = (ImageView) findViewById(R.id.checkin_iv_photo);
+
+        if (etName.getText().toString().equals("") || ivPhoto.getDrawable() == null)
+            return false;
+        else
+            return true;
+    }
+
+    private void enableDisableBtn() {
+        if (checkIfShouldEnable()) {
+            checkInBtn.setEnabled(true);
+        }
+        else {
+            checkInBtn.setEnabled(false);
         }
     }
 }

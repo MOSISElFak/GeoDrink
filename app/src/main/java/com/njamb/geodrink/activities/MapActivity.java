@@ -164,8 +164,10 @@ public class MapActivity extends AppCompatActivity
         fabAddPlace.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent i = new Intent(MapActivity.this, CheckInActivity.class);
-                startActivity(i);
+                Intent intent = new Intent(MapActivity.this, CheckInActivity.class);
+//                intent.putExtra("lat", mLocation.latitude)
+//                        .putExtra("lng", mLocation.longitude);
+                startActivity(intent);
             }
         });
 
