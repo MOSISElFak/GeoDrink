@@ -46,7 +46,7 @@ public class UsersGeoFire implements GeoQueryEventListener {
     public void onKeyEntered(String key, GeoLocation location) {
         if (key.equals(userId)) return;
 
-        Intent intent = new Intent(PoiService.ACTION_ADD_USER_MARKER);
+        Intent intent = new Intent(PoiService.ACTION_USER_IN_RANGE);
         intent.putExtra("lat", location.latitude)
                 .putExtra("lng", location.longitude)
                 .putExtra("key", key);

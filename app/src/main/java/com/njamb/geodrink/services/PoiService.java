@@ -17,10 +17,10 @@ import com.njamb.geodrink.utils.PlacesGeoFire;
 import com.njamb.geodrink.utils.UsersGeoFire;
 
 public class PoiService extends Service {
-    public static final String ACTION_ADD_USER_MARKER = "com.njamb.geodrink.useraddmarker";
-    public static final String ACTION_REMOVE_MARKER = "com.njamb.geodrink.removemarker";
-    public static final String ACTION_REPOSITION_MARKER = "com.njamb.geodrink.repositionmarker";
-    public static final String ACTION_ADD_PLACE_MARKER = "com.njamb.geodrink.placeaddmarker";
+    public static final String ACTION_USER_IN_RANGE = "com.njamb.geodrink.useraddmarker";
+    public static final String ACTION_POI_OUT_OF_RANGE = "com.njamb.geodrink.removemarker";
+    public static final String ACTION_REPOSITION_POI = "com.njamb.geodrink.repositionmarker";
+    public static final String ACTION_PLACE_IN_RANGE = "com.njamb.geodrink.placeaddmarker";
 
     private UsersGeoFire mUsersGeoFire;
     private PlacesGeoFire mPlacesGeoFire;
@@ -80,13 +80,13 @@ public class PoiService extends Service {
     }
 
     public void keyExited(String key) {
-        Intent intent = new Intent(PoiService.ACTION_REMOVE_MARKER);
+        Intent intent = new Intent(PoiService.ACTION_POI_OUT_OF_RANGE);
         intent.putExtra("key", key);
         mLocalBcastManager.sendBroadcast(intent);
     }
 
     public void keyMoved(String key, GeoLocation location) {
-        Intent intent = new Intent(PoiService.ACTION_REPOSITION_MARKER);
+        Intent intent = new Intent(PoiService.ACTION_REPOSITION_POI);
         intent.putExtra("key", key)
                 .putExtra("lat", location.latitude)
                 .putExtra("lng", location.longitude);

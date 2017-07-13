@@ -48,6 +48,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.njamb.geodrink.authentication.LoginActivity;
 import com.njamb.geodrink.bluetooth.AddFriendActivity;
 import com.njamb.geodrink.fragments.FilterDialogFragment;
+import com.njamb.geodrink.models.Coordinates;
 import com.njamb.geodrink.models.MarkerTagModel;
 import com.njamb.geodrink.R;
 import com.njamb.geodrink.services.LocationService;
@@ -156,16 +157,16 @@ public class MapActivity extends AppCompatActivity
     }
 
     private void registerForActions() {
-        IntentFilter filter = new IntentFilter(PoiService.ACTION_ADD_USER_MARKER);
+        IntentFilter filter = new IntentFilter(PoiService.ACTION_USER_IN_RANGE);
         localBroadcastManager.registerReceiver(mReceiver, filter);
 
-        filter = new IntentFilter(PoiService.ACTION_REMOVE_MARKER);
+        filter = new IntentFilter(PoiService.ACTION_POI_OUT_OF_RANGE);
         localBroadcastManager.registerReceiver(mReceiver, filter);
 
-        filter = new IntentFilter(PoiService.ACTION_REPOSITION_MARKER);
+        filter = new IntentFilter(PoiService.ACTION_REPOSITION_POI);
         localBroadcastManager.registerReceiver(mReceiver, filter);
 
-        filter = new IntentFilter(PoiService.ACTION_ADD_PLACE_MARKER);
+        filter = new IntentFilter(PoiService.ACTION_PLACE_IN_RANGE);
         localBroadcastManager.registerReceiver(mReceiver, filter);
 
         filter = new IntentFilter(MapActivity.ACTION_SET_CENTER);
@@ -466,36 +467,32 @@ public class MapActivity extends AppCompatActivity
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
-            if (PoiService.ACTION_ADD_USER_MARKER.equals(action)) {
-                double lat = intent.getDoubleExtra("lat", 0);
-                double lng = intent.getDoubleExtra("lng", 0);
+            if (PoiService.ACTION_USER_IN_RANGE.equals(action)) {
+                Coordinates c = Coordinates.getCoordinatesFromIntent(intent);
                 String key = intent.getStringExtra("key");
-                addUserMarkerOnMap(key, new LatLng(lat, lng));
+                addUserMarkerOnMap(key, c.toGoogleCoords());
             }
-            else if (PoiService.ACTION_ADD_PLACE_MARKER.equals(action)) {
-                double lat = intent.getDoubleExtra("lat", 0);
-                double lng = intent.getDoubleExtra("lng", 0);
+            else if (PoiService.ACTION_PLACE_IN_RANGE.equals(action)) {
+                Coordinates c = Coordinates.getCoordinatesFromIntent(intent);
                 String key = intent.getStringExtra("key");
-                addPlaceMarkerOnMap(key, new LatLng(lat, lng));
+                addPlaceMarkerOnMap(key, c.toGoogleCoords());
             }
-            else if (PoiService.ACTION_REMOVE_MARKER.equals(action)) {
+            else if (PoiService.ACTION_POI_OUT_OF_RANGE.equals(action)) {
                 removeMarkerFromMap(intent.getStringExtra("key"));
             }
-            else if (PoiService.ACTION_REPOSITION_MARKER.equals(action)) {
-                double lat = intent.getDoubleExtra("lat", 0);
-                double lng = intent.getDoubleExtra("lng", 0);
+            else if (PoiService.ACTION_REPOSITION_POI.equals(action)) {
+                Coordinates c = Coordinates.getCoordinatesFromIntent(intent);
                 String key = intent.getStringExtra("key");
-                repositionMarkerOnMap(key, new LatLng(lat, lng));
+                repositionMarkerOnMap(key, c.toGoogleCoords());
             }
             else if (MapActivity.ACTION_SET_CENTER.equals(action)) {
-                double lat = intent.getDoubleExtra("lat", 0);
-                double lng = intent.getDoubleExtra("lng", 0);
-                LatLng center = new LatLng(lat, lng);
+                Coordinates c = Coordinates.getCoordinatesFromIntent(intent);
+                LatLng center = c.toGoogleCoords();
 
                 if (mCircle != null) mCircle.setCenter(center);
                 else drawCircleOnMap(center, mRange);
 
-                mLocation = new GeoLocation(lat, lng);
+                mLocation = new GeoLocation(c.lat, c.lng);
 
                 if (mMap != null) {
                     float currZoom = mMap.getCameraPosition().zoom;

@@ -43,7 +43,7 @@ public class PlacesGeoFire implements GeoQueryEventListener {
 
     @Override
     public void onKeyEntered(String key, GeoLocation location) {
-        Intent intent = new Intent(PoiService.ACTION_ADD_PLACE_MARKER);
+        Intent intent = new Intent(PoiService.ACTION_PLACE_IN_RANGE);
         intent.putExtra("lat", location.latitude)
                 .putExtra("lng", location.longitude)
                 .putExtra("key", key);
