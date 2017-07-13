@@ -9,8 +9,6 @@ import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.location.Location;
-import android.location.LocationListener;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
@@ -30,7 +28,6 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.firebase.geofire.GeoLocation;
-import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -41,7 +38,6 @@ import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.firebase.auth.FirebaseAuth;
@@ -67,8 +63,8 @@ public class MapActivity extends AppCompatActivity
     // Const
     public static final String ACTION_SET_RADIUS = "com.njamb.geodrink.setradius";
     public static final String ACTION_SET_CENTER = "com.njamb.geodrink.setcenter";
-    private static final String TAG = "MapActivity";
     public static final int REQUEST_LOCATION_PERMISSION = 1;
+    private static final String TAG = "MapActivity";
     private static final double SEEKBAR_STEP = 100/*m*/;
     private static final int SEEKBAR_MAX_VALUE = 9900/*m*/;
     private static final double DEFAULT_RANGE_VALUE = 500/*m*/;
@@ -83,7 +79,7 @@ public class MapActivity extends AppCompatActivity
 
     // Map
     private GoogleMap mMap = null;
-    private Circle mCircle;
+    private Circle mCircle = null;
     private BiMap<String, Marker> mPoiMarkers = HashBiMap.create();
     private double mRange = DEFAULT_RANGE_VALUE;
 
@@ -155,9 +151,6 @@ public class MapActivity extends AppCompatActivity
         });
 
         registerForActions();
-
-        // Start background location service
-        startService(new Intent(this, LocationService.class));
     }
 
     private void registerForActions() {
@@ -185,9 +178,12 @@ public class MapActivity extends AppCompatActivity
             startLoginActivity();
         }
         else {
+            // Start background location service
+            startService(new Intent(this, LocationService.class));
+
             startPoiService();
 
-            if (mMap != null && FilterHelper.rangeQueryEnabled) {
+            if (mMap != null && mCircle == null) {
                 drawCircleOnMap(new LatLng(mLocation.latitude, mLocation.longitude), mRange);
             }
         }
@@ -198,19 +194,6 @@ public class MapActivity extends AppCompatActivity
         super.onResume();
 
         checkIfUserLoggedIn();
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-
-        sendBroadcastForCenterChange(0, 0); // hack
-
-        if (mMap != null) {
-            mMap.clear();
-            mPoiMarkers.clear();
-            mCircle = null;
-        }
     }
 
     @Override
@@ -346,7 +329,7 @@ public class MapActivity extends AppCompatActivity
     }
 
     private void drawCircleOnMap(LatLng center, double radius) {
-        if (mMap == null) return;
+        if (mMap == null || !FilterHelper.rangeQueryEnabled) return;
 
         mCircle = mMap.addCircle(
                 new CircleOptions()
@@ -360,13 +343,6 @@ public class MapActivity extends AppCompatActivity
     private void startLoginActivity() {
         Intent i = new Intent(this, LoginActivity.class);
         startActivity(i);
-    }
-
-    private void sendBroadcastForCenterChange(double lat, double lng) {
-        Intent intent = new Intent(MapActivity.ACTION_SET_CENTER);
-        intent.putExtra("lat", lat)
-                .putExtra("lng", lng);
-        localBroadcastManager.sendBroadcast(intent);
     }
 
     private void sendBroadcastForRadiusChange(double rad) {

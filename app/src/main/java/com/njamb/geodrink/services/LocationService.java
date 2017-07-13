@@ -82,13 +82,13 @@ public class LocationService extends Service {
         }
         LocationServices.getFusedLocationProviderClient(this)
                 .requestLocationUpdates(mLocationRequest, mLocationCallback, null/*Looper*/);
-
-        getLastKnownLocation();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
+
+        getLastKnownLocation();
 
         return START_STICKY;
     }

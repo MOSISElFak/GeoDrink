@@ -19,25 +19,26 @@ public class PlacesGeoFire implements GeoQueryEventListener {
 
     private GeoFire mGeoFirePlaces;
     private GeoQuery mGeoQueryPlaces;
-    private Context mContext;
     private PoiService mService;
 
+    private LocalBroadcastManager mLocalBcastManager;
 
-    public PlacesGeoFire(Context c, PoiService ps) {
-        mContext = c;
+
+    public PlacesGeoFire(Context context, PoiService ps) {
         mService = ps;
 
         mGeoFirePlaces = new GeoFire(FirebaseDatabase.getInstance().getReference("placesGeoFire"));
         mGeoQueryPlaces = mGeoFirePlaces.queryAtLocation(new GeoLocation(0, 0), 0.1);
         mGeoQueryPlaces.addGeoQueryEventListener(this);
 
+        mLocalBcastManager = LocalBroadcastManager.getInstance(context);
+
         IntentFilter filter = new IntentFilter(PlacesGeoFire.ACTION_SET_LOCATION);
-        LocalBroadcastManager.getInstance(mContext)
-                .registerReceiver(mReceiver, filter);
+        mLocalBcastManager.registerReceiver(mReceiver, filter);
     }
 
     public void onDestroy() {
-        mContext.unregisterReceiver(mReceiver);
+        mLocalBcastManager.unregisterReceiver(mReceiver);
     }
 
     @Override
@@ -47,7 +48,7 @@ public class PlacesGeoFire implements GeoQueryEventListener {
                 .putExtra("lng", location.longitude)
                 .putExtra("key", key);
 
-        LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+        mLocalBcastManager.sendBroadcast(intent);
     }
 
     @Override

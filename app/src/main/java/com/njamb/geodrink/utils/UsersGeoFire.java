@@ -21,24 +21,25 @@ public class UsersGeoFire implements GeoQueryEventListener {
     private GeoFire mGeoFireUsers;
     private GeoQuery mGeoQueryUsers;
     private String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
-    private Context mContext;
     private PoiService mService;
 
-    public UsersGeoFire(Context c, PoiService ps) {
-        mContext = c;
+    private LocalBroadcastManager mLocalBcastManager;
+
+    public UsersGeoFire(Context context, PoiService ps) {
         mService = ps;
 
         mGeoFireUsers = new GeoFire(FirebaseDatabase.getInstance().getReference("usersGeoFire"));
         mGeoQueryUsers = mGeoFireUsers.queryAtLocation(new GeoLocation(0, 0), 0.1);
         mGeoQueryUsers.addGeoQueryEventListener(this);
 
+        mLocalBcastManager = LocalBroadcastManager.getInstance(context);
+
         IntentFilter filter = new IntentFilter(UsersGeoFire.ACTION_SET_LOCATION);
-        LocalBroadcastManager.getInstance(mContext)
-                .registerReceiver(mReceiver, filter);
+        mLocalBcastManager.registerReceiver(mReceiver, filter);
     }
 
     public void onDestroy() {
-        mContext.unregisterReceiver(mReceiver);
+        mLocalBcastManager.unregisterReceiver(mReceiver);
     }
 
     @Override
@@ -50,7 +51,7 @@ public class UsersGeoFire implements GeoQueryEventListener {
                 .putExtra("lng", location.longitude)
                 .putExtra("key", key);
 
-        LocalBroadcastManager.getInstance(mContext).sendBroadcast(intent);
+        mLocalBcastManager.sendBroadcast(intent);
     }
 
     @Override

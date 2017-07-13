@@ -25,17 +25,19 @@ public class PoiService extends Service {
     private UsersGeoFire mUsersGeoFire;
     private PlacesGeoFire mPlacesGeoFire;
 
+    private LocalBroadcastManager mLocalBcastManager;
+
     public PoiService() {}
 
     @Override
     public void onCreate() {
         super.onCreate();
 
-        LocalBroadcastManager lbm = LocalBroadcastManager.getInstance(this);
+        mLocalBcastManager = LocalBroadcastManager.getInstance(this);
         IntentFilter filter = new IntentFilter(MapActivity.ACTION_SET_CENTER);
-        lbm.registerReceiver(mReceiver, filter);
+        mLocalBcastManager.registerReceiver(mReceiver, filter);
         filter = new IntentFilter(MapActivity.ACTION_SET_RADIUS);
-        lbm.registerReceiver(mReceiver, filter);
+        mLocalBcastManager.registerReceiver(mReceiver, filter);
 
         mUsersGeoFire = new UsersGeoFire(this, this);
         mPlacesGeoFire = new PlacesGeoFire(this, this);
@@ -73,14 +75,14 @@ public class PoiService extends Service {
         mUsersGeoFire.onDestroy();
         mPlacesGeoFire.onDestroy();
 
-        unregisterReceiver(mReceiver);
+        mLocalBcastManager.unregisterReceiver(mReceiver);
         Toast.makeText(this, "POI service stopped", Toast.LENGTH_SHORT).show();
     }
 
     public void keyExited(String key) {
         Intent intent = new Intent(PoiService.ACTION_REMOVE_MARKER);
         intent.putExtra("key", key);
-        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+        mLocalBcastManager.sendBroadcast(intent);
     }
 
     public void keyMoved(String key, GeoLocation location) {
@@ -89,7 +91,7 @@ public class PoiService extends Service {
                 .putExtra("lat", location.latitude)
                 .putExtra("lng", location.longitude);
 
-        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+        mLocalBcastManager.sendBroadcast(intent);
     }
 
     private void setCenter(Bundle extras) {
