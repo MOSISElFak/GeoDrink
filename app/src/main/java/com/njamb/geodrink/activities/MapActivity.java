@@ -3,20 +3,13 @@ package com.njamb.geodrink.activities;
 import android.Manifest;
 import android.app.SearchManager;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.location.Criteria;
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
@@ -35,7 +28,6 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.transition.Transition;
 import com.firebase.geofire.GeoLocation;
-import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -46,7 +38,6 @@ import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.firebase.auth.FirebaseAuth;
@@ -59,7 +50,7 @@ import com.njamb.geodrink.bluetooth.AddFriendActivity;
 import com.njamb.geodrink.fragments.FilterDialogFragment;
 import com.njamb.geodrink.models.MarkerTagModel;
 import com.njamb.geodrink.R;
-import com.njamb.geodrink.services.BackgroundService;
+import com.njamb.geodrink.services.LocationService;
 import com.njamb.geodrink.services.PoiService;
 import com.njamb.geodrink.utils.FilterHelper;
 
@@ -67,12 +58,13 @@ import java.util.ArrayList;
 
 public class MapActivity extends AppCompatActivity
         implements OnMapReadyCallback,
-        LocationListener,
         FilterDialogFragment.OnCompleteListener{
 
     // Const
-    private static final String TAG = "MapActivity";
+    public static final String ACTION_SET_RADIUS = "com.njamb.geodrink.setradius";
+    public static final String ACTION_SET_CENTER = "com.njamb.geodrink.setcenter";
     public static final int REQUEST_LOCATION_PERMISSION = 1;
+    private static final String TAG = "MapActivity";
     private static final double SEEKBAR_STEP = 100/*m*/;
     private static final int SEEKBAR_MAX_VALUE = 9900/*m*/;
     private static final double DEFAULT_RANGE_VALUE = 500/*m*/;
@@ -87,19 +79,15 @@ public class MapActivity extends AppCompatActivity
 
     // Map
     private GoogleMap mMap = null;
-    private Circle mCircle;
+    private Circle mCircle = null;
     private BiMap<String, Marker> mPoiMarkers = HashBiMap.create();
     private double mRange = DEFAULT_RANGE_VALUE;
 
     // Seekbar
-    SeekBar mSeekBar;
+    private SeekBar mSeekBar;
 
-    private LocationManager mLocationManager;
-    private String mLocationProvider;
-
-    // POI service
-    private PoiService mPoiService = null;
-    private boolean mBound = false;
+    // Local broadcast manager
+    private LocalBroadcastManager localBroadcastManager;
 
 
     @Override
@@ -120,25 +108,8 @@ public class MapActivity extends AppCompatActivity
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance();
 
-        // Location
-        mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        Criteria criteria = new Criteria();
-        mLocationProvider = mLocationManager.getBestProvider(criteria, false);
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-        Location loc = mLocationManager.getLastKnownLocation(mLocationProvider);
-        if (loc != null) {
-            onLocationChanged(loc);
-        }
+        // Local broadcast manager
+        localBroadcastManager = LocalBroadcastManager.getInstance(this);
 
         // Slider for range queries
         mSeekBar = (SeekBar) findViewById(R.id.seekBar2);
@@ -155,7 +126,7 @@ public class MapActivity extends AppCompatActivity
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                if (mPoiService != null) mPoiService.setRadius(mRange/1000/*->km*/);
+                sendBroadcastForRadiusChange(mRange/1000/*->km*/);
             }
         });
 
@@ -181,14 +152,10 @@ public class MapActivity extends AppCompatActivity
             }
         });
 
-        // Start background location service
-        Intent intent = new Intent(this, BackgroundService.class);
-        startService(intent);
+        registerForActions();
     }
 
     private void registerForActions() {
-        LocalBroadcastManager localBroadcastManager = LocalBroadcastManager.getInstance(this);
-
         IntentFilter filter = new IntentFilter(PoiService.ACTION_ADD_USER_MARKER);
         localBroadcastManager.registerReceiver(mReceiver, filter);
 
@@ -200,6 +167,9 @@ public class MapActivity extends AppCompatActivity
 
         filter = new IntentFilter(PoiService.ACTION_ADD_PLACE_MARKER);
         localBroadcastManager.registerReceiver(mReceiver, filter);
+
+        filter = new IntentFilter(MapActivity.ACTION_SET_CENTER);
+        localBroadcastManager.registerReceiver(mReceiver, filter);
     }
 
     @Override
@@ -210,17 +180,12 @@ public class MapActivity extends AppCompatActivity
             startLoginActivity();
         }
         else {
-            registerForActions();
+            // Start background location service
+            startService(new Intent(this, LocationService.class));
 
-            Intent intent = new Intent(this, PoiService.class);
-            intent.putExtra("lat", mLocation.latitude)
-                    .putExtra("lng", mLocation.longitude)
-                    .putExtra("rad", FilterHelper.rangeQueryEnabled
-                            ? mRange/1000/*->km*/
-                            : RANGE_QUERY_DISABLED_DISTANCE);
-            bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+            startPoiService();
 
-            if (mMap != null && mCircle != null && FilterHelper.rangeQueryEnabled) {
+            if (mMap != null && mCircle == null) {
                 drawCircleOnMap(new LatLng(mLocation.latitude, mLocation.longitude), mRange);
             }
         }
@@ -231,54 +196,18 @@ public class MapActivity extends AppCompatActivity
         super.onResume();
 
         checkIfUserLoggedIn();
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-        mLocationManager.requestLocationUpdates(mLocationProvider, 400, 1.0f, this);
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-
-        mLocationManager.removeUpdates(this);
-    }
-
-    @Override
-    protected void onStop() {
-        super.onStop();
-
-        if (mBound) {
-            unbindService(mConnection);
-            mBound = false;
-        }
-
-        LocalBroadcastManager.getInstance(this).unregisterReceiver(mReceiver);
-
-        if (mMap != null) {
-            mMap.clear();
-            mPoiMarkers.clear();
-            mCircle = null;
-        }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
 
+        localBroadcastManager.unregisterReceiver(mReceiver);
+
         boolean enableService = PreferenceManager.getDefaultSharedPreferences(this)
                 .getBoolean("pref_service", true);
         if (!enableService) {
-            stopService(new Intent(this, BackgroundService.class));
+            stopService(new Intent(this, LocationService.class));
             Toast.makeText(this, "Service stopped", Toast.LENGTH_SHORT).show();
         }
     }
@@ -287,6 +216,17 @@ public class MapActivity extends AppCompatActivity
         if (mAuth.getCurrentUser() == null) {
             startLoginActivity();
         }
+    }
+
+    private void startPoiService() {
+        double rad = FilterHelper.rangeQueryEnabled
+                ? mRange/1000/*->km*/
+                : RANGE_QUERY_DISABLED_DISTANCE;
+        Intent intent = new Intent(this, PoiService.class);
+        intent.putExtra("lat", mLocation.latitude)
+                .putExtra("lng", mLocation.longitude)
+                .putExtra("rad", rad);
+        startService(intent);
     }
 
     @Override
@@ -343,17 +283,6 @@ public class MapActivity extends AppCompatActivity
                 // On next click on it (thorough search) - new activity.
                 break;
             }
-//            case R.id.action_radius: {
-//                mSeekBar.setVisibility(mSeekBar.getVisibility() == View.VISIBLE ?
-//                        View.INVISIBLE : View.VISIBLE);
-//                if (item.getTitle().toString().toLowerCase().equals("change radius")) {
-//                    item.setTitle("Done Changing");
-//                }
-//                else {
-//                    item.setTitle("Change Radius");
-//                }
-//                break;
-//            }
             case R.id.action_add: {
                 Intent i = new Intent(this, AddFriendActivity.class);
                 i.putExtra("userId", mAuth.getCurrentUser().getUid());
@@ -366,15 +295,6 @@ public class MapActivity extends AppCompatActivity
                 startActivity(i);
                 break;
             }
-//            case R.id.action_login: {
-//                startLoginActivity();
-//                break;
-//            }
-//            case R.id.action_checkin: {
-//                Intent i = new Intent(this, CheckInActivity.class);
-//                startActivity(i);
-//                break;
-//            }
             case R.id.action_details: {
                 Intent i = new Intent(this, DetailsActivity.class);
                 startActivity(i);
@@ -408,19 +328,11 @@ public class MapActivity extends AppCompatActivity
             return;
         }
         mMap.setMyLocationEnabled(true);
-
-        LocationServices.getFusedLocationProviderClient(getBaseContext())
-                .getLastLocation()
-                .addOnSuccessListener(new OnSuccessListener<Location>() {
-                    @Override
-                    public void onSuccess(Location location) {
-                        LatLng center = new LatLng(location.getLatitude(), location.getLongitude());
-                        drawCircleOnMap(center, mRange);
-                    }
-                });
     }
 
     private void drawCircleOnMap(LatLng center, double radius) {
+        if (mMap == null || !FilterHelper.rangeQueryEnabled) return;
+
         mCircle = mMap.addCircle(
                 new CircleOptions()
                         .center(center)
@@ -435,33 +347,11 @@ public class MapActivity extends AppCompatActivity
         startActivity(i);
     }
 
-    @Override
-    public void onLocationChanged(Location location) {
-        double lat = location.getLatitude();
-        double lng = location.getLongitude();
-        LatLng center = new LatLng(lat, lng);
-
-        if (mCircle != null) {
-            mCircle.setCenter(center);
-        }
-
-        mLocation = new GeoLocation(lat, lng);
-
-        if (mPoiService != null) mPoiService.setLocation(new GeoLocation(lat, lng));
-
-        if (mMap != null) {
-            float currZoom = mMap.getCameraPosition().zoom;
-            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(center, Math.max(15.0f, currZoom)));
-        }
+    private void sendBroadcastForRadiusChange(double rad) {
+        Intent intent = new Intent(MapActivity.ACTION_SET_RADIUS)
+                .putExtra("rad", rad);
+        localBroadcastManager.sendBroadcast(intent);
     }
-
-    //region Unused methods
-    @Override public void onStatusChanged(String provider, int status, Bundle extras) {}
-
-    @Override public void onProviderEnabled(String provider) {}
-
-    @Override public void onProviderDisabled(String provider) {}
-    //endregion
 
     private void addUserMarkerOnMap(final String key, LatLng position) {
         if (mMap == null) return;
@@ -562,39 +452,19 @@ public class MapActivity extends AppCompatActivity
         if (mCircle != null) mCircle.setVisible(true);
         else drawCircleOnMap(new LatLng(mLocation.latitude, mLocation.longitude), mRange);
         mSeekBar.setVisibility(View.VISIBLE);
-        mPoiService.setRadius(mRange/1000/*->km*/);
+        sendBroadcastForRadiusChange(mRange/1000/*->km*/);
     }
 
     private void turnOffRangeFilter() {
         FilterHelper.rangeQueryEnabled = false;
         mCircle.setVisible(false);
         mSeekBar.setVisibility(View.GONE);
-        mPoiService.setRadius(RANGE_QUERY_DISABLED_DISTANCE); // set to something big
+        sendBroadcastForRadiusChange(RANGE_QUERY_DISABLED_DISTANCE); // set to something big
     }
-
-    private ServiceConnection mConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName className, IBinder service) {
-            if (className.getClassName().equals(PoiService.class.getName())) {
-                PoiService.PoiBinder binder = (PoiService.PoiBinder) service;
-                mPoiService = binder.getService();
-                mBound = true;
-            }
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName arg0) {
-            if (arg0.getClassName().equals(PoiService.class.getName())) {
-                mBound = false;
-            }
-        }
-    };
 
     private BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (!mBound) return;
-
             String action = intent.getAction();
             if (PoiService.ACTION_ADD_USER_MARKER.equals(action)) {
                 double lat = intent.getDoubleExtra("lat", 0);
@@ -616,6 +486,21 @@ public class MapActivity extends AppCompatActivity
                 double lng = intent.getDoubleExtra("lng", 0);
                 String key = intent.getStringExtra("key");
                 repositionMarkerOnMap(key, new LatLng(lat, lng));
+            }
+            else if (MapActivity.ACTION_SET_CENTER.equals(action)) {
+                double lat = intent.getDoubleExtra("lat", 0);
+                double lng = intent.getDoubleExtra("lng", 0);
+                LatLng center = new LatLng(lat, lng);
+
+                if (mCircle != null) mCircle.setCenter(center);
+                else drawCircleOnMap(center, mRange);
+
+                mLocation = new GeoLocation(lat, lng);
+
+                if (mMap != null) {
+                    float currZoom = mMap.getCameraPosition().zoom;
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(center, Math.max(15.0f, currZoom)));
+                }
             }
         }
     };

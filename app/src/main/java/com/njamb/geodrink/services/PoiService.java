@@ -2,14 +2,19 @@ package com.njamb.geodrink.services;
 
 
 import android.app.Service;
-import android.content.ComponentName;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
-import android.os.Binder;
+import android.content.IntentFilter;
+import android.os.Bundle;
 import android.os.IBinder;
+import android.support.v4.content.LocalBroadcastManager;
+import android.widget.Toast;
 
 import com.firebase.geofire.GeoLocation;
+import com.njamb.geodrink.activities.MapActivity;
+import com.njamb.geodrink.utils.PlacesGeoFire;
+import com.njamb.geodrink.utils.UsersGeoFire;
 
 public class PoiService extends Service {
     public static final String ACTION_ADD_USER_MARKER = "com.njamb.geodrink.useraddmarker";
@@ -17,91 +22,104 @@ public class PoiService extends Service {
     public static final String ACTION_REPOSITION_MARKER = "com.njamb.geodrink.repositionmarker";
     public static final String ACTION_ADD_PLACE_MARKER = "com.njamb.geodrink.placeaddmarker";
 
-    private final Binder mBinder = new PoiService.PoiBinder();
+    private UsersGeoFire mUsersGeoFire;
+    private PlacesGeoFire mPlacesGeoFire;
 
-    private UsersService mUsersService = null;
-    private boolean mBoundUsersService = false;
-    private ServiceConnection mConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName className, IBinder service) {
-            String cname = className.getClassName();
-            if (cname.equals(UsersService.class.getName())) {
-                UsersService.UsersBinder binder = (UsersService.UsersBinder) service;
-                mUsersService = binder.getService();
-                mBoundUsersService = true;
-            }
-            else if (cname.equals(PlacesService.class.getName())) {
-                PlacesService.PlacesBinder binder = (PlacesService.PlacesBinder) service;
-                mPlacesService = binder.getService();
-                mBoundPlacesService = true;
-            }
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName arg0) {
-            String cname = arg0.getClassName();
-            if (cname.equals(UsersService.class.getName())) {
-                mBoundUsersService = false;
-            }
-            else if (cname.equals(PlacesService.class.getName())) {
-                mBoundPlacesService = false;
-            }
-        }
-    };
-
-    private PlacesService mPlacesService = null;
-    private boolean mBoundPlacesService = false;
-
+    private LocalBroadcastManager mLocalBcastManager;
 
     public PoiService() {}
 
     @Override
     public void onCreate() {
         super.onCreate();
+
+        mLocalBcastManager = LocalBroadcastManager.getInstance(this);
+        IntentFilter filter = new IntentFilter(MapActivity.ACTION_SET_CENTER);
+        mLocalBcastManager.registerReceiver(mReceiver, filter);
+        filter = new IntentFilter(MapActivity.ACTION_SET_RADIUS);
+        mLocalBcastManager.registerReceiver(mReceiver, filter);
+
+        mUsersGeoFire = new UsersGeoFire(this, this);
+        mPlacesGeoFire = new PlacesGeoFire(this, this);
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        super.onStartCommand(intent, flags, startId);
+
+        if (intent != null) {
+            double lat = intent.getDoubleExtra("lat", 0);
+            double lng = intent.getDoubleExtra("lng", 0);
+            double rad = intent.getDoubleExtra("rad", 0.25/*km*/);
+            GeoLocation loc = new GeoLocation(lat, lng);
+
+            mUsersGeoFire.setCenter(loc);
+            mUsersGeoFire.setRadius(rad);
+
+            mPlacesGeoFire.setCenter(loc);
+            mPlacesGeoFire.setRadius(rad);
+        }
+
+        return START_STICKY;
     }
 
     @Override
     public IBinder onBind(Intent intent) {
-        Intent usersIntent = new Intent(this, UsersService.class);
-        usersIntent.putExtras(intent.getExtras());
-        Intent placesIntent = new Intent(this, PlacesService.class);
-        placesIntent.putExtras(intent.getExtras());
-        bindService(usersIntent, mConnection, Context.BIND_AUTO_CREATE);
-        bindService(placesIntent, mConnection, Context.BIND_AUTO_CREATE);
-
-        return mBinder;
+        throw new UnsupportedOperationException("It's not bounded service");
     }
 
     @Override
-    public boolean onUnbind(Intent intent) {
-        mUsersService.onUnbind(intent);
-        mPlacesService.onUnbind(intent);
+    public void onDestroy() {
+        super.onDestroy();
 
-        return super.onUnbind(intent);
+        mUsersGeoFire.onDestroy();
+        mPlacesGeoFire.onDestroy();
+
+        mLocalBcastManager.unregisterReceiver(mReceiver);
+        Toast.makeText(this, "POI service stopped", Toast.LENGTH_SHORT).show();
     }
 
-    public void setRadius(double rad) {
-        if (mBoundUsersService) {
-            mUsersService.setRadius(rad);
-        }
-        if (mBoundPlacesService) {
-            mPlacesService.setRadius(rad);
-        }
+    public void keyExited(String key) {
+        Intent intent = new Intent(PoiService.ACTION_REMOVE_MARKER);
+        intent.putExtra("key", key);
+        mLocalBcastManager.sendBroadcast(intent);
     }
 
-    public void setLocation(GeoLocation loc) {
-        if (mBoundUsersService) {
-            mUsersService.setLocation(loc);
-        }
-        if (mBoundPlacesService) {
-            mPlacesService.setLocation(loc);
-        }
+    public void keyMoved(String key, GeoLocation location) {
+        Intent intent = new Intent(PoiService.ACTION_REPOSITION_MARKER);
+        intent.putExtra("key", key)
+                .putExtra("lat", location.latitude)
+                .putExtra("lng", location.longitude);
+
+        mLocalBcastManager.sendBroadcast(intent);
     }
 
+    private void setCenter(Bundle extras) {
+        double lat = extras.getDouble("lat");
+        double lng = extras.getDouble("lng");
+        GeoLocation loc = new GeoLocation(lat, lng);
 
-    public class PoiBinder extends Binder {
-        public PoiService getService() {
-            return PoiService.this;
-        }
+        mUsersGeoFire.setCenter(loc);
+        mPlacesGeoFire.setCenter(loc);
     }
+
+    private void setRadius(Bundle extras) {
+        double rad = extras.getDouble("rad");
+
+        mUsersGeoFire.setRadius(rad);
+        mPlacesGeoFire.setRadius(rad);
+    }
+
+    private BroadcastReceiver mReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (MapActivity.ACTION_SET_CENTER.equals(action)) {
+                setCenter(intent.getExtras());
+            }
+            else if (MapActivity.ACTION_SET_RADIUS.equals(action)) {
+                setRadius(intent.getExtras());
+            }
+        }
+    };
 }
