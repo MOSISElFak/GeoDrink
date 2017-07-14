@@ -185,10 +185,6 @@ public class MapActivity extends AppCompatActivity
             startService(new Intent(this, LocationService.class));
 
             startPoiService();
-
-            if (mMap != null && mCircle == null) {
-                drawCircleOnMap(new LatLng(mLocation.latitude, mLocation.longitude), mRange);
-            }
         }
     }
 
@@ -279,11 +275,11 @@ public class MapActivity extends AppCompatActivity
                 startActivity(new Intent(this, SettingsActivity.class));
                 break;
             }
-            case R.id.action_search: {
-                // ToDo: Search field (hide icons), show only magnifying glass (quick search).
-                // On next click on it (thorough search) - new activity.
-                break;
-            }
+//            case R.id.action_search: {
+//                // ToDo: Search field (hide icons), show only magnifying glass (quick search).
+//                // On next click on it (thorough search) - new activity.
+//                break;
+//            }
             case R.id.action_add: {
                 Intent i = new Intent(this, AddFriendActivity.class);
                 i.putExtra("userId", mAuth.getCurrentUser().getUid());
