@@ -118,6 +118,7 @@
                 android:layout_weight="3" />
 
             <LinearLayout
+                android:id="@+id/profile_act_buttons_layout"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_weight="0"

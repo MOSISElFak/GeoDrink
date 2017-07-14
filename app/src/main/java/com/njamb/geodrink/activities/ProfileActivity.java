@@ -72,6 +72,11 @@ public class ProfileActivity extends AppCompatActivity {
         Bundle bundle = getIntent().getExtras();
         userId = bundle.getString("userId");
 
+        View layoutWithButtons = findViewById(R.id.profile_act_buttons_layout);
+        if (!userId.equals(FirebaseAuth.getInstance().getCurrentUser().getUid())) {
+            layoutWithButtons.setVisibility(View.GONE);
+        }
+
         mDatabase = FirebaseDatabase.getInstance().getReference(String.format("users/%s", userId));
 
         profileImg = (ImageView) findViewById(R.id.profile_image);

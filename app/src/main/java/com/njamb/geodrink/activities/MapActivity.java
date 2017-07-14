@@ -11,6 +11,7 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.LocalBroadcastManager;
@@ -287,9 +288,7 @@ public class MapActivity extends AppCompatActivity
                 break;
             }
             case R.id.action_profile: {
-                Intent i = new Intent(this, ProfileActivity.class);
-                i.putExtra("userId", mAuth.getCurrentUser().getUid());
-                startActivity(i);
+                startProfileActivity(mAuth.getCurrentUser().getUid());
                 break;
             }
             case R.id.action_details: {
@@ -309,8 +308,15 @@ public class MapActivity extends AppCompatActivity
         mMap.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener() {
             @Override
             public boolean onMarkerClick(Marker marker) {
-                // TODO: show user/place info
-                Toast.makeText(MapActivity.this, marker.getTag().toString(), Toast.LENGTH_LONG).show();
+                MarkerTagModel tag = (MarkerTagModel) marker.getTag();
+                assert tag != null;
+                if (tag.isUser || tag.isFriend) {
+                    startProfileActivity(tag.id);
+                }
+                else if (tag.isPlace) {
+                    // TODO: show place info
+                    Toast.makeText(MapActivity.this, marker.getTag().toString(), Toast.LENGTH_LONG).show();
+                }
                 return true;
             }
         });
@@ -341,6 +347,12 @@ public class MapActivity extends AppCompatActivity
 
     private void startLoginActivity() {
         Intent i = new Intent(this, LoginActivity.class);
+        startActivity(i);
+    }
+
+    private void startProfileActivity(@NonNull String id) {
+        Intent i = new Intent(this, ProfileActivity.class);
+        i.putExtra("userId", id);
         startActivity(i);
     }
 
