@@ -1,18 +1,32 @@
 package com.njamb.geodrink.activities;
 
 import android.content.Intent;
+import android.database.DataSetObserver;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.view.menu.ExpandedMenuView;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AbsListView;
+import android.widget.Adapter;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ListView;
+import android.widget.Toast;
+
 import com.njamb.geodrink.R;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class CheckInActivity extends AppCompatActivity {
     private static final int REQUEST_IMAGE_CAPTURE = 1;
@@ -89,7 +103,10 @@ public class CheckInActivity extends AppCompatActivity {
                 enableDisableBtn();
             }
         });
+
+        setDrinksList();
     }
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -124,5 +141,22 @@ public class CheckInActivity extends AppCompatActivity {
         else {
             checkInBtn.setEnabled(false);
         }
+    }
+
+    private void setDrinksList() {
+        List<String> drinksArray = new ArrayList<String>();
+        drinksArray.add("Beer");
+        drinksArray.add("Coffee");
+        drinksArray.add("Cocktail");
+        drinksArray.add("Juice");
+        drinksArray.add("Soda");
+        drinksArray.add("Alcohol");
+
+        ArrayAdapter<String> drinksAdapter = new ArrayAdapter<String>(this,
+                android.R.layout.simple_list_item_multiple_choice, drinksArray);
+
+        ListView lv = (ListView) findViewById(R.id.checkin_lv_drinks);
+        lv.setAdapter(drinksAdapter);
+        lv.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE);
     }
 }
