@@ -5,4 +5,18 @@ package com.njamb.geodrink.models;
  */
 
 public class Places {
+    public String[] places;
+
+    public Places() {
+    }
+
+    @Override
+    public String toString() {
+        String str = "";
+        for (int i = 0; i < places.length; i++) {
+            str += places[i] + "\n";
+        }
+
+        return str;
+    }
 }
