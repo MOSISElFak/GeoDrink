@@ -138,8 +138,8 @@ public class MapActivity extends AppCompatActivity
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MapActivity.this, CheckInActivity.class);
-//                intent.putExtra("lat", mLocation.latitude)
-//                        .putExtra("lng", mLocation.longitude);
+                intent.putExtra("lat", mLocation.latitude)
+                        .putExtra("lon", mLocation.longitude);
                 startActivity(intent);
             }
         });
