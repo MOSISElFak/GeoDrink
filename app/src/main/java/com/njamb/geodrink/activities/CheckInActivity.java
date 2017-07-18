@@ -39,7 +39,9 @@ import com.njamb.geodrink.models.Place;
 import com.njamb.geodrink.models.Places;
 import com.njamb.geodrink.models.User;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -133,6 +135,10 @@ public class CheckInActivity extends AppCompatActivity {
             public void onClick(View v) {
                 //TODO Get location name, uploaded photo, and drinks, and post them to firebase;
                 updateDrinks();
+                checkIn();
+
+                // Terminate activity upon checking in:
+                finish();
             }
         });
         enableDisableBtn();
@@ -198,16 +204,15 @@ public class CheckInActivity extends AppCompatActivity {
     }
 
     private void updateDrinks() {
-        DatabaseReference drinksRef = databaseReference.child("users").child(user.getUid())
+        final DatabaseReference drinksRef = databaseReference.child("users").child(user.getUid())
                 .child("drinks");
 
-        drinksRef.addValueEventListener(new ValueEventListener() {
+        drinksRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 drinks = dataSnapshot.getValue(Drinks.class);
-                Log.v("+nj", drinks.toString());
                 updateDrinksValues();
-                Log.v("+nj", drinks.toString());
+                drinksRef.setValue(drinks);
             }
 
             @Override
@@ -215,13 +220,6 @@ public class CheckInActivity extends AppCompatActivity {
 
             }
         });
-
-        //DatabaseReference drinksRef = databaseReference.child(user.getUid()).child("drinks");
-        Map<String, Drinks> drinksUpdates = new HashMap<String, Drinks>();
-        drinksUpdates.put("drinks", drinks);
-// TODO: Njambe, popravi ovo ispod sto ne radi!!
-        drinksRef.setValue(drinksUpdates);
-     //   drinksRef.put()
     }
 
     private void updateDrinksValues() {
@@ -240,22 +238,42 @@ public class CheckInActivity extends AppCompatActivity {
 
     private void checkIn() {
         DatabaseReference refPlaces = databaseReference.child("places").push();
-        String key = databaseReference.getKey();
+        final String key = databaseReference.getKey();
 
-        DatabaseReference places = FirebaseDatabase.getInstance().getReference().child("users")
+        final DatabaseReference places = FirebaseDatabase.getInstance().getReference().child("users")
                 .child(user.getUid()).child("places");
 
         // ** com.njamb.geodrink.models.Place **
-        Place place = new Place();
+        final Place place = new Place();
         Bundle bundle = getIntent().getExtras();
         // Setting our mapped data for firebase:
         place.lat = bundle.getDouble("lat");
         place.lon = bundle.getDouble("lon");
         place.name = ((EditText) findViewById(R.id.checkin_et_location)).getText().toString();
-        //place.imageUrl;
+        place.date = new SimpleDateFormat("dd/MM/yyyy").format(new Date());
+        place.time = new SimpleDateFormat("HH:mm:ss").format(new Date());
+        place.imageUrl = "www.geodrink.com";
 
         // Create new place:
-        refPlaces.child(key).setValue(place);
+        refPlaces.setValue(place);
+// ^ kreiranje lokacije radi kako treba!
+        places.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                //TODO: Pronaci nacin da se ubaci 'key' promenljiva u userID.places sa value 0:
+//                Places plcs = new Places();
+//
+//                plcs = dataSnapshot.getValue(Places.class);
+//                plcs.places.put(key, 0);
+//                //plcs.places.add(key);
+//                places.updateChildren(plcs.places);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
 
         // Do not look!! it's for reference :'D
 //        places.addListenerForSingleValueEvent(new ValueEventListener() {

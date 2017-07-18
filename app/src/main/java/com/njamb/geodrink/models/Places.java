@@ -1,22 +1,17 @@
 package com.njamb.geodrink.models;
 
+import com.google.firebase.database.IgnoreExtraProperties;
+
+import java.util.HashMap;
+
 /**
  * Created by njamb94 on 7/17/2017.
  */
 
+@IgnoreExtraProperties
 public class Places {
-    public String[] places;
+    public HashMap<String, Object> places = new HashMap<>();
 
     public Places() {
-    }
-
-    @Override
-    public String toString() {
-        String str = "";
-        for (int i = 0; i < places.length; i++) {
-            str += places[i] + "\n";
-        }
-
-        return str;
     }
 }

@@ -1,27 +1,30 @@
 package com.njamb.geodrink.models;
 
+import com.google.firebase.database.IgnoreExtraProperties;
+
 /**
  * Created by njamb94 on 7/16/2017.
  */
 
+@IgnoreExtraProperties
 public class Drinks {
-    public double beer;
-    public double coffee;
-    public double cocktail;
-    public double juice;
-    public double soda;
-    public double alcohol;
+    public long beer;
+    public long coffee;
+    public long cocktail;
+    public long juice;
+    public long soda;
+    public long alcohol;
 
     public Drinks() {
-        beer = 0;
-        coffee = 0;
-        cocktail = 0;
-        juice = 0;
-        soda = 0;
-        alcohol = 0;
+//        beer = 0;
+//        coffee = 0;
+//        cocktail = 0;
+//        juice = 0;
+//        soda = 0;
+//        alcohol = 0;
     }
 
-    public Drinks(double beer, double coffee, double cocktail, double juice, double soda, double alcohol) {
+    public Drinks(long beer, long coffee, long cocktail, long juice, long soda, long alcohol) {
         this.beer = beer;
         this.coffee = coffee;
         this.cocktail = cocktail;
