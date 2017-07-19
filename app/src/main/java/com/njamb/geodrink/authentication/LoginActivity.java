@@ -20,23 +20,28 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.mobsandgeeks.saripaar.ValidationError;
+import com.mobsandgeeks.saripaar.Validator;
+import com.mobsandgeeks.saripaar.annotation.Email;
+import com.mobsandgeeks.saripaar.annotation.NotEmpty;
+import com.mobsandgeeks.saripaar.annotation.Password;
 import com.njamb.geodrink.R;
 
-public class LoginActivity extends AppCompatActivity {
+import java.util.List;
+
+public class LoginActivity extends AppCompatActivity implements Validator.ValidationListener {
     private static final String TAG = "LoginActivity";
+    private static final int REQUEST_REGISTER = 1;
 
-    static int REQUEST_REGISTER = 1;
-
-    EditText username;
-    EditText password;
-    Button login;
-    Button register;
+    private Validator mValidator = null;
+    @NotEmpty
+    @Email private EditText email;
+    @Password private EditText password;
 
     private ProgressDialog pd;
-
     private FirebaseAuth mAuth;
+//    private boolean shouldClear = false;
 
-    private boolean shouldClear = false;
 
     @Override
     public void onBackPressed() {
@@ -53,13 +58,33 @@ public class LoginActivity extends AppCompatActivity {
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(false);
 
+        mValidator = new Validator(this);
+        mValidator.setValidationListener(this);
+
         mAuth = FirebaseAuth.getInstance();
         if (mAuth.getCurrentUser() != null) finish(); // TODO: how to remove this hack?
 
-        username = (EditText) findViewById(R.id.login_et_username);
+        email = (EditText) findViewById(R.id.login_et_username);
         password = (EditText) findViewById(R.id.login_et_password);
-        login = (Button) findViewById(R.id.login_btn_login);
-        register = (Button) findViewById(R.id.login_btn_register);
+
+        Button login = (Button) findViewById(R.id.login_btn_login);
+        login.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mValidator.validate();
+//                loginUser();
+            }
+        });
+
+        Button register = (Button) findViewById(R.id.login_btn_register);
+        register.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent registerActivity = new Intent(LoginActivity.this, RegisterActivity.class);
+                startActivityForResult(registerActivity, REQUEST_REGISTER);
+            }
+        });
+
         Button btnResetPass = (Button) findViewById(R.id.btn_rst_pass);
         btnResetPass.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -70,67 +95,52 @@ public class LoginActivity extends AppCompatActivity {
 
         configProgressDialog();
 
-        lockLoginBtn();
+//        lockLoginBtn();
 
-        username.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                clearAndRemove();
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                lockLoginBtn();
-            }
-        });
-
-        password.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-            }
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-                clearAndRemove();
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                lockLoginBtn();
-            }
-        });
-
-        register.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent registerActivity = new Intent(LoginActivity.this, RegisterActivity.class);
-                startActivityForResult(registerActivity, REQUEST_REGISTER);
-            }
-        });
-
-        login.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                loginUser();
-            }
-        });
+//        email.addTextChangedListener(new TextWatcher() {
+//            @Override
+//            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+//
+//            }
+//
+//            @Override
+//            public void onTextChanged(CharSequence s, int start, int before, int count) {
+//                clearAndRemove();
+//            }
+//
+//            @Override
+//            public void afterTextChanged(Editable s) {
+//                lockLoginBtn();
+//            }
+//        });
+//
+//        password.addTextChangedListener(new TextWatcher() {
+//            @Override
+//            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+//
+//            }
+//
+//            @Override
+//            public void onTextChanged(CharSequence s, int start, int before, int count) {
+//                clearAndRemove();
+//            }
+//
+//            @Override
+//            public void afterTextChanged(Editable s) {
+//                lockLoginBtn();
+//            }
+//        });
     }
 
-    private void clearAndRemove() {
-        if (shouldClear) {
-            username.setError(null);
-            password.setError(null);
-            username.getText().clear();
-            password.getText().clear();
-            shouldClear = false;
-        }
-    }
+//    private void clearAndRemove() {
+//        if (shouldClear) {
+//            email.setError(null);
+//            password.setError(null);
+//            email.getText().clear();
+//            password.getText().clear();
+//            shouldClear = false;
+//        }
+//    }
 
     private void configProgressDialog() {
         pd = new ProgressDialog(this, R.style.TransparentProgressDialogStyle);
@@ -143,41 +153,44 @@ public class LoginActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (resultCode == Activity.RESULT_OK) {
-            // TODO: after user is registered, make toast (successful registration)
-            // & return to the map.
-            // After registration, user is logged in automatically.
+        switch (requestCode) {
+            case REQUEST_REGISTER:
+                if (resultCode == Activity.RESULT_OK) {
+                    // TODO: after user is registered, make toast (successful registration)
+                    // & return to the map.
+                    // After registration, user is logged in automatically.
 
-            Toast.makeText(this, "Successful registration!", Toast.LENGTH_SHORT).show();
-        }
-        else if (requestCode == Activity.RESULT_CANCELED) {
-            // Do nothing.
+                    Toast.makeText(this, "Successful registration!", Toast.LENGTH_SHORT).show();
+                }
+//        else if (requestCode == Activity.RESULT_CANCELED) {
+//            // Do nothing.
+//        }
         }
     }
 
     // Method that checks if any of the input fields are empty:
-    private boolean areFieldsEmpty() {
-        if (username.getText().toString().equals("") ||
-                password.getText().toString().equals(""))
-        {
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
+//    private boolean areFieldsEmpty() {
+//        if (email.getText().toString().equals("") ||
+//                password.getText().toString().equals(""))
+//        {
+//            return true;
+//        }
+//        else {
+//            return false;
+//        }
+//    }
 
-    private void lockLoginBtn() {
-        if (areFieldsEmpty()) {
-            login.setEnabled(false);
-        }
-        else {
-            login.setEnabled(true);
-        }
-    }
+//    private void lockLoginBtn() {
+//        if (areFieldsEmpty()) {
+//            login.setEnabled(false);
+//        }
+//        else {
+//            login.setEnabled(true);
+//        }
+//    }
 
     private void loginUser() {
-        String email = username.getText().toString();
+        String email = this.email.getText().toString();
         String pass = password.getText().toString();
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE);
@@ -198,17 +211,36 @@ public class LoginActivity extends AppCompatActivity {
                             finish();
                         } else {
                             Log.w(TAG, "signInWithEmail:failure", task.getException());
-
-                            showError();
+                            Toast.makeText(LoginActivity.this, R.string.msg_auth_fail, Toast.LENGTH_LONG).show();
+//                            showError();
                         }
                     }
                 });
     }
 
 
-    private void showError() {
-        ((EditText) findViewById(R.id.login_et_username)).setError("Wrong username or password.");
-        ((EditText) findViewById(R.id.login_et_password)).setError("Wrong username or password.");
-        shouldClear = true;
+//    private void showError() {
+//        ((EditText) findViewById(R.id.login_et_username)).setError("Wrong email or password.");
+//        ((EditText) findViewById(R.id.login_et_password)).setError("Wrong email or password.");
+//        shouldClear = true;
+//    }
+
+    @Override
+    public void onValidationSucceeded() {
+        loginUser();
+    }
+
+    @Override
+    public void onValidationFailed(List<ValidationError> errors) {
+        for (ValidationError error : errors) {
+            View view = error.getView();
+            String message = error.getCollatedErrorMessage(this);
+            if (view instanceof EditText) {
+                ((EditText) view).setError(message);
+            }
+            else {
+                Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 }

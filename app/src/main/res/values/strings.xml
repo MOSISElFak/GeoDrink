@@ -41,4 +41,5 @@
     <string name="btn_send_rst_pass_text">Send</string>
     <string name="search_hint">Friend\'s Username</string>
     <string name="friend_profile_picture_desc">Friend profile picture</string>
+    <string name="msg_auth_fail">Authentication failed. Check your email and password and try again</string>
 </resources>
