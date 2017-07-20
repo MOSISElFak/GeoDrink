@@ -3,6 +3,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.njamb.geodrink.activities.MapActivity">
     <item
+        android:id="@+id/action_scoreboard"
+        android:orderInCategory="100"
+        android:title="Scoreboard"
+        app:showAsAction="never"/>
+    <item
         android:id="@+id/action_search"
         android:orderInCategory="100"
         android:title="Search"

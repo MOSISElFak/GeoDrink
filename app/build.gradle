@@ -18,6 +18,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    dataBinding.enabled true
 }
 
 dependencies {
@@ -42,7 +43,8 @@ dependencies {
     compile 'com.firebase:geofire-android:2.1.1'
     compile 'com.android.support:multidex:1.0.1'
     compile 'com.android.support:support-v4:25.3.1'
-    compile 'com.mobsandgeeks:android-saripaar:2.0.2'
+    compile 'com.mobsandgeeks:android-saripaar:2.0.3'
+    compile 'com.github.nitrico.lastadapter:lastadapter:2.2.2'
     testCompile 'junit:junit:4.12'
 }
 

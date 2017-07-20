@@ -272,6 +272,10 @@ public class MapActivity extends AppCompatActivity
         int id = item.getItemId();
 
         switch (id) {
+            case R.id.action_scoreboard: {
+                startActivity(new Intent(this, ScoreboardActivity.class));
+                break;
+            }
             case R.id.action_settings: {
                 startActivity(new Intent(this, SettingsActivity.class));
                 break;
