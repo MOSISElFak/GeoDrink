@@ -19,6 +19,7 @@ import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -155,6 +156,24 @@ public class MapActivity extends AppCompatActivity
         });
 
         registerForActions();
+
+        if (!locationPermissionsGranted()) {
+            ActivityCompat.requestPermissions(
+                this,
+                new String[] {
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                },
+                REQUEST_LOCATION_PERMISSION
+            );
+        }
+    }
+
+    private boolean locationPermissionsGranted() {
+        return ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED
+            && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED;
     }
 
     private void registerForActions() {
@@ -174,6 +193,11 @@ public class MapActivity extends AppCompatActivity
         localBroadcastManager.registerReceiver(mReceiver, filter);
     }
 
+    private void startServices() {
+        startService(new Intent(this, LocationService.class));
+        startPoiService(); // Users & Places
+    }
+
     @Override
     protected void onStart() {
         super.onStart();
@@ -182,10 +206,9 @@ public class MapActivity extends AppCompatActivity
             startLoginActivity();
         }
         else {
-            // Start background location service
-            startService(new Intent(this, LocationService.class));
-
-            startPoiService();
+            if (locationPermissionsGranted()) {
+                startServices();
+            }
         }
     }
 
@@ -197,6 +220,25 @@ public class MapActivity extends AppCompatActivity
     }
 
     @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case REQUEST_LOCATION_PERMISSION: {
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED
+                        && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                    startServices();
+                    setMapMyLocationEnabled();
+                }
+                else {
+                    Toast.makeText(this, "This app cannot work without location permissions",
+                            Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+            }
+        }
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
 
@@ -204,7 +246,7 @@ public class MapActivity extends AppCompatActivity
 
         boolean enableService = PreferenceManager.getDefaultSharedPreferences(this)
                 .getBoolean("pref_service", true);
-        if (!enableService) {
+        if (!enableService && locationPermissionsGranted()) {
             stopService(new Intent(this, LocationService.class));
             Toast.makeText(this, "Service stopped", Toast.LENGTH_SHORT).show();
         }
@@ -325,16 +367,18 @@ public class MapActivity extends AppCompatActivity
             }
         });
 
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACCESS_COARSE_LOCATION,
-                    Manifest.permission.ACCESS_FINE_LOCATION}, REQUEST_LOCATION_PERMISSION);
-
-            return;
+        if (locationPermissionsGranted()) {
+            setMapMyLocationEnabled();
         }
-        mMap.setMyLocationEnabled(true);
+    }
+
+    private void setMapMyLocationEnabled() {
+        try {
+            mMap.setMyLocationEnabled(true);
+        }
+        catch (SecurityException e) { // covers NPE
+            Log.e(TAG, e.getMessage());
+        }
     }
 
     private void drawCircleOnMap(LatLng center, double radius) {

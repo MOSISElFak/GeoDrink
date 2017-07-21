@@ -1,20 +1,15 @@
 package com.njamb.geodrink.services;
 
-import android.Manifest;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
+import android.widget.Toast;
 
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -90,21 +85,16 @@ public class LocationService extends Service {
         SettingsClient settingsClient = LocationServices.getSettingsClient(this);
         settingsClient.checkLocationSettings(locationSettingsRequest);
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
+        try {
+            LocationServices.getFusedLocationProviderClient(this)
+                    .requestLocationUpdates(mLocationRequest, mLocationCallback, null/*Looper*/);
         }
-        LocationServices.getFusedLocationProviderClient(this)
-                .requestLocationUpdates(mLocationRequest, mLocationCallback, null/*Looper*/);
+        catch (SecurityException e) {
+            // this should never happen, unless user disables permission while using app
+            stopSelf();
+            Toast.makeText(this, "Service stopped because location permission not granted",
+                    Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
@@ -134,27 +124,25 @@ public class LocationService extends Service {
     }
 
     private void getLastKnownLocation() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
-        LocationServices.getFusedLocationProviderClient(this)
-                .getLastLocation()
-                .addOnSuccessListener(new OnSuccessListener<Location>() {
-                    @Override
-                    public void onSuccess(Location location) {
-                        if (location != null) {
-                            mLastLocation = location;
-                            sendBroadcastLocationUpdated(location.getLatitude(), location.getLongitude());
+        try {
+            LocationServices.getFusedLocationProviderClient(this)
+                    .getLastLocation()
+                    .addOnSuccessListener(new OnSuccessListener<Location>() {
+                        @Override
+                        public void onSuccess(Location location) {
+                            if (location != null) {
+                                mLastLocation = location;
+                                sendBroadcastLocationUpdated(location.getLatitude(), location.getLongitude());
+                            }
                         }
-                    }
-                });
+                    });
+        }
+        catch (SecurityException e) {
+            // this should never happen, unless user disables permission while using app
+            stopSelf();
+            Toast.makeText(this, "Service stopped because location permission not granted",
+                    Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void onLocationChanged(Location loc) {
