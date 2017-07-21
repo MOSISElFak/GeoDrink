@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.DialogFragment;
 import android.app.FragmentManager;
 import android.app.ProgressDialog;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -16,6 +17,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -35,10 +37,13 @@ public class RegisterActivity extends AppCompatActivity {
     DialogFragment datePickerFragment;
     EditText username;
     EditText password;
+    EditText name;
     EditText email;
     EditText birthday;
     Button register;
+    Button pickImage;
     Button cancel;
+    ImageView loginImage;
 
     private ProgressDialog pd;
 
@@ -67,10 +72,13 @@ public class RegisterActivity extends AppCompatActivity {
         datePickerFragment = new DatePickerFragment();
         username = (EditText) findViewById(R.id.register_et_username);
         password = (EditText) findViewById(R.id.register_et_password);
+        name = (EditText) findViewById(R.id.register_et_name);
         email = (EditText) findViewById(R.id.register_et_email);
         birthday = (EditText) findViewById(R.id.register_et_birthday);
         register = (Button) findViewById(R.id.register_btn_register);
+        pickImage = (Button) findViewById(R.id.register_btn_pickimage);
         cancel = (Button) findViewById(R.id.register_btn_cancel);
+        loginImage = (ImageView) findViewById(R.id.register_iv_loginimage);
 
         configProgressDialog();
 
@@ -94,6 +102,23 @@ public class RegisterActivity extends AppCompatActivity {
                 });
 
         password.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                areFieldsEmpty();
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
+
+        name.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
@@ -181,6 +206,13 @@ public class RegisterActivity extends AppCompatActivity {
             }
         });
 
+        pickImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // TODO: Add picture select and change the present imageView showing the AppLogo.
+            }
+        });
+
         cancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -201,8 +233,10 @@ public class RegisterActivity extends AppCompatActivity {
     private void areFieldsEmpty() {
         if (username.getText().toString().trim().equals("") ||
                 password.getText().toString().trim().equals("") ||
+                name.getText().toString().trim().equals("") ||
                 email.getText().toString().trim().equals("") ||
-                birthday.getText().toString().trim().equals(""))
+                birthday.getText().toString().trim().equals("") ||
+                loginImage.getDrawable() == null)
         {
             register.setEnabled(false);
         }
