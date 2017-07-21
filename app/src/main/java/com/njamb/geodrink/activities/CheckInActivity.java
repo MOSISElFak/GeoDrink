@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
@@ -38,6 +39,7 @@ import com.njamb.geodrink.models.Drinks;
 import com.njamb.geodrink.models.Place;
 import com.njamb.geodrink.models.Places;
 import com.njamb.geodrink.models.User;
+import com.njamb.geodrink.utils.UsersGeoFire;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -56,6 +58,7 @@ public class CheckInActivity extends AppCompatActivity {
     private ListView drinksListView;
     private DatabaseReference databaseReference;
     private FirebaseUser user;
+    private LocalBroadcastManager mLocalBcastManager;
 
     private Drinks drinks;
 
@@ -73,6 +76,8 @@ public class CheckInActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        mLocalBcastManager = LocalBroadcastManager.getInstance(this);
 
         checkInUser();
 
@@ -252,7 +257,9 @@ public class CheckInActivity extends AppCompatActivity {
         place.name = ((EditText) findViewById(R.id.checkin_et_location)).getText().toString();
         place.date = new SimpleDateFormat("dd/MM/yyyy").format(new Date());
         place.time = new SimpleDateFormat("HH:mm:ss").format(new Date());
-        place.imageUrl = "www.geodrink.com";
+        place.imageUrl = "www.geodrink.com"; // TODO: Change this ffs: imageUrl @Storage on Firebase
+
+        setGeoFireUserLocation(user.getUid(), place.lat, place.lon);
 
         // Create new place:
         refPlaces.setValue(place);
@@ -290,5 +297,12 @@ public class CheckInActivity extends AppCompatActivity {
 //        });
 
 
+    }
+    private void setGeoFireUserLocation(String id, double lat, double lng) {
+        Intent intent = new Intent(UsersGeoFire.ACTION_SET_LOCATION);
+        intent.putExtra("id", id)
+                .putExtra("lat", lat)
+                .putExtra("lng", lng);
+        mLocalBcastManager.sendBroadcast(intent);
     }
 }
