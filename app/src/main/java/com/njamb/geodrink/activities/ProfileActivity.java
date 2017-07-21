@@ -183,7 +183,7 @@ public class ProfileActivity extends AppCompatActivity {
     }
 
     private void uploadProfilePicture(Uri imageUri) {
-        final String imageUrl = String.format("images/%s.jpg", userId);
+        final String imageUrl = String.format("images/users/%s.jpg", userId);
         StorageReference imageRef = FirebaseStorage.getInstance().getReference().child(imageUrl);
         UploadTask uploadTask = imageRef.putFile(imageUri);
 

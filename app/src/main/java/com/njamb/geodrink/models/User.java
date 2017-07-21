@@ -19,7 +19,8 @@ public class User implements Comparable {
 
     public User() {}
 
-    public User(String username, String email, String birthday) {
+    public User(String fullName, String username, String email, String birthday) {
+        this.fullName = fullName;
         this.username = username;
         this.email = email;
         this.birthday = birthday;
