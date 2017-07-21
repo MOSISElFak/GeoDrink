@@ -39,12 +39,15 @@ import com.njamb.geodrink.adapters.FriendListAdapter;
 import com.njamb.geodrink.models.User;
 import com.njamb.geodrink.R;
 
+import org.w3c.dom.Text;
+
 public class ProfileActivity extends AppCompatActivity {
     private static final String TAG = "ProfileActivity";
     private static final int SELECT_IMAGE_REQUEST = 1;
 
     private ImageView profileImg;
     private TextView username;
+    private TextView name;
     private TextView email;
     private TextView birthday;
     private RecyclerView mRecyclerView;
@@ -82,6 +85,7 @@ public class ProfileActivity extends AppCompatActivity {
 
         profileImg = (ImageView) findViewById(R.id.profile_image);
         username = (TextView) findViewById(R.id.profile_username);
+        name = (TextView) findViewById(R.id.profile_name);
         email = (TextView) findViewById(R.id.profile_email);
         birthday = (TextView) findViewById(R.id.profile_birthday);
 
@@ -166,6 +170,7 @@ public class ProfileActivity extends AppCompatActivity {
                 })
                 .into(profileImg);
         username.setText(String.format("Username: %s", user.username));
+        name.setText(String.format("Name: %s", user.fullName));
         email.setText(String.format("Email: %s", user.email));
         birthday.setText(String.format("Birthday: %s", user.birthday));
     }
