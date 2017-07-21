@@ -1,12 +1,14 @@
 package com.njamb.geodrink.models;
 
+import android.support.annotation.NonNull;
+
 import com.google.firebase.database.IgnoreExtraProperties;
 
 import java.util.HashMap;
 
 
 @IgnoreExtraProperties
-public class User {
+public class User implements Comparable {
     public String fullName;
     public String username;
     public String email;
@@ -21,5 +23,11 @@ public class User {
         this.username = username;
         this.email = email;
         this.birthday = birthday;
+    }
+
+    @Override
+    public int compareTo(@NonNull Object o) {
+        // TODO: change to points [o.points - this.points]
+        return ((User)o).email.compareTo(this.email);
     }
 }
