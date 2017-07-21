@@ -5,6 +5,7 @@ import android.databinding.ObservableArrayList;
 import android.databinding.ObservableList;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.widget.ImageView;
@@ -21,8 +22,7 @@ import com.njamb.geodrink.BR;
 import com.njamb.geodrink.R;
 import com.njamb.geodrink.models.User;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collections;
 
 public class ScoreboardActivity extends AppCompatActivity {
 
@@ -49,6 +49,7 @@ public class ScoreboardActivity extends AppCompatActivity {
 
         mRecyclerView = (RecyclerView) findViewById(R.id.rv_scoreboard);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        mRecyclerView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
         mLastAdapter = new LastAdapter(listOfUsers, BR.user)
                 .map(User.class, R.layout.list_item_user)
                 .into(mRecyclerView);
@@ -70,6 +71,7 @@ public class ScoreboardActivity extends AppCompatActivity {
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                 toast("onChildAdded");
                 listOfUsers.add(dataSnapshot.getValue(User.class));
+                Collections.sort(listOfUsers);
             }
 
             @Override
