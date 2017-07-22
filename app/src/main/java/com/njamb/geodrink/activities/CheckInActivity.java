@@ -242,11 +242,14 @@ public class CheckInActivity extends AppCompatActivity {
     }
 
     private void checkIn() {
-        DatabaseReference refPlaces = databaseReference.child("places").push();
-        final String key = databaseReference.getKey();
-
+        //DatabaseReference refPlaces = databaseReference.child("places").push();
+        final String key = databaseReference.child("places").push().getKey();
+        DatabaseReference refPlaces = databaseReference.child("places").child(key);
+        Log.v("+nj", "databaseReference.getKey() = " + key);
         final DatabaseReference places = FirebaseDatabase.getInstance().getReference().child("users")
                 .child(user.getUid()).child("places");
+
+        final DatabaseReference userRef = databaseReference.child("users").child(user.getUid());
 
         // ** com.njamb.geodrink.models.Place **
         final Place place = new Place();
@@ -268,12 +271,12 @@ public class CheckInActivity extends AppCompatActivity {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 //TODO: Pronaci nacin da se ubaci 'key' promenljiva u userID.places sa value 0:
-//                Places plcs = new Places();
-//
-//                plcs = dataSnapshot.getValue(Places.class);
-//                plcs.places.put(key, 0);
-//                //plcs.places.add(key);
-//                places.updateChildren(plcs.places);
+                Places plcs = new Places();
+
+                plcs = dataSnapshot.getValue(Places.class);
+                Log.v("+nj",plcs.toString());
+                plcs.addPlace(key);
+                places.setValue(plcs);
             }
 
             @Override
