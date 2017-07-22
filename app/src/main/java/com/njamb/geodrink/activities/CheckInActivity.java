@@ -2,10 +2,8 @@ package com.njamb.geodrink.activities;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.support.annotation.NonNull;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -20,10 +18,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.Toast;
-
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -31,22 +25,16 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
 import com.njamb.geodrink.R;
 import com.njamb.geodrink.models.Drinks;
 import com.njamb.geodrink.models.Place;
 import com.njamb.geodrink.models.Places;
-import com.njamb.geodrink.models.User;
 import com.njamb.geodrink.utils.UsersGeoFire;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class CheckInActivity extends AppCompatActivity {
     private static final int REQUEST_IMAGE_CAPTURE = 1;
@@ -138,9 +126,10 @@ public class CheckInActivity extends AppCompatActivity {
         checkInBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //TODO Get location name, uploaded photo, and drinks, and post them to firebase;
                 updateDrinks();
                 checkIn();
+
+                //TODO: Checkin photo to firebase (upon checking in)
 
                 // Terminate activity upon checking in:
                 finish();
@@ -170,12 +159,10 @@ public class CheckInActivity extends AppCompatActivity {
         EditText etName = (EditText) findViewById(R.id.checkin_et_location);
         ImageView ivPhoto = (ImageView) findViewById(R.id.checkin_iv_photo);
 
-        // TODO: Remove 'return true' and uncomment the code below:
-//        if (etName.getText().toString().equals("") || ivPhoto.getDrawable() == null || drinksListView.getCheckedItemPositions() == null)
-//            return false;
-//        else
-//            return true;
-        return true;
+        if (etName.getText().toString().equals("") || ivPhoto.getDrawable() == null || drinksListView.getCheckedItemPositions() == null)
+            return false;
+        else
+            return true;
     }
 
     private void enableDisableBtn() {
@@ -284,22 +271,6 @@ public class CheckInActivity extends AppCompatActivity {
 
             }
         });
-
-        // Do not look!! it's for reference :'D
-//        places.addListenerForSingleValueEvent(new ValueEventListener() {
-//            @Override
-//            public void onDataChange(DataSnapshot dataSnapshot) {
-//                for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
-//                    Places places = snapshot.getValue(Places.class);
-//                    System.out.println(places);
-//                }
-//            }
-//            @Override
-//            public void onCancelled(DatabaseError databaseError) {
-//            }
-//        });
-
-
     }
     private void setGeoFireUserLocation(String id, double lat, double lng) {
         Intent intent = new Intent(UsersGeoFire.ACTION_SET_LOCATION);
