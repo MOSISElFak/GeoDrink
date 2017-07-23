@@ -34,7 +34,6 @@ public class ResetPasswordActivity extends AppCompatActivity implements Validato
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_reset_password);
 
-        // TODO: fix Progress Dialog
         pd = new ProgressDialog(this, R.style.TransparentProgressDialogStyle);
         pd.setProgressStyle(android.R.style.Widget_ProgressBar_Small);
         pd.setIndeterminate(true);
