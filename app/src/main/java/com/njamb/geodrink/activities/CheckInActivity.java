@@ -29,6 +29,7 @@ import com.njamb.geodrink.R;
 import com.njamb.geodrink.models.Drinks;
 import com.njamb.geodrink.models.Place;
 import com.njamb.geodrink.models.Places;
+import com.njamb.geodrink.utils.PlacesGeoFire;
 import com.njamb.geodrink.utils.UsersGeoFire;
 
 import java.text.SimpleDateFormat;
@@ -249,7 +250,7 @@ public class CheckInActivity extends AppCompatActivity {
         place.time = new SimpleDateFormat("HH:mm:ss").format(new Date());
         place.imageUrl = "www.geodrink.com"; // TODO: Change this ffs: imageUrl @Storage on Firebase
 
-        setGeoFireUserLocation(user.getUid(), place.lat, place.lon);
+        setGeoFirePlaceLocation(key, place.lat, place.lon);
 
         // Create new place:
         refPlaces.setValue(place);
@@ -272,8 +273,8 @@ public class CheckInActivity extends AppCompatActivity {
             }
         });
     }
-    private void setGeoFireUserLocation(String id, double lat, double lng) {
-        Intent intent = new Intent(UsersGeoFire.ACTION_SET_LOCATION);
+    private void setGeoFirePlaceLocation(String id, double lat, double lng) {
+        Intent intent = new Intent(PlacesGeoFire.ACTION_SET_LOCATION);
         intent.putExtra("id", id)
                 .putExtra("lat", lat)
                 .putExtra("lng", lng);
