@@ -26,6 +26,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.njamb.geodrink.R;
+import com.njamb.geodrink.models.Coordinates;
 import com.njamb.geodrink.models.Drinks;
 import com.njamb.geodrink.models.Place;
 import com.njamb.geodrink.models.Places;
@@ -243,14 +244,14 @@ public class CheckInActivity extends AppCompatActivity {
         final Place place = new Place();
         Bundle bundle = getIntent().getExtras();
         // Setting our mapped data for firebase:
-        place.lat = bundle.getDouble("lat");
-        place.lon = bundle.getDouble("lon");
+
+        place.location = new Coordinates(bundle.getDouble("lat"),bundle.getDouble("lon"));
         place.name = ((EditText) findViewById(R.id.checkin_et_location)).getText().toString();
         place.date = new SimpleDateFormat("dd/MM/yyyy").format(new Date());
         place.time = new SimpleDateFormat("HH:mm:ss").format(new Date());
         place.imageUrl = "www.geodrink.com"; // TODO: Change this ffs: imageUrl @Storage on Firebase
 
-        setGeoFirePlaceLocation(key, place.lat, place.lon);
+        setGeoFirePlaceLocation(key, place.location.lat, place.location.lng);
 
         // Create new place:
         refPlaces.setValue(place);

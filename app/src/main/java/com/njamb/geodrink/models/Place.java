@@ -8,8 +8,7 @@ import com.google.firebase.database.IgnoreExtraProperties;
 
 @IgnoreExtraProperties
 public class Place {
-    public double lon;
-    public double lat;
+    public Coordinates location;
     public String imageUrl;
     public String date;
     public String time;
