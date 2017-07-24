@@ -1,9 +1,12 @@
 package com.njamb.geodrink.activities;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
+import android.support.v4.content.FileProvider;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -18,21 +21,28 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.Toast;
+
+import com.bumptech.glide.Glide;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 import com.njamb.geodrink.R;
 import com.njamb.geodrink.models.Coordinates;
-import com.njamb.geodrink.models.Drinks;
 import com.njamb.geodrink.models.Place;
-import com.njamb.geodrink.models.Places;
 import com.njamb.geodrink.services.PoiService;
 import com.njamb.geodrink.utils.PlacesGeoFire;
 
+import java.io.File;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -40,6 +50,8 @@ import java.util.HashMap;
 import java.util.List;
 
 public class CheckInActivity extends AppCompatActivity {
+    public static final String TAG = "CheckInActivity";
+
     private static final int REQUEST_IMAGE_CAPTURE = 1;
     private static final String CHANGE_LOC_NAME = "Change Name";
     private static final String DONE_CHANGING_LOC_NAME = "Done Changing";
@@ -53,6 +65,8 @@ public class CheckInActivity extends AppCompatActivity {
 
     private FirebaseDatabase mDatabase;
     private String userId;
+
+    private String mPhotoPath;
 
     @Override
     public boolean onSupportNavigateUp() {
@@ -82,7 +96,16 @@ public class CheckInActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                 if (takePictureIntent.resolveActivity(getPackageManager()) != null) {
-                    startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+                    File photoFile = null;
+                    try {
+                        photoFile = createImageFile();
+                    } catch (IOException ex) {
+                        Log.e(TAG, ex.getMessage());
+                    }
+                    if (photoFile != null) {
+                        takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, Uri.fromFile(photoFile));
+                        startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE);
+                    }
                 }
             }
         });
@@ -133,9 +156,6 @@ public class CheckInActivity extends AppCompatActivity {
             public void onClick(View v) {
                 updateDrinks();
                 checkIn();
-
-                //TODO: Checkin photo to firebase (upon checking in)
-
                 // Terminate activity upon checking in:
                 finish();
             }
@@ -144,6 +164,14 @@ public class CheckInActivity extends AppCompatActivity {
 
     }
 
+    private File createImageFile() throws IOException {
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String imageFileName = "JPEG_" + timeStamp + "_";
+        File storageDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
+        File image = File.createTempFile(imageFileName, ".jpg", storageDir);
+        mPhotoPath = image.getAbsolutePath();
+        return image;
+    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -151,9 +179,7 @@ public class CheckInActivity extends AppCompatActivity {
 
         if (requestCode == REQUEST_IMAGE_CAPTURE) {
             if (resultCode == RESULT_OK) {
-                Bundle extras = data.getExtras();
-                Bitmap imageBitmap = (Bitmap) extras.get("data");
-                imageView.setImageBitmap(imageBitmap);
+                Glide.with(this).load(mPhotoPath).into(imageView);
 
                 enableDisableBtn();
             }
@@ -250,13 +276,31 @@ public class CheckInActivity extends AppCompatActivity {
         // add placeId to User
         mDatabase.getReference(String.format("users/%s/places/%s", userId, key)).setValue(true);
 
-        addPhoto();
+        addPhoto(key);
 
         setGeoFirePlaceLocation(key, place.location.lat, place.location.lng);
     }
 
-    private void addPhoto() {
+    private void addPhoto(final String placeId) {
+        String imgUrl = String.format("images/places/%s.jpg", placeId);
+        StorageReference imgRef = FirebaseStorage.getInstance().getReference(imgUrl);
+        UploadTask uploadTask = imgRef.putFile(Uri.fromFile(new File(mPhotoPath)));
 
+        uploadTask.addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                Toast.makeText(CheckInActivity.this, "Upload failed!", Toast.LENGTH_SHORT).show();
+            }
+        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                @SuppressWarnings("VisibleForTests")
+                String imageUrl = taskSnapshot.getDownloadUrl().toString();
+
+                // add image url to db
+                mDatabase.getReference(String.format("places/%s/imageUrl", placeId)).setValue(imageUrl);
+            }
+        });
     }
 
     private void setGeoFirePlaceLocation(String id, double lat, double lng) {
