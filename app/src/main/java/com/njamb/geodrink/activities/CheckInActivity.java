@@ -263,9 +263,11 @@ public class CheckInActivity extends AppCompatActivity {
                 Places plcs = new Places();
 
                 plcs = dataSnapshot.getValue(Places.class);
-                Log.v("+nj",plcs.toString());
-                plcs.addPlace(key);
-                places.setValue(plcs);
+                if (plcs != null) {
+                    Log.v("+nj",plcs.toString());
+                    plcs.addPlace(key);
+                    places.setValue(plcs);
+                }
             }
 
             @Override

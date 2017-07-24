@@ -53,6 +53,7 @@ import com.njamb.geodrink.fragments.FilterDialogFragment;
 import com.njamb.geodrink.models.Coordinates;
 import com.njamb.geodrink.models.MarkerTagModel;
 import com.njamb.geodrink.R;
+import com.njamb.geodrink.models.Place;
 import com.njamb.geodrink.services.LocationService;
 import com.njamb.geodrink.services.PoiService;
 import com.njamb.geodrink.utils.FilterHelper;
@@ -478,7 +479,32 @@ public class MapActivity extends AppCompatActivity
     }
 
     private void addPlaceMarkerOnMap(final String key, LatLng position) {
-        // TODO: add place marker on map
+        if (mMap == null) return;
+
+        MarkerOptions markerOptions = new MarkerOptions();
+        markerOptions.position(position);
+        if (mMap != null) {
+            final Marker marker = mMap.addMarker(markerOptions);
+            marker.setTag(MarkerTagModel.createPlaceTag(key, null/*at this moment*/));
+            marker.setVisible(FilterHelper.placesVisible);
+            mPoiMarkers.put(key, marker);
+
+            mDatabase.getReference(String.format("places/%s/name", key))
+                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            if (dataSnapshot.getValue() != null) {
+                                String name = (String) dataSnapshot.getValue();
+                                MarkerTagModel mtm = (MarkerTagModel) marker.getTag();
+                                assert mtm != null;
+                                mtm.name = name;
+                                marker.setTitle(name);
+                            }
+                        }
+
+                        @Override public void onCancelled(DatabaseError databaseError) {}
+                    });
+        }
     }
 
     private void removeMarkerFromMap(String key) {
