@@ -13,6 +13,7 @@ import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
+import com.github.nitrico.lastadapter.BuildConfig;
 import com.github.nitrico.lastadapter.LastAdapter;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
@@ -69,19 +70,22 @@ public class ScoreboardActivity extends AppCompatActivity {
         return new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                toast("onChildAdded");
                 listOfUsers.add(dataSnapshot.getValue(User.class));
                 Collections.sort(listOfUsers);
             }
 
             @Override
             public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-                toast("onChildChanged");
+                User user = dataSnapshot.getValue(User.class);
+                int i = listOfUsers.indexOf(user);
+                listOfUsers.set(i, user);
+                Collections.sort(listOfUsers);
             }
 
             @Override
             public void onChildRemoved(DataSnapshot dataSnapshot) {
-                toast("onChildRemoved");
+                User user = dataSnapshot.getValue(User.class);
+                listOfUsers.remove(listOfUsers.indexOf(user));
             }
 
             @Override

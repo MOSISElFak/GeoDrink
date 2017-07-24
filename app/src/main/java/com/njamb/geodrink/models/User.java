@@ -25,11 +25,17 @@ public class User implements Comparable {
         this.username = username;
         this.email = email;
         this.birthday = birthday;
+        this.points = 0;
     }
 
     @Override
     public int compareTo(@NonNull Object o) {
-        // TODO: change to points [o.points - this.points]
-        return ((User)o).email.compareTo(this.email);
+        return ((User)o).points - this.points;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        // email is unique for sure
+        return obj instanceof User && this.email.equals(((User) obj).email);
     }
 }
