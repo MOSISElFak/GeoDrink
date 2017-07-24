@@ -32,11 +32,11 @@ import com.njamb.geodrink.models.Place;
 import com.njamb.geodrink.models.Places;
 import com.njamb.geodrink.services.PoiService;
 import com.njamb.geodrink.utils.PlacesGeoFire;
-import com.njamb.geodrink.utils.UsersGeoFire;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 
 public class CheckInActivity extends AppCompatActivity {
@@ -47,11 +47,12 @@ public class CheckInActivity extends AppCompatActivity {
     private ImageView imageView;
     private Button checkInBtn;
     private ListView drinksListView;
-    private DatabaseReference databaseReference;
-    private FirebaseUser user;
     private LocalBroadcastManager mLocalBcastManager;
 
-    private Drinks drinks;
+    private HashMap<String, Long> drinks;
+
+    private FirebaseDatabase mDatabase;
+    private String userId;
 
     @Override
     public boolean onSupportNavigateUp() {
@@ -70,7 +71,8 @@ public class CheckInActivity extends AppCompatActivity {
 
         mLocalBcastManager = LocalBroadcastManager.getInstance(this);
 
-        checkInUser();
+        mDatabase = FirebaseDatabase.getInstance();
+        userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
         imageView = (ImageView) findViewById(R.id.checkin_iv_photo);
 
@@ -147,8 +149,8 @@ public class CheckInActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (resultCode == RESULT_OK) {
-            if (requestCode == REQUEST_IMAGE_CAPTURE) {
+        if (requestCode == REQUEST_IMAGE_CAPTURE) {
+            if (resultCode == RESULT_OK) {
                 Bundle extras = data.getExtras();
                 Bitmap imageBitmap = (Bitmap) extras.get("data");
                 imageView.setImageBitmap(imageBitmap);
@@ -162,19 +164,19 @@ public class CheckInActivity extends AppCompatActivity {
         EditText etName = (EditText) findViewById(R.id.checkin_et_location);
         ImageView ivPhoto = (ImageView) findViewById(R.id.checkin_iv_photo);
 
-        if (etName.getText().toString().equals("") || ivPhoto.getDrawable() == null || drinksListView.getCheckedItemPositions() == null)
-            return false;
-        else
-            return true;
+        return !(etName.getText().toString().trim().equals("")
+                || ivPhoto.getDrawable() == null
+                || drinksListView.getCheckedItemPositions() == null);
     }
 
     private void enableDisableBtn() {
-        if (checkIfShouldEnable()) {
-            checkInBtn.setEnabled(true);
-        }
-        else {
-            checkInBtn.setEnabled(false);
-        }
+        checkInBtn.setEnabled(checkIfShouldEnable());
+//        if (checkIfShouldEnable()) {
+//            checkInBtn.setEnabled(true);
+//        }
+//        else {
+//            checkInBtn.setEnabled(false);
+//        }
     }
 
     private void setDrinksList() {
@@ -186,34 +188,31 @@ public class CheckInActivity extends AppCompatActivity {
         drinksArray.add("Soda");
         drinksArray.add("Alcohol");
 
-        ArrayAdapter<String> drinksAdapter = new ArrayAdapter<String>(this,
+        ArrayAdapter<String> drinksAdapter = new ArrayAdapter<>(this,
                 android.R.layout.simple_list_item_multiple_choice, drinksArray);
 
         drinksListView.setAdapter(drinksAdapter);
         drinksListView.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE);
     }
 
-    private void checkInUser() {
-        databaseReference = FirebaseDatabase.getInstance().getReference();
-        user = FirebaseAuth.getInstance().getCurrentUser();
-    }
+//    private void checkInUser() {
+//        mDatabase = FirebaseDatabase.getInstance().getReference();
+//        userId = FirebaseAuth.getInstance().getCurrentUser();
+//    }
 
     private void updateDrinks() {
-        final DatabaseReference drinksRef = databaseReference.child("users").child(user.getUid())
-                .child("drinks");
+        final DatabaseReference drinksRef = mDatabase
+                .getReference(String.format("users/%s/drinks", userId));
 
         drinksRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                drinks = dataSnapshot.getValue(Drinks.class);
+                drinks = (HashMap<String, Long>) dataSnapshot.getValue();
                 updateDrinksValues();
                 drinksRef.setValue(drinks);
             }
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
+            @Override public void onCancelled(DatabaseError databaseError) {}
         });
     }
 
@@ -223,10 +222,10 @@ public class CheckInActivity extends AppCompatActivity {
         String drink;
 
         for (int i = 0; i < len; i++) {
-            drink = "";
             if (checked.get(i)) {
-                drink = drinksListView.getItemAtPosition(i).toString();
-                drinks.incrementDrinkByName(drink);
+                drink = drinksListView.getItemAtPosition(i).toString().toLowerCase();
+                drinks.put(drink, drinks.get(drink) + 1);
+//                drinks.incrementDrinkByName(drink);
             }
         }
     }
@@ -236,51 +235,30 @@ public class CheckInActivity extends AppCompatActivity {
                 .putExtra("pts", 20);
         mLocalBcastManager.sendBroadcast(intent);
 
-        //DatabaseReference refPlaces = databaseReference.child("places").push();
-        final String key = databaseReference.child("places").push().getKey();
-        DatabaseReference refPlaces = databaseReference.child("places").child(key);
-        Log.v("+nj", "databaseReference.getKey() = " + key);
-        final DatabaseReference places = FirebaseDatabase.getInstance().getReference().child("users")
-                .child(user.getUid()).child("places");
-
-        final DatabaseReference userRef = databaseReference.child("users").child(user.getUid());
-
-        // ** com.njamb.geodrink.models.Place **
-        final Place place = new Place();
+        // add Place in DB
         Bundle bundle = getIntent().getExtras();
-        // Setting our mapped data for firebase:
+        Place place = new Place(
+            /*name*/((EditText) findViewById(R.id.checkin_et_location)).getText().toString(),
+            /*date*/new SimpleDateFormat("dd/MM/yyyy").format(new Date()),
+            /*time*/new SimpleDateFormat("HH:mm:ss").format(new Date()),
+            /*addedBy*/userId,
+            /*location*/new Coordinates(bundle.getDouble("lat"),bundle.getDouble("lon"))
+        );
+        String key = mDatabase.getReference("places").push().getKey();
+        mDatabase.getReference("places").child(key).setValue(place);
 
-        place.location = new Coordinates(bundle.getDouble("lat"),bundle.getDouble("lon"));
-        place.name = ((EditText) findViewById(R.id.checkin_et_location)).getText().toString();
-        place.date = new SimpleDateFormat("dd/MM/yyyy").format(new Date());
-        place.time = new SimpleDateFormat("HH:mm:ss").format(new Date());
-        place.imageUrl = "www.geodrink.com"; // TODO: Change this ffs: imageUrl @Storage on Firebase
+        // add placeId to User
+        mDatabase.getReference(String.format("users/%s/places/%s", userId, key)).setValue(true);
+
+        addPhoto();
 
         setGeoFirePlaceLocation(key, place.location.lat, place.location.lng);
-
-        // Create new place:
-        refPlaces.setValue(place);
-// ^ kreiranje lokacije radi kako treba!
-        places.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                //TODO: Pronaci nacin da se ubaci 'key' promenljiva u userID.places sa value 0:
-                Places plcs = new Places();
-
-                plcs = dataSnapshot.getValue(Places.class);
-                if (plcs != null) {
-                    Log.v("+nj",plcs.toString());
-                    plcs.addPlace(key);
-                    places.setValue(plcs);
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
     }
+
+    private void addPhoto() {
+
+    }
+
     private void setGeoFirePlaceLocation(String id, double lat, double lng) {
         Intent intent = new Intent(PlacesGeoFire.ACTION_SET_LOCATION);
         intent.putExtra("id", id)

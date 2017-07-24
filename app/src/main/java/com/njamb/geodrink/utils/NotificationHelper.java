@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.support.v4.app.NotificationCompat;
 
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
@@ -52,15 +53,17 @@ public final class NotificationHelper {
     public static void displayPlaceNotification(final String id,
                                                 final Context context,
                                                 final double dist) {
+        final String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
         final NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context);
         FirebaseDatabase.getInstance().getReference(String.format("places/%s", id))
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         Place place = dataSnapshot.getValue(Place.class);
-                        // TODO: do not display notification for 'my' places
-                        // add 'addedBy' field in places ?
                         assert place != null;
+                        if (place.addedBy.equals(userId)) return;
+
                         notificationBuilder
                                 .setSmallIcon(R.mipmap.geodrink_blue_logo)
                                 .setContentTitle(String.format("%s is near you", place.name))

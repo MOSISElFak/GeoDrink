@@ -63,7 +63,7 @@
             android:paddingRight="20dp"
             android:paddingEnd="20dp"
             android:textSize="20sp"
-            android:text="@{Integer.toString(user.points)}"/>
+            android:text="@{Long.toString(user.points)}"/>
 
     </RelativeLayout>
 

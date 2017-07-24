@@ -13,15 +13,17 @@ public class Place {
     public String date;
     public String time;
     public String name;
+    public String addedBy;
 
-    public Place() {
-//        lon = 0.0;
-//        lat = 0.0;
-//        imageUrl = "";
-//        date = new SimpleDateFormat("dd/MM/yyyy").format(new Date());
-//        time = new SimpleDateFormat("HH:mm:ss").format(new Date());
-//        name = "";
+    public Place() {}
+
+    public Place(String name, String date, String time, String addedBy, Coordinates location) {
+        this.name = name;
+        this.date = date;
+        this.time = time;
+        this.addedBy = addedBy;
+        this.location = location;
+
+        imageUrl = "http://bit.ly/2tuVdKI";
     }
-
-
 }

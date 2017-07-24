@@ -16,7 +16,9 @@ public class User implements Comparable {
     public String profileUrl;
     public Coordinates location;
     public HashMap<String, Boolean> friends = new HashMap<>();
-    public int points;
+    public HashMap<String, Boolean> places = new HashMap<>();
+    public HashMap<String, Long> drinks = initDrinks();
+    public long points;
 
     public User() {}
 
@@ -25,12 +27,25 @@ public class User implements Comparable {
         this.username = username;
         this.email = email;
         this.birthday = birthday;
-        this.points = 0;
+        this.points = 0L;
+    }
+
+    private HashMap<String, Long> initDrinks() {
+        HashMap<String, Long> hm = new HashMap<>();
+
+        hm.put("beer", 0L);
+        hm.put("coffee", 0L);
+        hm.put("cocktail", 0L);
+        hm.put("juice", 0L);
+        hm.put("soda", 0L);
+        hm.put("alcohol", 0L);
+
+        return hm;
     }
 
     @Override
     public int compareTo(@NonNull Object o) {
-        return ((User)o).points - this.points;
+        return (int) (((User)o).points - this.points);
     }
 
     @Override

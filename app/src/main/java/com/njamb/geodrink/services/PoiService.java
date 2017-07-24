@@ -142,9 +142,9 @@ public class PoiService extends Service {
         dbRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                int points;
+                long points;
                 if (dataSnapshot.getValue() == null) points = 0;
-                else points = (int) dataSnapshot.getValue();
+                else points = (long) dataSnapshot.getValue();
                 points += pts;
                 dbRef.setValue(points);
 
