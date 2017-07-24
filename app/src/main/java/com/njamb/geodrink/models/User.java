@@ -16,6 +16,7 @@ public class User implements Comparable {
     public String profileUrl;
     public Coordinates location;
     public HashMap<String, Boolean> friends = new HashMap<>();
+    public int points;
 
     public User() {}
 

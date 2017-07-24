@@ -30,6 +30,7 @@ import com.njamb.geodrink.models.Coordinates;
 import com.njamb.geodrink.models.Drinks;
 import com.njamb.geodrink.models.Place;
 import com.njamb.geodrink.models.Places;
+import com.njamb.geodrink.services.PoiService;
 import com.njamb.geodrink.utils.PlacesGeoFire;
 import com.njamb.geodrink.utils.UsersGeoFire;
 
@@ -231,6 +232,10 @@ public class CheckInActivity extends AppCompatActivity {
     }
 
     private void checkIn() {
+        Intent intent = new Intent(PoiService.ACTION_ADD_POINTS)
+                .putExtra("pts", 20);
+        mLocalBcastManager.sendBroadcast(intent);
+
         //DatabaseReference refPlaces = databaseReference.child("places").push();
         final String key = databaseReference.child("places").push().getKey();
         DatabaseReference refPlaces = databaseReference.child("places").child(key);

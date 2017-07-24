@@ -58,6 +58,8 @@ public final class NotificationHelper {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         Place place = dataSnapshot.getValue(Place.class);
+                        // TODO: do not display notification for 'my' places
+                        // add 'addedBy' field in places ?
                         assert place != null;
                         notificationBuilder
                                 .setSmallIcon(R.mipmap.geodrink_blue_logo)

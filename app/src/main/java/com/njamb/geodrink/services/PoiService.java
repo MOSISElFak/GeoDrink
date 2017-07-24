@@ -12,6 +12,12 @@ import android.support.v4.content.LocalBroadcastManager;
 import android.widget.Toast;
 
 import com.firebase.geofire.GeoLocation;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.njamb.geodrink.activities.MapActivity;
 import com.njamb.geodrink.utils.PlacesGeoFire;
 import com.njamb.geodrink.utils.UsersGeoFire;
@@ -21,6 +27,7 @@ public class PoiService extends Service {
     public static final String ACTION_POI_OUT_OF_RANGE = "com.njamb.geodrink.removemarker";
     public static final String ACTION_REPOSITION_POI = "com.njamb.geodrink.repositionmarker";
     public static final String ACTION_PLACE_IN_RANGE = "com.njamb.geodrink.placeaddmarker";
+    public static final String ACTION_ADD_POINTS = "com.njamb.geodrink.addpoints";
 
     private UsersGeoFire mUsersGeoFire;
     private PlacesGeoFire mPlacesGeoFire;
@@ -37,6 +44,8 @@ public class PoiService extends Service {
         IntentFilter filter = new IntentFilter(MapActivity.ACTION_SET_CENTER);
         mLocalBcastManager.registerReceiver(mReceiver, filter);
         filter = new IntentFilter(MapActivity.ACTION_SET_RADIUS);
+        mLocalBcastManager.registerReceiver(mReceiver, filter);
+        filter = new IntentFilter(PoiService.ACTION_ADD_POINTS);
         mLocalBcastManager.registerReceiver(mReceiver, filter);
 
         mUsersGeoFire = new UsersGeoFire(this, this);
@@ -120,6 +129,30 @@ public class PoiService extends Service {
             else if (MapActivity.ACTION_SET_RADIUS.equals(action)) {
                 setRadius(intent.getExtras());
             }
+            else if (PoiService.ACTION_ADD_POINTS.equals(action)) {
+                updatePoints(intent.getExtras().getInt("pts"));
+            }
         }
     };
+
+    private void updatePoints(final int pts) {
+        String userId = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        final DatabaseReference dbRef = FirebaseDatabase.getInstance()
+                .getReference(String.format("users/%s/points", userId));
+        dbRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                int points;
+                if (dataSnapshot.getValue() == null) points = 0;
+                else points = (int) dataSnapshot.getValue();
+                points += pts;
+                dbRef.setValue(points);
+
+                String msg = String.format("You gained %d points!", pts);
+                Toast.makeText(PoiService.this, msg, Toast.LENGTH_SHORT).show();
+            }
+
+            @Override public void onCancelled(DatabaseError databaseError) {}
+        });
+    }
 }
