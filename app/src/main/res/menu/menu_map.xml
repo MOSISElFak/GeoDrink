@@ -43,11 +43,11 @@
         android:title="Login"
         app:showAsAction="never"
         />-->
-    <item
-        android:id="@+id/action_details"
-        android:orderInCategory="100"
-        android:title="Details"
-        app:showAsAction="never"/>
+    <!--<item-->
+        <!--android:id="@+id/action_details"-->
+        <!--android:orderInCategory="100"-->
+        <!--android:title="Details"-->
+        <!--app:showAsAction="never"/>-->
     <item
         android:id="@+id/action_settings"
         android:orderInCategory="100"

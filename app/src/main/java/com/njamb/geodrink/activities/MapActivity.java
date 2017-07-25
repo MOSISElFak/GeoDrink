@@ -361,8 +361,10 @@ public class MapActivity extends AppCompatActivity
                     startProfileActivity(tag.id);
                 }
                 else if (tag.isPlace) {
-                    // TODO: show place info
-                    Toast.makeText(MapActivity.this, marker.getTag().toString(), Toast.LENGTH_LONG).show();
+                    Intent intent = new Intent(MapActivity.this, DetailsActivity.class);
+                    intent.putExtra("placeId", tag.id);
+
+                    startActivity(intent);
                 }
                 return true;
             }

@@ -26,4 +26,12 @@ public class Place {
 
         imageUrl = "http://bit.ly/2tuVdKI";
     }
+
+    @Override
+    public String toString() {
+        return "\nName: " + name + "\n" +
+                "Date: " + date + "\n" +
+                "Time: " + time + "\n" +
+                "Added By: " + addedBy + "\n";
+    }
 }
