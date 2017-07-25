@@ -6,6 +6,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v4.app.NotificationCompat;
+import android.telecom.Call;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -13,6 +14,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.njamb.geodrink.R;
+import com.njamb.geodrink.activities.DetailsActivity;
 import com.njamb.geodrink.activities.MapActivity;
 import com.njamb.geodrink.activities.ProfileActivity;
 import com.njamb.geodrink.models.Place;
@@ -69,7 +71,8 @@ public final class NotificationHelper {
                                 .setContentTitle(String.format("%s is near you", place.name))
                                 .setContentText(String.format("It's only %d meters from you", (int)dist))
                                 .setAutoCancel(true);
-                        Intent intent = new Intent(context, MapActivity.class);
+                        Intent intent = new Intent(context, DetailsActivity.class);
+                        intent.putExtra("placeId", id);
                         // TODO: change from MapActivity to DetailsActivity & add placeId
                         PendingIntent resultPendingIntent = PendingIntent
                                 .getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
