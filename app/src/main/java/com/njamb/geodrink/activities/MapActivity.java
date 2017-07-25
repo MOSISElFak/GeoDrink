@@ -93,6 +93,8 @@ public class MapActivity extends AppCompatActivity
     // Local broadcast manager
     private LocalBroadcastManager localBroadcastManager;
 
+    // Camera animation flag:
+    private boolean isCameraAnimated  = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -338,11 +340,6 @@ public class MapActivity extends AppCompatActivity
                 startProfileActivity(mAuth.getCurrentUser().getUid());
                 break;
             }
-            case R.id.action_details: {
-                Intent i = new Intent(this, DetailsActivity.class);
-                startActivity(i);
-                break;
-            }
         }
 
         return super.onOptionsItemSelected(item);
@@ -581,6 +578,11 @@ public class MapActivity extends AppCompatActivity
                 if (mMap != null) {
                     float currZoom = mMap.getCameraPosition().zoom;
                     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(center, Math.max(15.0f, currZoom)));
+                }
+
+                if (!isCameraAnimated && mMap != null) {
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(center, 15.0f));
+                    isCameraAnimated = true;
                 }
             }
         }
