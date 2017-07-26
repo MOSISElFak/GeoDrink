@@ -24,7 +24,7 @@ public class Place {
         this.addedBy = addedBy;
         this.location = location;
 
-        imageUrl = "http://bit.ly/2tuVdKI";
+        imageUrl = "http://enigmaescape.gr/images/comingsoon.jpg";
     }
 
     @Override
