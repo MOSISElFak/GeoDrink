@@ -2,11 +2,6 @@ package com.njamb.geodrink.models;
 
 import com.google.firebase.database.IgnoreExtraProperties;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 /**
  * Created by njamb94 on 7/17/2017.
  */

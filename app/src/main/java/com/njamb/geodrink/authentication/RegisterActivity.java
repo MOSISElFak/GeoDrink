@@ -38,9 +38,9 @@ import com.mobsandgeeks.saripaar.annotation.Email;
 import com.mobsandgeeks.saripaar.annotation.NotEmpty;
 import com.mobsandgeeks.saripaar.annotation.Password;
 import com.mobsandgeeks.saripaar.annotation.Past;
+import com.njamb.geodrink.R;
 import com.njamb.geodrink.fragments.DatePickerFragment;
 import com.njamb.geodrink.models.User;
-import com.njamb.geodrink.R;
 
 import java.util.List;
 

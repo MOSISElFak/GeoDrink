@@ -35,11 +35,9 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.njamb.geodrink.R;
 import com.njamb.geodrink.adapters.FriendListAdapter;
 import com.njamb.geodrink.models.User;
-import com.njamb.geodrink.R;
-
-import org.w3c.dom.Text;
 
 public class ProfileActivity extends AppCompatActivity {
     private static final String TAG = "ProfileActivity";

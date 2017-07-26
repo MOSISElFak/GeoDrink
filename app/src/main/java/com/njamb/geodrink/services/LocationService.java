@@ -21,16 +21,11 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 import com.google.maps.android.SphericalUtil;
-import com.njamb.geodrink.R;
 import com.njamb.geodrink.activities.MapActivity;
 import com.njamb.geodrink.models.Coordinates;
-import com.njamb.geodrink.models.User;
 import com.njamb.geodrink.utils.NotificationHelper;
 import com.njamb.geodrink.utils.UsersGeoFire;
 

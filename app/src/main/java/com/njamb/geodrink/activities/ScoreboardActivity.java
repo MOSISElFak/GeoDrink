@@ -3,8 +3,8 @@ package com.njamb.geodrink.activities;
 import android.databinding.BindingAdapter;
 import android.databinding.ObservableArrayList;
 import android.databinding.ObservableList;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -13,7 +13,6 @@ import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
-import com.github.nitrico.lastadapter.BuildConfig;
 import com.github.nitrico.lastadapter.LastAdapter;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
@@ -77,9 +76,12 @@ public class ScoreboardActivity extends AppCompatActivity {
             @Override
             public void onChildChanged(DataSnapshot dataSnapshot, String s) {
                 User user = dataSnapshot.getValue(User.class);
+                assert user != null;
                 int i = listOfUsers.indexOf(user);
-                listOfUsers.set(i, user);
-                Collections.sort(listOfUsers);
+                if (listOfUsers.get(i).points != user.points) {
+                    listOfUsers.set(i, user);
+                    Collections.sort(listOfUsers);
+                }
             }
 
             @Override

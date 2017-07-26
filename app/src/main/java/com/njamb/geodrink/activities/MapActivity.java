@@ -47,13 +47,12 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.njamb.geodrink.R;
 import com.njamb.geodrink.authentication.LoginActivity;
 import com.njamb.geodrink.bluetooth.AddFriendActivity;
 import com.njamb.geodrink.fragments.FilterDialogFragment;
 import com.njamb.geodrink.models.Coordinates;
 import com.njamb.geodrink.models.MarkerTagModel;
-import com.njamb.geodrink.R;
-import com.njamb.geodrink.models.Place;
 import com.njamb.geodrink.services.LocationService;
 import com.njamb.geodrink.services.PoiService;
 import com.njamb.geodrink.utils.FilterHelper;
@@ -574,11 +573,6 @@ public class MapActivity extends AppCompatActivity
                 else drawCircleOnMap(center, mRange);
 
                 mLocation = new GeoLocation(c.lat, c.lng);
-
-                if (mMap != null) {
-                    float currZoom = mMap.getCameraPosition().zoom;
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(center, Math.max(15.0f, currZoom)));
-                }
 
                 if (!isCameraAnimated && mMap != null) {
                     mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(center, 15.0f));

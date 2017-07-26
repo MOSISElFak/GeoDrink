@@ -7,8 +7,8 @@ import android.os.Bundle;
 import android.widget.DatePicker;
 import android.widget.EditText;
 
-import com.njamb.geodrink.authentication.RegisterActivity;
 import com.njamb.geodrink.R;
+import com.njamb.geodrink.authentication.RegisterActivity;
 
 import java.util.Calendar;
 

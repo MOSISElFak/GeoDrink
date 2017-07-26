@@ -6,7 +6,6 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v4.app.NotificationCompat;
-import android.telecom.Call;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
@@ -15,12 +14,9 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.njamb.geodrink.R;
 import com.njamb.geodrink.activities.DetailsActivity;
-import com.njamb.geodrink.activities.MapActivity;
 import com.njamb.geodrink.activities.ProfileActivity;
 import com.njamb.geodrink.models.Place;
 import com.njamb.geodrink.models.User;
-
-import java.util.Date;
 
 public final class NotificationHelper {
     public static void displayUserNotification(final String id,
