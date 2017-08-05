@@ -196,12 +196,6 @@ public class CheckInActivity extends AppCompatActivity {
 
     private void enableDisableBtn() {
         checkInBtn.setEnabled(checkIfShouldEnable());
-//        if (checkIfShouldEnable()) {
-//            checkInBtn.setEnabled(true);
-//        }
-//        else {
-//            checkInBtn.setEnabled(false);
-//        }
     }
 
     private void setDrinksList() {
@@ -219,11 +213,6 @@ public class CheckInActivity extends AppCompatActivity {
         drinksListView.setAdapter(drinksAdapter);
         drinksListView.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE);
     }
-
-//    private void checkInUser() {
-//        mDatabase = FirebaseDatabase.getInstance().getReference();
-//        userId = FirebaseAuth.getInstance().getCurrentUser();
-//    }
 
     private void updateDrinks() {
         final DatabaseReference drinksRef = mDatabase
@@ -250,7 +239,6 @@ public class CheckInActivity extends AppCompatActivity {
             if (checked.get(i)) {
                 drink = drinksListView.getItemAtPosition(i).toString().toLowerCase();
                 drinks.put(drink, drinks.get(drink) + 1);
-//                drinks.incrementDrinkByName(drink);
             }
         }
     }

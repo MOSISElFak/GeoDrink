@@ -56,6 +56,7 @@ public class FriendListAdapter extends RecyclerView.Adapter<FriendViewHolder> {
             @Override
             public void onClick(View v) {
                 int index = mRecyclerView.getChildLayoutPosition(v);
+                // TODO: open profile for that user?
                 Toast.makeText(mContext,
                         String.format("%s says hi", mFriends.get(index).username),
                         Toast.LENGTH_SHORT).show();

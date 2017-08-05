@@ -12,9 +12,6 @@ import com.njamb.geodrink.authentication.RegisterActivity;
 
 import java.util.Calendar;
 
-/**
- * Created by Njamb on 21-May-17.
- */
 
 public class DatePickerFragment extends DialogFragment implements DatePickerDialog.OnDateSetListener {
 

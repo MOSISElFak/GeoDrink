@@ -55,7 +55,6 @@ public class BluetoothService {
         msg.obj = s;
         msg.what = msgWhat;
         mHandler.sendMessageDelayed(msg, delay);
-//        mHandler.sendMessage(msg);
     }
 
     /**
@@ -273,7 +272,6 @@ public class BluetoothService {
                 }
             }
             Log.i(TAG, "END mAcceptThread");
-
         }
 
         public void cancel() {

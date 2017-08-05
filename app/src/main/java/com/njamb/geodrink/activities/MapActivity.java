@@ -222,7 +222,9 @@ public class MapActivity extends AppCompatActivity
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode,
+                                           @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
         switch (requestCode) {
             case REQUEST_LOCATION_PERMISSION: {
                 if (grantResults.length > 0
@@ -324,11 +326,6 @@ public class MapActivity extends AppCompatActivity
                 startActivity(new Intent(this, SettingsActivity.class));
                 break;
             }
-//            case R.id.action_search: {
-//                // ToDo: Search field (hide icons), show only magnifying glass (quick search).
-//                // On next click on it (thorough search) - new activity.
-//                break;
-//            }
             case R.id.action_add: {
                 Intent i = new Intent(this, AddFriendActivity.class);
                 i.putExtra("userId", mAuth.getCurrentUser().getUid());

@@ -65,7 +65,6 @@ public class ScoreboardActivity extends AppCompatActivity {
     }
 
     private ChildEventListener getChildEventListener() {
-        // TODO: add code to other methods ?
         return new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {

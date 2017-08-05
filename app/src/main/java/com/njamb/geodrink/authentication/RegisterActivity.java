@@ -107,126 +107,29 @@ public class RegisterActivity extends AppCompatActivity implements Validator.Val
 
         configProgressDialog();
 
-        // If any input field is empty -> disable 'register' button:
-//        areFieldsEmpty();
-
-//        username.addTextChangedListener(new TextWatcher() {
-//                    @Override
-//                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-//                    }
-//
-//                    @Override
-//                    public void onTextChanged(CharSequence s, int start, int before, int count) {
-//                        areFieldsEmpty();
-//                    }
-//
-//                    @Override
-//                    public void afterTextChanged(Editable s) {
-//
-//                    }
-//                });
-
-//        password.addTextChangedListener(new TextWatcher() {
-//            @Override
-//            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-//
-//            }
-//
-//            @Override
-//            public void onTextChanged(CharSequence s, int start, int before, int count) {
-//                areFieldsEmpty();
-//            }
-//
-//            @Override
-//            public void afterTextChanged(Editable s) {
-//
-//            }
-//        });
-
-//        name.addTextChangedListener(new TextWatcher() {
-//            @Override
-//            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-//
-//            }
-//
-//            @Override
-//            public void onTextChanged(CharSequence s, int start, int before, int count) {
-//                areFieldsEmpty();
-//            }
-//
-//            @Override
-//            public void afterTextChanged(Editable s) {
-//
-//            }
-//        });
-
-//        email.addTextChangedListener(new TextWatcher() {
-//            @Override
-//            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-//
-//            }
-//
-//            @Override
-//            public void onTextChanged(CharSequence s, int start, int before, int count) {
-//                areFieldsEmpty();
-//            }
-//
-//            @Override
-//            public void afterTextChanged(Editable s) {
-//
-//            }
-//        });
-
         // Set datePicker widget for birthday editText field:
         birthday.setInputType(InputType.TYPE_NULL);
-
-//        birthday.addTextChangedListener(new TextWatcher() {
-//            @Override
-//            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-//
-//            }
-//
-//            @Override
-//            public void onTextChanged(CharSequence s, int start, int before, int count) {
-//                areFieldsEmpty();
-//            }
-//
-//            @Override
-//            public void afterTextChanged(Editable s) {
-//
-//            }
-//        });
-
         birthday.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
                 if (hasFocus) {
                     FragmentManager fragmentManager = getFragmentManager();
-
                     datePickerFragment.show(fragmentManager, "datePicker");
-
-//                    areFieldsEmpty();
                 }
             }
         });
-
         birthday.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 FragmentManager fragmentManager = getFragmentManager();
-
                 datePickerFragment.show(fragmentManager, "datePicker");
-
-//                areFieldsEmpty();
             }
         });
-
 
         register.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mValidator.validate();
-//                registerUser();
             }
         });
 
@@ -276,22 +179,6 @@ public class RegisterActivity extends AppCompatActivity implements Validator.Val
         pd.setIndeterminate(true);
         pd.setCancelable(false);
     }
-
-    // Method that checks if any of the input fields are empty:
-//    private void areFieldsEmpty() {
-//        if (username.getText().toString().trim().equals("") ||
-//                password.getText().toString().trim().equals("") ||
-//                name.getText().toString().trim().equals("") ||
-//                email.getText().toString().trim().equals("") ||
-//                birthday.getText().toString().trim().equals("") ||
-//                loginImage.getDrawable() == null)
-//        {
-//            register.setEnabled(false);
-//        }
-//        else {
-//            register.setEnabled(true);
-//        }
-//    }
 
     private void registerUser() {
         String emailReg = email.getText().toString();

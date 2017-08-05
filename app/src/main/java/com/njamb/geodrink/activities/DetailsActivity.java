@@ -27,11 +27,7 @@ import com.njamb.geodrink.models.User;
 
 public class DetailsActivity extends AppCompatActivity {
 
-    private DatabaseReference mDatabase;
-    private DatabaseReference mPlacesReference ;
-    private DatabaseReference mPlaceUserRef;
-    private FirebaseUser mUser;
-    private StorageReference mStorage;
+    private FirebaseDatabase mDatabase;
     private TextView mDate;
     private TextView mTime;
     private TextView mPlaceName;
@@ -39,9 +35,7 @@ public class DetailsActivity extends AppCompatActivity {
     private Button mReturn;
     private ImageView mProfileImage;
     private ImageView mPlaceImage;
-    private String placeId;
-    private Place mPlace = new Place();
-    private User mUserPlace;
+    private Place mPlace;
 
     @Override
     public boolean onSupportNavigateUp() {
@@ -71,17 +65,10 @@ public class DetailsActivity extends AppCompatActivity {
 
         // Set listeners:
         setListeners();
-
-        // Set UI elements:
-        //setUI();
     }
 
     private void getReferences() {
-        mUser = FirebaseAuth.getInstance().getCurrentUser();
-        mDatabase = FirebaseDatabase.getInstance().getReference()
-                .child("users").child(mUser.getUid());
-
-        mStorage = FirebaseStorage.getInstance().getReference().child("images").child("places");
+        mDatabase = FirebaseDatabase.getInstance();
 
         mPlaceName = (TextView) findViewById(R.id.details_tv_placeName);
         mProfileName = (TextView) findViewById(R.id.details_tv_userName);
@@ -103,12 +90,11 @@ public class DetailsActivity extends AppCompatActivity {
 
         // Get parsed placeId:
         Intent intent = getIntent();
-        placeId = intent.getStringExtra("placeId");
+        String placeId = intent.getStringExtra("placeId");
 
         Log.v("+nj", "PRE mPlacesRef");
         // Map the place data:
-        FirebaseDatabase.getInstance()
-                .getReference(String.format("places/%s", placeId))
+        mDatabase.getReference(String.format("places/%s", placeId))
                 .addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -121,14 +107,6 @@ public class DetailsActivity extends AppCompatActivity {
 
             }
         });
-        Log.v("+nj", "POST mPlacesRef");
-
-        Log.v("+nj", mPlace.toString());
-
-        Log.v("+nj", "PRE mPlaceUserRef");
-        // Map the checked-in user data:
-
-        Log.v("+nj", "POST mPlaceUserRef");
     }
 
     private void setUI() {
@@ -141,16 +119,15 @@ public class DetailsActivity extends AppCompatActivity {
                 .apply(RequestOptions.errorOf(R.mipmap.geodrink_blue_logo))
                 .into(mPlaceImage);
 
-        FirebaseDatabase.getInstance()
-                .getReference(String.format("users/%s", mPlace.addedBy))
+        mDatabase.getReference(String.format("users/%s", mPlace.addedBy))
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
-                        mUserPlace = dataSnapshot.getValue(User.class);
+                        User userPlace = dataSnapshot.getValue(User.class);
 
-                        mProfileName.setText("Username: " + mUserPlace.username);
+                        mProfileName.setText("Username: " + userPlace.username);
                         Glide.with(DetailsActivity.this)
-                                .load(mUserPlace.profileUrl)
+                                .load(userPlace.profileUrl)
                                 .apply(RequestOptions.errorOf(R.mipmap.geodrink_blue_logo))
                                 .into(mProfileImage);
                     }

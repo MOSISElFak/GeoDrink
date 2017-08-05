@@ -69,7 +69,6 @@ public final class NotificationHelper {
                                 .setAutoCancel(true);
                         Intent intent = new Intent(context, DetailsActivity.class);
                         intent.putExtra("placeId", id);
-                        // TODO: change from MapActivity to DetailsActivity & add placeId
                         PendingIntent resultPendingIntent = PendingIntent
                                 .getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
                         notificationBuilder.setContentIntent(resultPendingIntent);

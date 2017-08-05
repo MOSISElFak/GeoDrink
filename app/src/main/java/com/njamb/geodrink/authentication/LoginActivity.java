@@ -38,7 +38,6 @@ public class LoginActivity extends AppCompatActivity implements Validator.Valida
 
     private ProgressDialog pd;
     private FirebaseAuth mAuth;
-//    private boolean shouldClear = false;
 
 
     @Override
@@ -70,7 +69,6 @@ public class LoginActivity extends AppCompatActivity implements Validator.Valida
             @Override
             public void onClick(View v) {
                 mValidator.validate();
-//                loginUser();
             }
         });
 
@@ -92,53 +90,7 @@ public class LoginActivity extends AppCompatActivity implements Validator.Valida
         });
 
         configProgressDialog();
-
-//        lockLoginBtn();
-
-//        email.addTextChangedListener(new TextWatcher() {
-//            @Override
-//            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-//
-//            }
-//
-//            @Override
-//            public void onTextChanged(CharSequence s, int start, int before, int count) {
-//                clearAndRemove();
-//            }
-//
-//            @Override
-//            public void afterTextChanged(Editable s) {
-//                lockLoginBtn();
-//            }
-//        });
-//
-//        password.addTextChangedListener(new TextWatcher() {
-//            @Override
-//            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-//
-//            }
-//
-//            @Override
-//            public void onTextChanged(CharSequence s, int start, int before, int count) {
-//                clearAndRemove();
-//            }
-//
-//            @Override
-//            public void afterTextChanged(Editable s) {
-//                lockLoginBtn();
-//            }
-//        });
     }
-
-//    private void clearAndRemove() {
-//        if (shouldClear) {
-//            email.setError(null);
-//            password.setError(null);
-//            email.getText().clear();
-//            password.getText().clear();
-//            shouldClear = false;
-//        }
-//    }
 
     private void configProgressDialog() {
         pd = new ProgressDialog(this, R.style.TransparentProgressDialogStyle);
@@ -154,38 +106,10 @@ public class LoginActivity extends AppCompatActivity implements Validator.Valida
         switch (requestCode) {
             case REQUEST_REGISTER:
                 if (resultCode == Activity.RESULT_OK) {
-                    // TODO: after user is registered, make toast (successful registration)
-                    // & return to the map.
-                    // After registration, user is logged in automatically.
-
                     Toast.makeText(this, "Successful registration!", Toast.LENGTH_SHORT).show();
                 }
-//        else if (requestCode == Activity.RESULT_CANCELED) {
-//            // Do nothing.
-//        }
         }
     }
-
-    // Method that checks if any of the input fields are empty:
-//    private boolean areFieldsEmpty() {
-//        if (email.getText().toString().equals("") ||
-//                password.getText().toString().equals(""))
-//        {
-//            return true;
-//        }
-//        else {
-//            return false;
-//        }
-//    }
-
-//    private void lockLoginBtn() {
-//        if (areFieldsEmpty()) {
-//            login.setEnabled(false);
-//        }
-//        else {
-//            login.setEnabled(true);
-//        }
-//    }
 
     private void loginUser() {
         String email = this.email.getText().toString();
@@ -202,26 +126,16 @@ public class LoginActivity extends AppCompatActivity implements Validator.Valida
 
                         if (task.isSuccessful()) {
                             Log.d(TAG, "signInWithEmail:success");
-//                            FirebaseUser user = mAuth.getCurrentUser();
-//                            Intent intent = new Intent(LoginActivity.this, ProfileActivity.class);
-//                            intent.putExtra("userId", user.getUid());
-//                            LoginActivity.this.startActivity(intent);
                             finish();
                         } else {
                             Log.w(TAG, "signInWithEmail:failure", task.getException());
-                            Toast.makeText(LoginActivity.this, R.string.msg_auth_fail, Toast.LENGTH_LONG).show();
-//                            showError();
+                            Toast.makeText(LoginActivity.this,
+                                    R.string.msg_auth_fail,
+                                    Toast.LENGTH_LONG).show();
                         }
                     }
                 });
     }
-
-
-//    private void showError() {
-//        ((EditText) findViewById(R.id.login_et_username)).setError("Wrong email or password.");
-//        ((EditText) findViewById(R.id.login_et_password)).setError("Wrong email or password.");
-//        shouldClear = true;
-//    }
 
     @Override
     public void onValidationSucceeded() {
