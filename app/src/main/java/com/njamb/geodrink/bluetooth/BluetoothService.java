@@ -148,8 +148,6 @@ public class BluetoothService {
         // Start the thread to manage the connection and perform transmissions
         mConnectedThread = new ConnectedThread(socket);
         mConnectedThread.start();
-
-        sendMessage(null, Constants.MESSAGE_CONNECTED, 1000/*ms*/);
     }
 
     /**
@@ -342,6 +340,7 @@ public class BluetoothService {
 
             // Start the connected thread
             connected(mmSocket, mmDevice);
+            sendMessage(null, Constants.MESSAGE_CONNECTED, 3000/*ms*/);
         }
 
         public void cancel() {
