@@ -2,10 +2,11 @@ package com.njamb.geodrink.models
 
 import com.njamb.geodrink.utils.FilterHelper
 
-class MarkerTagModel
-// more?
-
-private constructor(var isUser: Boolean, var isFriend: Boolean, var isPlace: Boolean, var id: String, var name: String) {
+class MarkerTagModel private constructor(var isUser: Boolean,
+                                         var isFriend: Boolean,
+                                         var isPlace: Boolean,
+                                         var id: String,
+                                         var name: String) {
     var previousVisibilityState: Boolean = false /* for filtering only */
 
     init {
@@ -21,20 +22,20 @@ private constructor(var isUser: Boolean, var isFriend: Boolean, var isPlace: Boo
         previousVisibilityState = FilterHelper.friendsVisible
     }
 
-    override fun toString(): String {
-        return String.format("Id: %s\nName: %s\nUser: %s\nFriend: %s\nPlace: %s\n",
-                             id, name,
-                             isUser.toString(), isFriend.toString(), isPlace.toString())
-    }
+    override fun toString(): String = """
+        Id: $id
+        Name: $name
+        User: $isUser
+        Friend: $isFriend
+        Place: $isPlace
+    """.trimIndent()
 
     companion object {
 
-        fun createPlaceTag(id: String, name: String): MarkerTagModel {
-            return MarkerTagModel(false, false, true, id, name)
-        }
+        fun createPlaceTag(id: String, name: String): MarkerTagModel =
+                MarkerTagModel(isUser=false, isFriend=false, isPlace=true, id=id, name=name)
 
-        fun createUserTag(id: String, name: String, isFriend: Boolean): MarkerTagModel {
-            return MarkerTagModel(!isFriend, isFriend, false, id, name)
-        }
+        fun createUserTag(id: String, name: String, isFriend: Boolean): MarkerTagModel =
+                MarkerTagModel(isUser=!isFriend, isFriend=isFriend, isPlace=false, id=id, name=name)
     }
 }

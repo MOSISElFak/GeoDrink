@@ -1,5 +1,6 @@
 package com.njamb.geodrink.activities
 
+import android.app.Activity
 import android.databinding.BindingAdapter
 import android.databinding.ObservableArrayList
 import android.databinding.ObservableList
@@ -21,15 +22,18 @@ import com.google.firebase.database.FirebaseDatabase
 import com.njamb.geodrink.BR
 import com.njamb.geodrink.R
 import com.njamb.geodrink.models.User
+import kotlinx.android.synthetic.main.activity_scoreboard.*
 
 import java.util.Collections
+
+fun Activity.toast(msg: String, len: Int = Toast.LENGTH_SHORT)
+        = Toast.makeText(this, msg, len).show()
 
 class ScoreboardActivity : AppCompatActivity() {
 
     private val listOfUsers = ObservableArrayList<User>()
     private var mChildEventListener: ChildEventListener? = null
-    private var mLastAdapter: LastAdapter? = null
-    private var mRecyclerView: RecyclerView? = null
+    private lateinit var mLastAdapter: LastAdapter
 
     override fun onSupportNavigateUp(): Boolean {
         onBackPressed()
@@ -45,12 +49,11 @@ class ScoreboardActivity : AppCompatActivity() {
         FirebaseDatabase.getInstance().getReference("users")
                 .addChildEventListener(mChildEventListener)
 
-        mRecyclerView = findViewById(R.id.rv_scoreboard) as RecyclerView
-        mRecyclerView!!.layoutManager = LinearLayoutManager(this)
-        mRecyclerView!!.addItemDecoration(DividerItemDecoration(this, DividerItemDecoration.VERTICAL))
+        rv_scoreboard.layoutManager = LinearLayoutManager(this)
+        rv_scoreboard.addItemDecoration(DividerItemDecoration(this, DividerItemDecoration.VERTICAL))
         mLastAdapter = LastAdapter(listOfUsers, BR.user)
                 .map(User::class.java, R.layout.list_item_user)
-                .into(mRecyclerView)
+                .into(rv_scoreboard)
     }
 
     private val childEventListener: ChildEventListener
@@ -82,10 +85,6 @@ class ScoreboardActivity : AppCompatActivity() {
                 toast("onCancelled")
             }
         }
-
-    private fun toast(msg: String) {
-        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
-    }
 
     companion object {
 

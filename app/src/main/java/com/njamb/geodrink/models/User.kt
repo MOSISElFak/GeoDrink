@@ -6,11 +6,11 @@ import java.util.HashMap
 
 
 @IgnoreExtraProperties
-class User : Comparable<*> {
-    var fullName: String
-    var username: String
-    var email: String
-    var birthday: String
+class User : Comparable<Any> {
+    lateinit var fullName: String
+    lateinit var username: String
+    lateinit var email: String
+    lateinit var birthday: String
     var profileUrl: String? = null
     var location: Coordinates? = null
     var friends = HashMap<String, Boolean>()
@@ -41,12 +41,22 @@ class User : Comparable<*> {
         return hm
     }
 
-    override operator fun compareTo(o: Any): Int {
-        return ((o as User).points - this.points).toInt()
-    }
+    override operator fun compareTo(other: Any): Int = ((other as User).points - this.points).toInt()
 
-    override fun equals(obj: Any?): Boolean {
-        // email is unique for sure
-        return obj is User && this.email == obj.email
+    override fun equals(other: Any?): Boolean = // email is unique for sure
+            other is User && this.email == other.email
+
+    override fun hashCode(): Int {
+        var result = fullName.hashCode()
+        result = 31 * result + username.hashCode()
+        result = 31 * result + email.hashCode()
+        result = 31 * result + birthday.hashCode()
+        result = 31 * result + (profileUrl?.hashCode() ?: 0)
+        result = 31 * result + (location?.hashCode() ?: 0)
+        result = 31 * result + friends.hashCode()
+        result = 31 * result + places.hashCode()
+        result = 31 * result + drinks.hashCode()
+        result = 31 * result + points.hashCode()
+        return result
     }
 }

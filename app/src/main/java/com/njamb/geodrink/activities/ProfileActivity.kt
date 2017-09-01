@@ -1,5 +1,6 @@
 package com.njamb.geodrink.activities
 
+import android.app.Activity
 import android.content.Intent
 import android.graphics.drawable.Drawable
 import android.net.Uri
@@ -7,13 +8,8 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
-import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.View
-import android.widget.Button
-import android.widget.ImageView
-import android.widget.ProgressBar
-import android.widget.TextView
 import android.widget.Toast
 
 import com.bumptech.glide.Glide
@@ -22,8 +18,6 @@ import com.bumptech.glide.load.engine.GlideException
 import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.Target
-import com.google.android.gms.tasks.OnFailureListener
-import com.google.android.gms.tasks.OnSuccessListener
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -31,27 +25,16 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.FirebaseStorage
-import com.google.firebase.storage.StorageReference
-import com.google.firebase.storage.UploadTask
 import com.njamb.geodrink.R
 import com.njamb.geodrink.adapters.FriendListAdapter
 import com.njamb.geodrink.models.User
+import kotlinx.android.synthetic.main.content_profile.*
 
 class ProfileActivity : AppCompatActivity() {
+    private lateinit var mDatabase: DatabaseReference
 
-    private var profileImg: ImageView? = null
-    private var username: TextView? = null
-    private var name: TextView? = null
-    private var email: TextView? = null
-    private var birthday: TextView? = null
-    private var mRecyclerView: RecyclerView? = null
-
-    private var pb: ProgressBar? = null
-
-    private var mDatabase: DatabaseReference? = null
-
-    private var userId: String? = null
-    private var mAdapter: FriendListAdapter? = null
+    private lateinit var userId: String
+    private lateinit var mAdapter: FriendListAdapter
 
 
     override fun onSupportNavigateUp(): Boolean {
@@ -73,32 +56,21 @@ class ProfileActivity : AppCompatActivity() {
             layoutWithButtons.visibility = View.GONE
         }
 
-        mDatabase = FirebaseDatabase.getInstance().getReference(String.format("users/%s", userId))
+        mDatabase = FirebaseDatabase.getInstance().getReference("users/$userId")
 
-        profileImg = findViewById(R.id.profile_image) as ImageView
-        username = findViewById(R.id.profile_username) as TextView
-        name = findViewById(R.id.profile_name) as TextView
-        email = findViewById(R.id.profile_email) as TextView
-        birthday = findViewById(R.id.profile_birthday) as TextView
+        friends_list.layoutManager = LinearLayoutManager(this)
+        friends_list.addItemDecoration(DividerItemDecoration(this, DividerItemDecoration.VERTICAL))
 
-        mRecyclerView = findViewById(R.id.friends_list) as RecyclerView
-        mRecyclerView!!.layoutManager = LinearLayoutManager(this)
-        mRecyclerView!!.addItemDecoration(DividerItemDecoration(this, DividerItemDecoration.VERTICAL))
+        profile_add_pic.setOnClickListener { choosePictureFromGallery() }
 
-        pb = findViewById(R.id.progressbar_profile_img) as ProgressBar
-
-        val uploadPic = findViewById(R.id.profile_add_pic) as Button
-        uploadPic.setOnClickListener { choosePictureFromGallery() }
-
-        val logoutBtn = findViewById(R.id.profile_logout_btn) as Button
-        logoutBtn.setOnClickListener {
+        profile_logout_btn.setOnClickListener {
             FirebaseAuth.getInstance().signOut()
             finish()
         }
 
-        mDatabase!!.addListenerForSingleValueEvent(object : ValueEventListener {
+        mDatabase.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
-                val user = dataSnapshot.getValue(User::class.java)
+                val user = dataSnapshot.getValue(User::class.java)!!
 
                 fillProfile(user)
             }
@@ -112,46 +84,45 @@ class ProfileActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        if (requestCode == SELECT_IMAGE_REQUEST) {
-            if (resultCode == Activity.RESULT_OK) {
-                if (data != null) {
-                    val imageUri = data.data
-                    setProfileImage(imageUri)
-                    uploadProfilePicture(imageUri)
+        when (requestCode) {
+            SELECT_IMAGE_REQUEST -> when(resultCode) {
+                Activity.RESULT_OK -> data?.let {
+                    setProfileImage(data.data)
+                    uploadProfilePicture(data.data)
                 }
             }
         }
     }
 
     private fun setProfileImage(uri: Uri) {
-        Glide.with(this).load(uri).into(profileImg!!)
+        Glide.with(this).load(uri).into(profile_image)
     }
 
-    private fun fillProfile(user: User?) {
-        pb!!.visibility = View.VISIBLE
+    private fun fillProfile(user: User) {
+        progressbar_profile_img.visibility = View.VISIBLE
 
-        mAdapter = FriendListAdapter(this@ProfileActivity, mRecyclerView, user)
-        mRecyclerView!!.adapter = mAdapter
+        mAdapter = FriendListAdapter(this@ProfileActivity, friends_list, user)
+        friends_list.adapter = mAdapter
 
         Glide.with(this)
-                .load(user!!.profileUrl)
+                .load(user.profileUrl)
                 .apply(RequestOptions.errorOf(R.mipmap.geodrink_blue_logo))
                 .listener(object : RequestListener<Drawable> {
                     override fun onLoadFailed(e: GlideException?, model: Any, target: Target<Drawable>, isFirstResource: Boolean): Boolean {
-                        pb!!.visibility = View.GONE
+                        progressbar_profile_img.visibility = View.GONE
                         return false
                     }
 
                     override fun onResourceReady(resource: Drawable, model: Any, target: Target<Drawable>, dataSource: DataSource, isFirstResource: Boolean): Boolean {
-                        pb!!.visibility = View.GONE
+                        progressbar_profile_img.visibility = View.GONE
                         return false
                     }
                 })
-                .into(profileImg!!)
-        username!!.text = String.format("Username: %s", user.username)
-        name!!.text = String.format("Name: %s", user.fullName)
-        email!!.text = String.format("Email: %s", user.email)
-        birthday!!.text = String.format("Birthday: %s", user.birthday)
+                .into(profile_image)
+        profile_username.text = "Username: ${user.username}"
+        profile_name.text = "Name: ${user.fullName}"
+        profile_email.text = "Email: ${user.email}"
+        profile_birthday.text = "Birthday: ${user.birthday}"
     }
 
     private fun choosePictureFromGallery() {
@@ -166,18 +137,19 @@ class ProfileActivity : AppCompatActivity() {
     }
 
     private fun uploadProfilePicture(imageUri: Uri) {
-        val imageUrl = String.format("images/users/%s.jpg", userId)
-        val imageRef = FirebaseStorage.getInstance().reference.child(imageUrl)
+        val imageRef = FirebaseStorage.getInstance().reference.child("images/users/$userId.jpg")
         val uploadTask = imageRef.putFile(imageUri)
 
-        uploadTask.addOnFailureListener { Toast.makeText(this@ProfileActivity, "Upload failed!", Toast.LENGTH_SHORT).show() }.addOnSuccessListener { taskSnapshot ->
+        uploadTask.addOnFailureListener {
+            Toast.makeText(this@ProfileActivity, "Upload failed!", Toast.LENGTH_SHORT).show()
+        }.addOnSuccessListener { taskSnapshot ->
             val imageUrl = taskSnapshot.downloadUrl!!.toString()
             addProfilePictureLinkToDatabase(imageUrl)
         }
     }
 
     private fun addProfilePictureLinkToDatabase(url: String) {
-        mDatabase!!.child("profileUrl").setValue(url)
+        mDatabase.child("profileUrl").setValue(url)
     }
 
     companion object {

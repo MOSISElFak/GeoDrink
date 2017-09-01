@@ -15,9 +15,7 @@ class Coordinates {
         this.lng = lng
     }
 
-    fun toGoogleCoords(): LatLng {
-        return LatLng(lat, lng)
-    }
+    fun toGoogleCoords() = LatLng(lat, lng)
 
     companion object {
 

@@ -5,12 +5,12 @@ import com.google.firebase.database.IgnoreExtraProperties
 
 @IgnoreExtraProperties
 class Place {
-    var location: Coordinates
-    var imageUrl: String
-    var date: String
-    var time: String
-    var name: String
-    var addedBy: String
+    lateinit var location: Coordinates
+    lateinit var imageUrl: String
+    lateinit var date: String
+    lateinit var time: String
+    lateinit var name: String
+    lateinit var addedBy: String
 
     constructor() {}
 
@@ -24,10 +24,9 @@ class Place {
         imageUrl = "http://enigmaescape.gr/images/comingsoon.jpg"
     }
 
-    override fun toString(): String {
-        return "\nName: " + name + "\n" +
-                "Date: " + date + "\n" +
-                "Time: " + time + "\n" +
-                "Added By: " + addedBy + "\n"
-    }
+    override fun toString(): String = """
+        Name: $name
+        Date: $date
+        Time: $time
+        Added By: $addedBy"""
 }

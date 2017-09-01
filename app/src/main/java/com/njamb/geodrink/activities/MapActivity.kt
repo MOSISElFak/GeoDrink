@@ -39,7 +39,6 @@ import com.google.android.gms.maps.model.CircleOptions
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
-import com.google.common.collect.BiMap
 import com.google.common.collect.HashBiMap
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
@@ -64,20 +63,20 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, FilterDialogFragmen
     private var mLocation = GeoLocation(0.0, 0.0)
 
     // Firebase
-    private var mAuth: FirebaseAuth? = null
-    private var mDatabase: FirebaseDatabase? = null
+    private lateinit var mAuth: FirebaseAuth
+    private lateinit var mDatabase: FirebaseDatabase
 
     // Map
-    private var mMap: GoogleMap? = null
-    private var mCircle: Circle? = null
+    private lateinit var mMap: GoogleMap
+    private lateinit var mCircle: Circle
     private val mPoiMarkers = HashBiMap.create<String, Marker>()
     private var mRange = DEFAULT_RANGE_VALUE
 
     // Seekbar
-    private var mSeekBar: SeekBar? = null
+    private lateinit var mSeekBar: SeekBar
 
     // Local broadcast manager
-    private var localBroadcastManager: LocalBroadcastManager? = null
+    private lateinit var localBroadcastManager: LocalBroadcastManager
 
     // Camera animation flag:
     private var isCameraAnimated = false
@@ -104,12 +103,12 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, FilterDialogFragmen
 
         // Slider for range queries
         mSeekBar = findViewById(R.id.seekBar2) as SeekBar
-        mSeekBar!!.max = SEEKBAR_MAX_VALUE
-        mSeekBar!!.progress = mRange.toInt()
-        mSeekBar!!.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+        mSeekBar.max = SEEKBAR_MAX_VALUE
+        mSeekBar.progress = mRange.toInt()
+        mSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
                 mRange = progress + SEEKBAR_STEP
-                mCircle!!.radius = mRange
+                mCircle.radius = mRange
             }
 
             override fun onStartTrackingTouch(seekBar: SeekBar) {}
@@ -146,25 +145,26 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, FilterDialogFragmen
         }
     }
 
-    private fun locationPermissionsGranted(): Boolean {
-        return ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
-    }
+    private fun locationPermissionsGranted(): Boolean =
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+            &&
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
 
     private fun registerForActions() {
         var filter = IntentFilter(PoiService.ACTION_USER_IN_RANGE)
-        localBroadcastManager!!.registerReceiver(mReceiver, filter)
+        localBroadcastManager.registerReceiver(mReceiver, filter)
 
         filter = IntentFilter(PoiService.ACTION_POI_OUT_OF_RANGE)
-        localBroadcastManager!!.registerReceiver(mReceiver, filter)
+        localBroadcastManager.registerReceiver(mReceiver, filter)
 
         filter = IntentFilter(PoiService.ACTION_REPOSITION_POI)
-        localBroadcastManager!!.registerReceiver(mReceiver, filter)
+        localBroadcastManager.registerReceiver(mReceiver, filter)
 
         filter = IntentFilter(PoiService.ACTION_PLACE_IN_RANGE)
-        localBroadcastManager!!.registerReceiver(mReceiver, filter)
+        localBroadcastManager.registerReceiver(mReceiver, filter)
 
         filter = IntentFilter(MapActivity.ACTION_SET_CENTER)
-        localBroadcastManager!!.registerReceiver(mReceiver, filter)
+        localBroadcastManager.registerReceiver(mReceiver, filter)
     }
 
     private fun startServices() {
@@ -175,7 +175,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, FilterDialogFragmen
     override fun onStart() {
         super.onStart()
 
-        if (mAuth!!.currentUser == null) {
+        if (mAuth.currentUser == null) {
             startLoginActivity()
         } else {
             if (locationPermissionsGranted()) {
@@ -195,7 +195,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, FilterDialogFragmen
                                             grantResults: IntArray) {
         when (requestCode) {
             REQUEST_LOCATION_PERMISSION -> {
-                if (grantResults.size > 0
+                if (grantResults.isNotEmpty()
                         && grantResults[0] == PackageManager.PERMISSION_GRANTED
                         && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
                     startServices()
@@ -212,7 +212,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, FilterDialogFragmen
     override fun onDestroy() {
         super.onDestroy()
 
-        localBroadcastManager!!.unregisterReceiver(mReceiver)
+        localBroadcastManager.unregisterReceiver(mReceiver)
 
         val enableService = PreferenceManager.getDefaultSharedPreferences(this)
                 .getBoolean("pref_service", true)
@@ -223,7 +223,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, FilterDialogFragmen
     }
 
     private fun checkIfUserLoggedIn() {
-        if (mAuth!!.currentUser == null) {
+        if (mAuth.currentUser == null) {
             startLoginActivity()
         }
     }
@@ -278,20 +278,14 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, FilterDialogFragmen
         val id = item.itemId
 
         when (id) {
-            R.id.action_scoreboard -> {
-                startActivity(Intent(this, ScoreboardActivity::class.java))
-            }
-            R.id.action_settings   -> {
-                startActivity(Intent(this, SettingsActivity::class.java))
-            }
+            R.id.action_scoreboard -> startActivity(Intent(this, ScoreboardActivity::class.java))
+            R.id.action_settings   -> startActivity(Intent(this, SettingsActivity::class.java))
             R.id.action_add        -> {
                 val i = Intent(this, AddFriendActivity::class.java)
-                i.putExtra("userId", mAuth!!.currentUser!!.uid)
+                i.putExtra("userId", mAuth.currentUser!!.uid)
                 startActivity(i)
             }
-            R.id.action_profile    -> {
-                startProfileActivity(mAuth!!.currentUser!!.uid)
-            }
+            R.id.action_profile    -> startProfileActivity(mAuth.currentUser!!.uid)
         }
 
         return super.onOptionsItemSelected(item)
@@ -299,8 +293,8 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, FilterDialogFragmen
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
-        mMap!!.mapType = GoogleMap.MAP_TYPE_NORMAL
-        mMap!!.setOnMarkerClickListener { marker ->
+        mMap.mapType = GoogleMap.MAP_TYPE_NORMAL
+        mMap.setOnMarkerClickListener { marker ->
             val tag = (marker.tag as MarkerTagModel?)!!
             if (tag.isUser || tag.isFriend) {
                 startProfileActivity(tag.id)
@@ -320,7 +314,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, FilterDialogFragmen
 
     private fun setMapMyLocationEnabled() {
         try {
-            mMap!!.isMyLocationEnabled = true
+            mMap.isMyLocationEnabled = true
         } catch (e: SecurityException) { // covers NPE
             Log.e(TAG, e.message)
         }
@@ -330,13 +324,13 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, FilterDialogFragmen
     private fun drawCircleOnMap(center: LatLng, radius: Double) {
         if (mMap == null || !FilterHelper.rangeQueryEnabled) return
 
-        mCircle = mMap!!.addCircle(
+        mCircle = mMap.addCircle(
                 CircleOptions()
                         .center(center)
                         .radius(radius)
         )
-        mCircle!!.fillColor = Color.argb(30, 255, 0, 0)
-        mCircle!!.strokeColor = Color.argb(50, 255, 0, 0)
+        mCircle.fillColor = Color.argb(30, 255, 0, 0)
+        mCircle.strokeColor = Color.argb(50, 255, 0, 0)
     }
 
     private fun startLoginActivity() {
@@ -353,7 +347,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, FilterDialogFragmen
     private fun sendBroadcastForRadiusChange(rad: Double) {
         val intent = Intent(MapActivity.ACTION_SET_RADIUS)
                 .putExtra("rad", rad)
-        localBroadcastManager!!.sendBroadcast(intent)
+        localBroadcastManager.sendBroadcast(intent)
     }
 
     private fun addUserMarkerOnMap(key: String, position: LatLng) {
@@ -362,15 +356,15 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, FilterDialogFragmen
         val markerOptions = MarkerOptions()
         markerOptions.position(position)
         if (mMap != null) {
-            val marker = mMap!!.addMarker(markerOptions)
-            marker.tag = MarkerTagModel.createUserTag(key, null, false)
+            val marker = mMap.addMarker(markerOptions)
+            marker.tag = MarkerTagModel.createUserTag(key, name="", isFriend=false)
             marker.isVisible = FilterHelper.usersVisible
             setUserMarkerTitle(marker)
             marker.setIcon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
             mPoiMarkers.put(key, marker)
 
-            val userId = mAuth!!.currentUser!!.uid
-            mDatabase!!.getReference(String.format("users/%s/friends/%s", userId, key))
+            val userId = mAuth.currentUser!!.uid
+            mDatabase.getReference("users/$userId/friends/$key")
                     .addListenerForSingleValueEvent(object : ValueEventListener {
                         override fun onDataChange(dataSnapshot: DataSnapshot) {
                             if (dataSnapshot.value != null) {
@@ -386,13 +380,13 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, FilterDialogFragmen
     private fun addUserPhotoOnMarker(marker: Marker) {
         val tag = (marker.tag as MarkerTagModel?)!!
         tag.setIsFriend()
-        mDatabase!!.getReference(String.format("users/%s/profileUrl", tag.id))
+        mDatabase.getReference("users/${tag.id}/profileUrl")
                 .addListenerForSingleValueEvent(object : ValueEventListener {
                     override fun onDataChange(dataSnapshot: DataSnapshot) {
                         Glide.with(this@MapActivity)
                                 .asBitmap()
                                 .load(dataSnapshot.value)
-                                .into<>(object : SimpleTarget<Bitmap>(32, 32) {
+                                .into(object : SimpleTarget<Bitmap>(32, 32) {
                                     override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>) {
                                         marker.setIcon(BitmapDescriptorFactory.fromBitmap(resource))
                                     }
@@ -405,10 +399,10 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, FilterDialogFragmen
 
     private fun setUserMarkerTitle(marker: Marker) {
         val tag = (marker.tag as MarkerTagModel?)!!
-        mDatabase!!.getReference(String.format("users/%s/fullName", tag.id))
+        mDatabase.getReference("users/${tag.id}/fullName")
                 .addListenerForSingleValueEvent(object : ValueEventListener {
                     override fun onDataChange(dataSnapshot: DataSnapshot) {
-                        val name = dataSnapshot.value as String?
+                        val name = dataSnapshot.value as String
                         marker.title = name
                         tag.name = name
                     }
@@ -423,16 +417,16 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, FilterDialogFragmen
         val markerOptions = MarkerOptions()
         markerOptions.position(position)
         if (mMap != null) {
-            val marker = mMap!!.addMarker(markerOptions)
-            marker.tag = MarkerTagModel.createPlaceTag(key, null/*at this moment*/)
+            val marker = mMap.addMarker(markerOptions)
+            marker.tag = MarkerTagModel.createPlaceTag(key, name=""/*at this moment*/)
             marker.isVisible = FilterHelper.placesVisible
             mPoiMarkers.put(key, marker)
 
-            mDatabase!!.getReference(String.format("places/%s/name", key))
+            mDatabase.getReference("places/$key/name")
                     .addListenerForSingleValueEvent(object : ValueEventListener {
                         override fun onDataChange(dataSnapshot: DataSnapshot) {
                             if (dataSnapshot.value != null) {
-                                val name = dataSnapshot.value as String?
+                                val name = dataSnapshot.value as String
                                 val mtm = (marker.tag as MarkerTagModel?)!!
                                 mtm.name = name
                                 marker.title = name
@@ -452,7 +446,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, FilterDialogFragmen
     }
 
     private fun repositionMarkerOnMap(key: String, position: LatLng) {
-        mPoiMarkers[key].setPosition(position)
+        mPoiMarkers[key]?.position = position
     }
 
     override fun onComplete(checked: ArrayList<String>) {
@@ -471,17 +465,17 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, FilterDialogFragmen
     private fun turnOnRangeFilter() {
         FilterHelper.rangeQueryEnabled = true
         if (mCircle != null)
-            mCircle!!.isVisible = true
+            mCircle.isVisible = true
         else
             drawCircleOnMap(LatLng(mLocation.latitude, mLocation.longitude), mRange)
-        mSeekBar!!.visibility = View.VISIBLE
+        mSeekBar.visibility = View.VISIBLE
         sendBroadcastForRadiusChange(mRange / 1000/*->km*/)
     }
 
     private fun turnOffRangeFilter() {
         FilterHelper.rangeQueryEnabled = false
-        mCircle!!.isVisible = false
-        mSeekBar!!.visibility = View.GONE
+        mCircle.isVisible = false
+        mSeekBar.visibility = View.GONE
         sendBroadcastForRadiusChange(RANGE_QUERY_DISABLED_DISTANCE) // set to something big
     }
 
@@ -507,14 +501,14 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, FilterDialogFragmen
                 val center = c.toGoogleCoords()
 
                 if (mCircle != null)
-                    mCircle!!.center = center
+                    mCircle.center = center
                 else
                     drawCircleOnMap(center, mRange)
 
                 mLocation = GeoLocation(c.lat, c.lng)
 
                 if (!isCameraAnimated && mMap != null) {
-                    mMap!!.animateCamera(CameraUpdateFactory.newLatLngZoom(center, 15.0f))
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(center, 15.0f))
                     isCameraAnimated = true
                 }
             }

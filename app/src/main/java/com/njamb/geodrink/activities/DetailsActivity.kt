@@ -1,41 +1,34 @@
 package com.njamb.geodrink.activities
 
-import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
 import android.util.Log
-import android.view.View
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
-import com.google.firebase.storage.FirebaseStorage
-import com.google.firebase.storage.StorageReference
 import com.njamb.geodrink.R
 import com.njamb.geodrink.models.Place
 import com.njamb.geodrink.models.User
 
 class DetailsActivity : AppCompatActivity() {
 
-    private var mDatabase: FirebaseDatabase? = null
-    private var mDate: TextView? = null
-    private var mTime: TextView? = null
-    private var mPlaceName: TextView? = null
-    private var mProfileName: TextView? = null
-    private var mReturn: Button? = null
-    private var mProfileImage: ImageView? = null
-    private var mPlaceImage: ImageView? = null
-    private var mPlace: Place? = null
+    private lateinit var mDatabase: FirebaseDatabase
+    private lateinit var mDate: TextView
+    private lateinit var mTime: TextView
+    private lateinit var mPlaceName: TextView
+    private lateinit var mProfileName: TextView
+    private lateinit var mReturn: Button
+    private lateinit var mProfileImage: ImageView
+    private lateinit var mPlaceImage: ImageView
+    private lateinit var mPlace: Place
 
     override fun onSupportNavigateUp(): Boolean {
         onBackPressed()
@@ -74,7 +67,7 @@ class DetailsActivity : AppCompatActivity() {
 
     private fun setListeners() {
         // Return button:
-        mReturn!!.setOnClickListener { finish() }
+        mReturn.setOnClickListener { finish() }
 
         // Get parsed placeId:
         val intent = intent
@@ -82,10 +75,10 @@ class DetailsActivity : AppCompatActivity() {
 
         Log.v("+nj", "PRE mPlacesRef")
         // Map the place data:
-        mDatabase!!.getReference(String.format("places/%s", placeId))
+        mDatabase.getReference("places/$placeId")
                 .addListenerForSingleValueEvent(object : ValueEventListener {
                     override fun onDataChange(dataSnapshot: DataSnapshot) {
-                        mPlace = dataSnapshot.getValue(Place::class.java)
+                        mPlace = dataSnapshot.getValue(Place::class.java)!!
                         setUI()
                     }
 
@@ -96,25 +89,25 @@ class DetailsActivity : AppCompatActivity() {
     }
 
     private fun setUI() {
-        mPlaceName!!.text = "Place Name: " + mPlace!!.name
-        mDate!!.text = mPlace!!.date
-        mTime!!.text = mPlace!!.time
+        mPlaceName.text = "Place Name: ${mPlace.name}"
+        mDate.text = mPlace.date
+        mTime.text = mPlace.time
 
         Glide.with(this@DetailsActivity)
-                .load(mPlace!!.imageUrl)
+                .load(mPlace.imageUrl)
                 .apply(RequestOptions.errorOf(R.mipmap.geodrink_blue_logo))
-                .into(mPlaceImage!!)
+                .into(mPlaceImage)
 
-        mDatabase!!.getReference(String.format("users/%s", mPlace!!.addedBy))
+        mDatabase.getReference("users/${mPlace.addedBy}")
                 .addListenerForSingleValueEvent(object : ValueEventListener {
                     override fun onDataChange(dataSnapshot: DataSnapshot) {
-                        val userPlace = dataSnapshot.getValue(User::class.java)
+                        val userPlace = dataSnapshot.getValue(User::class.java)!!
 
-                        mProfileName!!.text = "Username: " + userPlace!!.username
+                        mProfileName.text = "Username: ${userPlace.username}"
                         Glide.with(this@DetailsActivity)
                                 .load(userPlace.profileUrl)
                                 .apply(RequestOptions.errorOf(R.mipmap.geodrink_blue_logo))
-                                .into(mProfileImage!!)
+                                .into(mProfileImage)
                     }
 
                     override fun onCancelled(databaseError: DatabaseError) {

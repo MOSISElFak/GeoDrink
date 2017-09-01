@@ -1,5 +1,6 @@
 package com.njamb.geodrink.activities
 
+import android.app.Activity
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -11,8 +12,6 @@ import android.support.v7.widget.Toolbar
 import android.text.Editable
 import android.text.TextWatcher
 import android.util.Log
-import android.util.SparseBooleanArray
-import android.view.View
 import android.widget.AbsListView
 import android.widget.ArrayAdapter
 import android.widget.Button
@@ -22,17 +21,12 @@ import android.widget.ListView
 import android.widget.Toast
 
 import com.bumptech.glide.Glide
-import com.google.android.gms.tasks.OnFailureListener
-import com.google.android.gms.tasks.OnSuccessListener
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.FirebaseStorage
-import com.google.firebase.storage.StorageReference
-import com.google.firebase.storage.UploadTask
 import com.njamb.geodrink.R
 import com.njamb.geodrink.models.Coordinates
 import com.njamb.geodrink.models.Place
@@ -48,17 +42,17 @@ import java.util.HashMap
 
 class CheckInActivity : AppCompatActivity() {
 
-    private var imageView: ImageView? = null
-    private var checkInBtn: Button? = null
-    private var drinksListView: ListView? = null
-    private var mLocalBcastManager: LocalBroadcastManager? = null
+    private lateinit var imageView: ImageView
+    private lateinit var checkInBtn: Button
+    private lateinit var drinksListView: ListView
+    private lateinit var mLocalBcastManager: LocalBroadcastManager
 
-    private var drinks: HashMap<String, Long>? = null
+    private lateinit var drinks: HashMap<String, Long>
 
-    private var mDatabase: FirebaseDatabase? = null
-    private var userId: String? = null
+    private lateinit var mDatabase: FirebaseDatabase
+    private lateinit var userId: String
 
-    private var mPhotoPath: String? = null
+    private lateinit var mPhotoPath: String
 
     override fun onSupportNavigateUp(): Boolean {
         onBackPressed()
@@ -132,7 +126,7 @@ class CheckInActivity : AppCompatActivity() {
         setDrinksList()
 
         checkInBtn = findViewById(R.id.checkin_btn_checkin) as Button
-        checkInBtn!!.setOnClickListener {
+        checkInBtn.setOnClickListener {
             updateDrinks()
             checkIn()
             // Terminate activity upon checking in:
@@ -145,7 +139,7 @@ class CheckInActivity : AppCompatActivity() {
     @Throws(IOException::class)
     private fun createImageFile(): File {
         val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
-        val imageFileName = "JPEG_" + timeStamp + "_"
+        val imageFileName = "JPEG_${timeStamp}_"
         val storageDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM)
         val image = File.createTempFile(imageFileName, ".jpg", storageDir)
         mPhotoPath = image.absolutePath
@@ -155,12 +149,15 @@ class CheckInActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
         super.onActivityResult(requestCode, resultCode, data)
 
-        if (requestCode == REQUEST_IMAGE_CAPTURE) {
-            if (resultCode == Activity.RESULT_OK) {
-                Glide.with(this).load(mPhotoPath).into(imageView!!)
-
-                enableDisableBtn()
+        when (requestCode) {
+            REQUEST_IMAGE_CAPTURE -> when(resultCode) {
+                Activity.RESULT_OK -> {
+                    Glide.with(this).load(mPhotoPath).into(imageView)
+                    enableDisableBtn()
+                }
+                else -> return
             }
+            else -> return
         }
     }
 
@@ -170,11 +167,11 @@ class CheckInActivity : AppCompatActivity() {
 
         return !(etName.text.toString().trim { it <= ' ' } == ""
                 || ivPhoto.drawable == null
-                || drinksListView!!.checkedItemPositions == null)
+                || drinksListView.checkedItemPositions == null)
     }
 
     private fun enableDisableBtn() {
-        checkInBtn!!.isEnabled = checkIfShouldEnable()
+        checkInBtn.isEnabled = checkIfShouldEnable()
     }
 
     private fun setDrinksList() {
@@ -189,17 +186,17 @@ class CheckInActivity : AppCompatActivity() {
         val drinksAdapter = ArrayAdapter(this,
                                          android.R.layout.simple_list_item_multiple_choice, drinksArray)
 
-        drinksListView!!.adapter = drinksAdapter
-        drinksListView!!.choiceMode = AbsListView.CHOICE_MODE_MULTIPLE
+        drinksListView.adapter = drinksAdapter
+        drinksListView.choiceMode = AbsListView.CHOICE_MODE_MULTIPLE
     }
 
     private fun updateDrinks() {
-        val drinksRef = mDatabase!!
-                .getReference(String.format("users/%s/drinks", userId))
+        val drinksRef = mDatabase
+                .getReference("users/$userId/drinks")
 
         drinksRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
-                drinks = dataSnapshot.value as HashMap<String, Long>?
+                drinks = dataSnapshot.value as HashMap<String, Long>
                 updateDrinksValues()
                 drinksRef.setValue(drinks)
             }
@@ -209,14 +206,14 @@ class CheckInActivity : AppCompatActivity() {
     }
 
     private fun updateDrinksValues() {
-        val len = drinksListView!!.count
-        val checked = drinksListView!!.checkedItemPositions
+        val len = drinksListView.count
+        val checked = drinksListView.checkedItemPositions
         var drink: String
 
-        for (i in 0..len - 1) {
+        for (i in 0 until len) {
             if (checked.get(i)) {
-                drink = drinksListView!!.getItemAtPosition(i).toString().toLowerCase()
-                drinks!!.put(drink, drinks!![drink] + 1)
+                drink = drinksListView.getItemAtPosition(i).toString().toLowerCase()
+                drinks.put(drink, drinks[drink]!! + 1)
             }
         }
     }
@@ -224,7 +221,7 @@ class CheckInActivity : AppCompatActivity() {
     private fun checkIn() {
         val intent = Intent(PoiService.ACTION_ADD_POINTS)
                 .putExtra("pts", 20)
-        mLocalBcastManager!!.sendBroadcast(intent)
+        mLocalBcastManager.sendBroadcast(intent)
 
         // add Place in DB
         val bundle = getIntent().extras
@@ -235,11 +232,11 @@ class CheckInActivity : AppCompatActivity() {
                 /*addedBy*/userId,
                 /*location*/Coordinates(bundle.getDouble("lat"), bundle.getDouble("lon"))
         )
-        val key = mDatabase!!.getReference("places").push().key
-        mDatabase!!.getReference("places").child(key).setValue(place)
+        val key = mDatabase.getReference("places").push().key
+        mDatabase.getReference("places").child(key).setValue(place)
 
         // add placeId to User
-        mDatabase!!.getReference(String.format("users/%s/places/%s", userId, key)).setValue(true)
+        mDatabase.getReference("users/$userId/places/$key").setValue(true)
 
         addPhoto(key)
 
@@ -247,15 +244,17 @@ class CheckInActivity : AppCompatActivity() {
     }
 
     private fun addPhoto(placeId: String) {
-        val imgUrl = String.format("images/places/%s.jpg", placeId)
+        val imgUrl = "images/places/$placeId.jpg"
         val imgRef = FirebaseStorage.getInstance().getReference(imgUrl)
-        val uploadTask = imgRef.putFile(Uri.fromFile(File(mPhotoPath!!)))
+        val uploadTask = imgRef.putFile(Uri.fromFile(File(mPhotoPath)))
 
-        uploadTask.addOnFailureListener { Toast.makeText(this@CheckInActivity, "Upload failed!", Toast.LENGTH_SHORT).show() }.addOnSuccessListener { taskSnapshot ->
+        uploadTask.addOnFailureListener {
+            Toast.makeText(this@CheckInActivity, "Upload failed!", Toast.LENGTH_SHORT).show()
+        }.addOnSuccessListener { taskSnapshot ->
             val imageUrl = taskSnapshot.downloadUrl!!.toString()
 
             // add image url to db
-            mDatabase!!.getReference(String.format("places/%s/imageUrl", placeId)).setValue(imageUrl)
+            mDatabase.getReference("places/$placeId/imageUrl").setValue(imageUrl)
         }
     }
 
@@ -264,7 +263,7 @@ class CheckInActivity : AppCompatActivity() {
         intent.putExtra("id", id)
                 .putExtra("lat", lat)
                 .putExtra("lng", lng)
-        mLocalBcastManager!!.sendBroadcast(intent)
+        mLocalBcastManager.sendBroadcast(intent)
     }
 
     companion object {
