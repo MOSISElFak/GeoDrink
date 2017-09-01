@@ -20,20 +20,19 @@ import com.njamb.geodrink.view_holders.FriendViewHolder
 
 import java.util.ArrayList
 
-class FriendListAdapter(private val mContext: Context, private val mRecyclerView: RecyclerView, u: User) : RecyclerView.Adapter<FriendViewHolder>() {
+class FriendListAdapter(private val mContext: Context,
+                        private val mRecyclerView: RecyclerView,
+                        u: User) : RecyclerView.Adapter<FriendViewHolder>() {
     private val mFriends = ArrayList<User>()
 
-    private val mUsersDatabase: DatabaseReference
+    private val mUsersDatabase: DatabaseReference = FirebaseDatabase.getInstance().getReference("users")
 
     init {
-
-        mUsersDatabase = FirebaseDatabase.getInstance().getReference("users")
-
         for (key in u.friends.keys) {
             // Get friend info
             mUsersDatabase.child(key).addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(dataSnapshot: DataSnapshot) {
-                    mFriends.add(dataSnapshot.getValue(User::class.java))
+                    mFriends.add(dataSnapshot.getValue(User::class.java)!!)
                     notifyItemInserted(mFriends.size - 1)
                 }
 
@@ -49,7 +48,7 @@ class FriendListAdapter(private val mContext: Context, private val mRecyclerView
             val index = mRecyclerView.getChildLayoutPosition(v)
             // TODO: open profile for that user?
             Toast.makeText(mContext,
-                           String.format("%s says hi", mFriends[index].username),
+                           "${mFriends[index].username} says hi",
                            Toast.LENGTH_SHORT).show()
         }
         return FriendViewHolder(view)
@@ -68,7 +67,5 @@ class FriendListAdapter(private val mContext: Context, private val mRecyclerView
         holder.tvEmail.text = friend.email
     }
 
-    override fun getItemCount(): Int {
-        return mFriends.size
-    }
+    override fun getItemCount(): Int = mFriends.size
 }

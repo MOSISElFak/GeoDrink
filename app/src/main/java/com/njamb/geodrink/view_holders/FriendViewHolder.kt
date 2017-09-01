@@ -4,21 +4,12 @@ import android.support.v7.widget.RecyclerView
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
-
-import com.njamb.geodrink.R
-
+import kotlinx.android.synthetic.main.list_item_friends.view.*
 
 class FriendViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-    var tvFullName: TextView
-    var tvUsername: TextView
-    var tvEmail: TextView
-    var ivProfileImg: ImageView
+    var tvFullName: TextView = itemView.friend_full_name
+    var tvUsername: TextView = itemView.friend_username
+    var tvEmail: TextView = itemView.friend_email
+    var ivProfileImg: ImageView = itemView.friend_profile_pic
 
-    init {
-
-        tvFullName = itemView.findViewById(R.id.friend_full_name) as TextView
-        tvUsername = itemView.findViewById(R.id.friend_username) as TextView
-        tvEmail = itemView.findViewById(R.id.friend_email) as TextView
-        ivProfileImg = itemView.findViewById(R.id.friend_profile_pic) as ImageView
-    }
 }

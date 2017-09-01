@@ -25,7 +25,7 @@ class DatePickerFragment : DialogFragment(), DatePickerDialog.OnDateSetListener 
     }
 
     override fun onDateSet(view: DatePicker, year: Int, month: Int, dayOfMonth: Int) {
-        var month = month
+        var vmonth = month
         // chosen date
         val registerActivity = activity as RegisterActivity
         val editText = registerActivity.findViewById(R.id.register_et_birthday) as EditText
@@ -33,7 +33,7 @@ class DatePickerFragment : DialogFragment(), DatePickerDialog.OnDateSetListener 
         val stringBuilder = StringBuilder()
         stringBuilder.append(dayOfMonth)
         stringBuilder.append("/")
-        stringBuilder.append(++month)
+        stringBuilder.append(++vmonth)
         stringBuilder.append("/")
         stringBuilder.append(year)
 
