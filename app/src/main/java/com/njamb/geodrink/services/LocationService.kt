@@ -38,13 +38,13 @@ class LocationService : Service() {
     private val userNotification = HashSet<String>()
     private val placeNotification = HashSet<String>()
 
-    private var mLocationRequest: LocationRequest? = null
-    private var mLastLocation: Location? = null
+    private lateinit var mLocationRequest: LocationRequest
+    private lateinit var mLastLocation: Location
 
     private val mDatabase = FirebaseDatabase.getInstance().reference
     private val mAuth = FirebaseAuth.getInstance()
 
-    private var mLocalBcastManager: LocalBroadcastManager? = null
+    private lateinit var mLocalBcastManager: LocalBroadcastManager
 
     private val mLocationCallback = object : LocationCallback() {
         override fun onLocationResult(locationResult: LocationResult?) {
@@ -60,12 +60,12 @@ class LocationService : Service() {
         if (shouldDisplayNotification) registerForActions()
 
         mLocationRequest = LocationRequest()
-        mLocationRequest!!.priority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
-        mLocationRequest!!.interval = UPDATE_INTERVAL.toLong()
-        mLocationRequest!!.fastestInterval = FASTEST_INTERVAL.toLong()
+        mLocationRequest.priority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
+        mLocationRequest.interval = UPDATE_INTERVAL.toLong()
+        mLocationRequest.fastestInterval = FASTEST_INTERVAL.toLong()
 
         val builder = LocationSettingsRequest.Builder()
-        builder.addLocationRequest(mLocationRequest!!)
+        builder.addLocationRequest(mLocationRequest)
         val locationSettingsRequest = builder.build()
 
         val settingsClient = LocationServices.getSettingsClient(this)
@@ -98,7 +98,7 @@ class LocationService : Service() {
     override fun onDestroy() {
         super.onDestroy()
 
-        if (shouldDisplayNotification) mLocalBcastManager!!.unregisterReceiver(mReceiver)
+        if (shouldDisplayNotification) mLocalBcastManager.unregisterReceiver(mReceiver)
 
         LocationServices.getFusedLocationProviderClient(this)
                 .removeLocationUpdates(mLocationCallback)
@@ -144,16 +144,16 @@ class LocationService : Service() {
 
     private fun registerForActions() {
         var filter = IntentFilter(PoiService.ACTION_PLACE_IN_RANGE)
-        mLocalBcastManager!!.registerReceiver(mReceiver, filter)
+        mLocalBcastManager.registerReceiver(mReceiver, filter)
         filter = IntentFilter(PoiService.ACTION_USER_IN_RANGE)
-        mLocalBcastManager!!.registerReceiver(mReceiver, filter)
+        mLocalBcastManager.registerReceiver(mReceiver, filter)
     }
 
     private fun sendBroadcastLocationUpdated(lat: Double, lng: Double) {
         val intent = Intent(MapActivity.ACTION_SET_CENTER)
         intent.putExtra("lat", lat)
                 .putExtra("lng", lng)
-        mLocalBcastManager!!.sendBroadcast(intent)
+        mLocalBcastManager.sendBroadcast(intent)
     }
 
     private fun updateUserLocationInDatabase(id: String, lat: Double, lng: Double) {
@@ -167,7 +167,7 @@ class LocationService : Service() {
         intent.putExtra("id", id)
                 .putExtra("lat", lat)
                 .putExtra("lng", lng)
-        mLocalBcastManager!!.sendBroadcast(intent)
+        mLocalBcastManager.sendBroadcast(intent)
     }
 
     private fun displayUserNotificationIfInRange(id: String, loc: LatLng) {
@@ -193,7 +193,7 @@ class LocationService : Service() {
     }
 
     private fun getDistance(loc: LatLng): Double {
-        val myLoc = LatLng(mLastLocation!!.latitude, mLastLocation!!.longitude)
+        val myLoc = LatLng(mLastLocation.latitude, mLastLocation.longitude)
         return SphericalUtil.computeDistanceBetween(myLoc, loc)
     }
 

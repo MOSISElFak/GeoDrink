@@ -7,61 +7,23 @@ import com.njamb.geodrink.models.MarkerTagModel
 
 class FilterHelper private constructor(private val mMarkers: BiMap<String, Marker>) {
 
-    fun setUsersVisibility(v: Boolean) {
-        FilterHelper.usersVisible = v
-        setVisibility(UserStrategy(), v)
-    }
-
-    fun setFriendsVisibility(v: Boolean) {
-        FilterHelper.friendsVisible = v
-        setVisibility(FriendStrategy(), v)
-    }
-
-    fun setPlacesVisibility(v: Boolean) {
-        FilterHelper.placesVisible = v
-        setVisibility(PlaceStrategy(), v)
-    }
-
-    private fun setVisibility(strategy: Strategy, v: Boolean) {
-        for (marker in mMarkers.inverse().keys) {
-            val tag = (marker.tag as MarkerTagModel?)!!
-            if (strategy.`is`(tag)) {
-                tag.previousVisibilityState = marker.isVisible
-                marker.isVisible = v
+    fun setVisibility(v: Boolean, cond: (tag: MarkerTagModel) -> Boolean) {
+        mMarkers.inverse().keys.forEach {
+            val tag = it.tag as MarkerTagModel
+            if (cond(tag)) {
+                tag.previousVisibilityState = it.isVisible
+                it.isVisible = v
             }
         }
     }
 
     fun filter(text: String) {
         for (marker in mMarkers.inverse().keys) {
-            val tag = (marker.tag as MarkerTagModel?)!!
+            val tag = marker.tag as MarkerTagModel
             marker.isVisible = tag.previousVisibilityState
             if (!tag.name.toLowerCase().contains(text.toLowerCase())) {
                 marker.isVisible = false
             }
-        }
-    }
-
-
-    private interface Strategy {
-        fun `is`(tag: MarkerTagModel): Boolean
-    }
-
-    private inner class UserStrategy : Strategy {
-        override fun `is`(tag: MarkerTagModel): Boolean {
-            return tag.isUser
-        }
-    }
-
-    private inner class FriendStrategy : Strategy {
-        override fun `is`(tag: MarkerTagModel): Boolean {
-            return tag.isFriend
-        }
-    }
-
-    private inner class PlaceStrategy : Strategy {
-        override fun `is`(tag: MarkerTagModel): Boolean {
-            return tag.isPlace
         }
     }
 
@@ -81,7 +43,7 @@ class FilterHelper private constructor(private val mMarkers: BiMap<String, Marke
                     if (ourInstance == null) ourInstance = FilterHelper(markers)
                 }
             }
-            return ourInstance
+            return ourInstance!!
         }
     }
 }

@@ -16,15 +16,27 @@ import com.njamb.geodrink.services.PoiService
 
 class PlacesGeoFire(context: Context, private val mService: PoiService) : GeoQueryEventListener {
 
-    private val mGeoFirePlaces: GeoFire
+    private val mGeoFirePlaces: GeoFire = GeoFire(FirebaseDatabase.getInstance()
+                                                          .getReference("placesGeoFire"))
     private val mGeoQueryPlaces: GeoQuery
 
     private val mLocalBcastManager: LocalBroadcastManager
 
+    private val mReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            val action = intent.action
+            if (PlacesGeoFire.ACTION_SET_LOCATION == action) {
+                val id = intent.getStringExtra("id")
+                val lat = intent.getDoubleExtra("lat", 0.0)
+                val lng = intent.getDoubleExtra("lng", 0.0)
+                val loc = GeoLocation(lat, lng)
+
+                mGeoFirePlaces.setLocation(id, loc)
+            }
+        }
+    }
 
     init {
-
-        mGeoFirePlaces = GeoFire(FirebaseDatabase.getInstance().getReference("placesGeoFire"))
         mGeoQueryPlaces = mGeoFirePlaces.queryAtLocation(GeoLocation(0.0, 0.0), 0.1)
         mGeoQueryPlaces.addGeoQueryEventListener(this)
 
@@ -73,19 +85,7 @@ class PlacesGeoFire(context: Context, private val mService: PoiService) : GeoQue
         mGeoQueryPlaces.radius = rad
     }
 
-    private val mReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            val action = intent.action
-            if (PlacesGeoFire.ACTION_SET_LOCATION == action) {
-                val id = intent.getStringExtra("id")
-                val lat = intent.getDoubleExtra("lat", 0.0)
-                val lng = intent.getDoubleExtra("lng", 0.0)
-                val loc = GeoLocation(lat, lng)
 
-                mGeoFirePlaces.setLocation(id, loc)
-            }
-        }
-    }
 
     companion object {
         val ACTION_SET_LOCATION = "com.njamb.geofire.setplacelocation"

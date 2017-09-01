@@ -24,21 +24,21 @@ import com.njamb.geodrink.utils.UsersGeoFire
 
 class PoiService : Service() {
 
-    private var mUsersGeoFire: UsersGeoFire? = null
-    private var mPlacesGeoFire: PlacesGeoFire? = null
+    private lateinit var mUsersGeoFire: UsersGeoFire
+    private lateinit var mPlacesGeoFire: PlacesGeoFire
 
-    private var mLocalBcastManager: LocalBroadcastManager? = null
+    private lateinit var mLocalBcastManager: LocalBroadcastManager
 
     override fun onCreate() {
         super.onCreate()
 
         mLocalBcastManager = LocalBroadcastManager.getInstance(this)
         var filter = IntentFilter(MapActivity.ACTION_SET_CENTER)
-        mLocalBcastManager!!.registerReceiver(mReceiver, filter)
+        mLocalBcastManager.registerReceiver(mReceiver, filter)
         filter = IntentFilter(MapActivity.ACTION_SET_RADIUS)
-        mLocalBcastManager!!.registerReceiver(mReceiver, filter)
+        mLocalBcastManager.registerReceiver(mReceiver, filter)
         filter = IntentFilter(PoiService.ACTION_ADD_POINTS)
-        mLocalBcastManager!!.registerReceiver(mReceiver, filter)
+        mLocalBcastManager.registerReceiver(mReceiver, filter)
 
         mUsersGeoFire = UsersGeoFire(this, this)
         mPlacesGeoFire = PlacesGeoFire(this, this)
@@ -53,11 +53,11 @@ class PoiService : Service() {
             val rad = intent.getDoubleExtra("rad", 0.25/*km*/)
             val loc = GeoLocation(lat, lng)
 
-            mUsersGeoFire!!.setCenter(loc)
-            mUsersGeoFire!!.setRadius(rad)
+            mUsersGeoFire.setCenter(loc)
+            mUsersGeoFire.setRadius(rad)
 
-            mPlacesGeoFire!!.setCenter(loc)
-            mPlacesGeoFire!!.setRadius(rad)
+            mPlacesGeoFire.setCenter(loc)
+            mPlacesGeoFire.setRadius(rad)
         }
 
         return Service.START_STICKY
@@ -70,17 +70,17 @@ class PoiService : Service() {
     override fun onDestroy() {
         super.onDestroy()
 
-        mUsersGeoFire!!.onDestroy()
-        mPlacesGeoFire!!.onDestroy()
+        mUsersGeoFire.onDestroy()
+        mPlacesGeoFire.onDestroy()
 
-        mLocalBcastManager!!.unregisterReceiver(mReceiver)
+        mLocalBcastManager.unregisterReceiver(mReceiver)
         Toast.makeText(this, "POI service stopped", Toast.LENGTH_SHORT).show()
     }
 
     fun keyExited(key: String) {
         val intent = Intent(PoiService.ACTION_POI_OUT_OF_RANGE)
         intent.putExtra("key", key)
-        mLocalBcastManager!!.sendBroadcast(intent)
+        mLocalBcastManager.sendBroadcast(intent)
     }
 
     fun keyMoved(key: String, location: GeoLocation) {
@@ -89,7 +89,7 @@ class PoiService : Service() {
                 .putExtra("lat", location.latitude)
                 .putExtra("lng", location.longitude)
 
-        mLocalBcastManager!!.sendBroadcast(intent)
+        mLocalBcastManager.sendBroadcast(intent)
     }
 
     private fun setCenter(extras: Bundle) {
@@ -97,26 +97,24 @@ class PoiService : Service() {
         val lng = extras.getDouble("lng")
         val loc = GeoLocation(lat, lng)
 
-        mUsersGeoFire!!.setCenter(loc)
-        mPlacesGeoFire!!.setCenter(loc)
+        mUsersGeoFire.setCenter(loc)
+        mPlacesGeoFire.setCenter(loc)
     }
 
     private fun setRadius(extras: Bundle) {
         val rad = extras.getDouble("rad")
 
-        mUsersGeoFire!!.setRadius(rad)
-        mPlacesGeoFire!!.setRadius(rad)
+        mUsersGeoFire.setRadius(rad)
+        mPlacesGeoFire.setRadius(rad)
     }
 
     private val mReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val action = intent.action
-            if (MapActivity.ACTION_SET_CENTER == action) {
-                setCenter(intent.extras)
-            } else if (MapActivity.ACTION_SET_RADIUS == action) {
-                setRadius(intent.extras)
-            } else if (PoiService.ACTION_ADD_POINTS == action) {
-                updatePoints(intent.extras.getInt("pts"))
+            when (action) {
+                MapActivity.ACTION_SET_CENTER -> setCenter(intent.extras)
+                MapActivity.ACTION_SET_RADIUS -> setRadius(intent.extras)
+                PoiService.ACTION_ADD_POINTS  -> updatePoints(intent.extras.getInt("pts"))
             }
         }
     }
@@ -127,16 +125,14 @@ class PoiService : Service() {
                 .getReference(String.format("users/%s/points", userId))
         dbRef.addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onDataChange(dataSnapshot: DataSnapshot) {
-                var points: Long
-                if (dataSnapshot.value == null)
-                    points = 0
+                var points: Long = if (dataSnapshot.value == null)
+                    0
                 else
-                    points = dataSnapshot.value as Long
+                    dataSnapshot.value as Long
                 points += pts.toLong()
                 dbRef.setValue(points)
 
-                val msg = String.format("You gained %d points!", pts)
-                Toast.makeText(this@PoiService, msg, Toast.LENGTH_SHORT).show()
+                Toast.makeText(this@PoiService, "You gained $pts points!", Toast.LENGTH_SHORT).show()
             }
 
             override fun onCancelled(databaseError: DatabaseError) {}

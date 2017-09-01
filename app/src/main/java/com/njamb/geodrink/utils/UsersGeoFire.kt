@@ -17,15 +17,28 @@ import com.njamb.geodrink.services.PoiService
 
 class UsersGeoFire(context: Context, private val mService: PoiService) : GeoQueryEventListener {
 
-    private val mGeoFireUsers: GeoFire
+    private val mGeoFireUsers: GeoFire = GeoFire(FirebaseDatabase.getInstance()
+                                                         .getReference("usersGeoFire"))
     private val mGeoQueryUsers: GeoQuery
     private val userId = FirebaseAuth.getInstance().currentUser!!.uid
 
     private val mLocalBcastManager: LocalBroadcastManager
 
-    init {
+    private val mReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            val action = intent.action
+            if (UsersGeoFire.ACTION_SET_LOCATION == action) {
+                val id = intent.getStringExtra("id")
+                val lat = intent.getDoubleExtra("lat", 0.0)
+                val lng = intent.getDoubleExtra("lng", 0.0)
+                val loc = GeoLocation(lat, lng)
 
-        mGeoFireUsers = GeoFire(FirebaseDatabase.getInstance().getReference("usersGeoFire"))
+                mGeoFireUsers.setLocation(id, loc)
+            }
+        }
+    }
+
+    init {
         mGeoQueryUsers = mGeoFireUsers.queryAtLocation(GeoLocation(0.0, 0.0), 0.1)
         mGeoQueryUsers.addGeoQueryEventListener(this)
 
@@ -76,20 +89,6 @@ class UsersGeoFire(context: Context, private val mService: PoiService) : GeoQuer
 
     fun setRadius(rad: Double) {
         mGeoQueryUsers.radius = rad
-    }
-
-    private val mReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            val action = intent.action
-            if (UsersGeoFire.ACTION_SET_LOCATION == action) {
-                val id = intent.getStringExtra("id")
-                val lat = intent.getDoubleExtra("lat", 0.0)
-                val lng = intent.getDoubleExtra("lng", 0.0)
-                val loc = GeoLocation(lat, lng)
-
-                mGeoFireUsers.setLocation(id, loc)
-            }
-        }
     }
 
     companion object {

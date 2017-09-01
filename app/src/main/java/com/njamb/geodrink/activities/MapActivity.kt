@@ -457,9 +457,12 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, FilterDialogFragmen
         else
             turnOffRangeFilter()
 
-        fh.setUsersVisibility(checked.contains("Users"))
-        fh.setFriendsVisibility(checked.contains("Friends"))
-        fh.setPlacesVisibility(checked.contains("Places"))
+//        fh.setUsersVisibility(checked.contains("Users"))
+//        fh.setFriendsVisibility(checked.contains("Friends"))
+//        fh.setPlacesVisibility(checked.contains("Places"))
+        fh.setVisibility(checked.contains("Users")) { it.isUser }
+        fh.setVisibility(checked.contains("Friends")) { it.isFriend }
+        fh.setVisibility(checked.contains("Places")) { it.isPlace }
     }
 
     private fun turnOnRangeFilter() {

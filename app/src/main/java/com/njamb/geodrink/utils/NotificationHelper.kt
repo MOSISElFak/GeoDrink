@@ -23,14 +23,14 @@ object NotificationHelper {
                                 context: Context,
                                 dist: Double) {
         val notificationBuilder = NotificationCompat.Builder(context)
-        FirebaseDatabase.getInstance().getReference(String.format("users/%s", id))
+        FirebaseDatabase.getInstance().getReference("users/$id")
                 .addListenerForSingleValueEvent(object : ValueEventListener {
                     override fun onDataChange(dataSnapshot: DataSnapshot) {
                         val user = dataSnapshot.getValue(User::class.java)!!
                         notificationBuilder
                                 .setSmallIcon(R.mipmap.geodrink_blue_logo)
-                                .setContentTitle(String.format("%s is near you", user.fullName))
-                                .setContentText(String.format("It's only %d meters from you", dist.toInt()))
+                                .setContentTitle("${user.fullName} is near you")
+                                .setContentText("It's only ${dist.toInt()} meters from you")
                                 .setAutoCancel(true)
                         val intent = Intent(context, ProfileActivity::class.java)
                         intent.putExtra("userId", id)
@@ -51,7 +51,7 @@ object NotificationHelper {
         val userId = FirebaseAuth.getInstance().currentUser!!.uid
 
         val notificationBuilder = NotificationCompat.Builder(context)
-        FirebaseDatabase.getInstance().getReference(String.format("places/%s", id))
+        FirebaseDatabase.getInstance().getReference("places/$id")
                 .addListenerForSingleValueEvent(object : ValueEventListener {
                     override fun onDataChange(dataSnapshot: DataSnapshot) {
                         val place = dataSnapshot.getValue(Place::class.java)!!
@@ -59,8 +59,8 @@ object NotificationHelper {
 
                         notificationBuilder
                                 .setSmallIcon(R.mipmap.geodrink_blue_logo)
-                                .setContentTitle(String.format("%s is near you", place.name))
-                                .setContentText(String.format("It's only %d meters from you", dist.toInt()))
+                                .setContentTitle("${place.name} is near you")
+                                .setContentText("It's only ${dist.toInt()} meters from you")
                                 .setAutoCancel(true)
                         val intent = Intent(context, DetailsActivity::class.java)
                         intent.putExtra("placeId", id)
