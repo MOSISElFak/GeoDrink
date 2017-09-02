@@ -26,14 +26,14 @@ import com.njamb.geodrink.R
 
 class LoginActivity : AppCompatActivity(), Validator.ValidationListener {
 
-    private var mValidator: Validator? = null
+    private lateinit var mValidator: Validator
     @NotEmpty
     @Email
-    private var email: EditText? = null
-    @Password private var password: EditText? = null
+    private lateinit var email: EditText
+    @Password private lateinit var password: EditText
 
-    private var pd: ProgressDialog? = null
-    private var mAuth: FirebaseAuth? = null
+    private lateinit var pd: ProgressDialog
+    private lateinit var mAuth: FirebaseAuth
 
 
     override fun onBackPressed() {
@@ -50,16 +50,16 @@ class LoginActivity : AppCompatActivity(), Validator.ValidationListener {
         supportActionBar!!.setDisplayHomeAsUpEnabled(false)
 
         mValidator = Validator(this)
-        mValidator!!.setValidationListener(this)
+        mValidator.setValidationListener(this)
 
         mAuth = FirebaseAuth.getInstance()
-        if (mAuth!!.currentUser != null) finish() // TODO: how to remove this hack?
+        if (mAuth.currentUser != null) finish() // TODO: how to remove this hack?
 
         email = findViewById(R.id.login_et_username) as EditText
         password = findViewById(R.id.login_et_password) as EditText
 
         val login = findViewById(R.id.login_btn_login) as Button
-        login.setOnClickListener { mValidator!!.validate() }
+        login.setOnClickListener { mValidator.validate() }
 
         val register = findViewById(R.id.login_btn_register) as Button
         register.setOnClickListener {
@@ -75,9 +75,9 @@ class LoginActivity : AppCompatActivity(), Validator.ValidationListener {
 
     private fun configProgressDialog() {
         pd = ProgressDialog(this, R.style.TransparentProgressDialogStyle)
-        pd!!.setProgressStyle(android.R.style.Widget_ProgressBar_Small)
-        pd!!.isIndeterminate = true
-        pd!!.setCancelable(false)
+        pd.setProgressStyle(android.R.style.Widget_ProgressBar_Small)
+        pd.isIndeterminate = true
+        pd.setCancelable(false)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent) {
@@ -91,15 +91,15 @@ class LoginActivity : AppCompatActivity(), Validator.ValidationListener {
     }
 
     private fun loginUser() {
-        val email = this.email!!.text.toString()
-        val pass = password!!.text.toString()
+        val email = this.email.text.toString()
+        val pass = password.text.toString()
 
         window.addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
-        pd!!.show()
-        mAuth!!.signInWithEmailAndPassword(email, pass)
+        pd.show()
+        mAuth.signInWithEmailAndPassword(email, pass)
                 .addOnCompleteListener(this) { task ->
                     window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
-                    pd!!.dismiss()
+                    pd.dismiss()
 
                     if (task.isSuccessful) {
                         Log.d(TAG, "signInWithEmail:success")

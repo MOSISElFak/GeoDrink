@@ -24,7 +24,7 @@ class BluetoothService
 (context: Context, private val mHandler: Handler) {
 
     // Member fields
-    private val mAdapter: BluetoothAdapter
+    private val mAdapter: BluetoothAdapter = BluetoothAdapter.getDefaultAdapter()
     private var mAcceptThread: AcceptThread? = null
     private var mConnectThread: ConnectThread? = null
     private var mConnectedThread: ConnectedThread? = null
@@ -36,7 +36,6 @@ class BluetoothService
         private set
 
     init {
-        mAdapter = BluetoothAdapter.getDefaultAdapter()
         state = STATE_NONE
     }
 
@@ -81,7 +80,7 @@ class BluetoothService
      */
     @Synchronized
     fun connect(device: BluetoothDevice) {
-        Log.d(TAG, "connect to: " + device)
+        Log.d(TAG, "connect to: $device")
 
         // Cancel any thread attempting to make a connection
         if (state == STATE_CONNECTING) {
@@ -167,7 +166,7 @@ class BluetoothService
      */
     fun write(out: ByteArray) {
         // Create temporary object
-        var r: ConnectedThread?
+        var r: ConnectedThread? = null
         // Synchronize a copy of the ConnectedThread
         synchronized(this) {
             if (state != STATE_CONNECTED) return
@@ -218,7 +217,7 @@ class BluetoothService
             }
 
             mmServerSocket = tmp
-            state = STATE_LISTEN
+            this@BluetoothService.state = STATE_LISTEN
         }
 
         override fun run() {
@@ -227,7 +226,7 @@ class BluetoothService
             var socket: BluetoothSocket? = null
 
             // Listen to the server socket if we're not connected
-            while (state != STATE_CONNECTED) {
+            while (this@BluetoothService.state != STATE_CONNECTED) {
                 try {
                     // This is a blocking call and will only return on a
                     // successful connection or an exception
@@ -240,10 +239,10 @@ class BluetoothService
                 // If a connection was accepted
                 if (socket != null) {
                     synchronized(this@BluetoothService) {
-                        when (state) {
+                        when (this@BluetoothService.state) {
                             STATE_LISTEN, STATE_CONNECTING ->
                                 // Situation normal. Start the connected thread.
-                                connected(socket, socket!!.remoteDevice)
+                                connected(socket!!, socket!!.remoteDevice)
                             STATE_NONE, STATE_CONNECTED    ->
                                 // Either not ready or already connected. Terminate new socket.
                                 try {
@@ -251,7 +250,7 @@ class BluetoothService
                                 } catch (e: IOException) {
                                     Log.e(TAG, "Could not close unwanted socket", e)
                                 }
-
+                            else -> {}
                         }
                     }
                 }
@@ -291,7 +290,7 @@ class BluetoothService
             }
 
             mmSocket = tmp
-            state = STATE_CONNECTING
+            this@BluetoothService.state = STATE_CONNECTING
         }
 
         override fun run() {
@@ -360,7 +359,7 @@ class BluetoothService
 
             mmInStream = tmpIn
             mmOutStream = tmpOut
-            state = STATE_CONNECTED
+            this@BluetoothService.state = STATE_CONNECTED
         }
 
         override fun run() {
@@ -369,7 +368,7 @@ class BluetoothService
             var bytes: Int
 
             // Keep listening to the InputStream while connected
-            while (state == STATE_CONNECTED) {
+            while (this@BluetoothService.state == STATE_CONNECTED) {
                 try {
                     // Read from the InputStream
                     bytes = mmInStream!!.read(buffer)

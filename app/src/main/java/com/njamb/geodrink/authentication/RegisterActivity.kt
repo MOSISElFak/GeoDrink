@@ -43,36 +43,36 @@ import com.njamb.geodrink.models.User
 
 class RegisterActivity : AppCompatActivity(), Validator.ValidationListener {
 
-    private var datePickerFragment: DialogFragment? = null
+    private lateinit var datePickerFragment: DialogFragment
 
-    @NotEmpty private var username: EditText? = null
+    @NotEmpty private lateinit var username: EditText
 
     @NotEmpty
     @Password(message = "Password needs to have at least 6 characters")
-    private var password: EditText? = null
+    private lateinit var password: EditText
 
-    @NotEmpty private var name: EditText? = null
+    @NotEmpty private lateinit var name: EditText
 
     @NotEmpty
     @Email
-    private var email: EditText? = null
+    private lateinit var email: EditText
 
     @NotEmpty
     @Past(dateFormat = "dd/MM/yyyy")
-    private var birthday: EditText? = null
+    private lateinit var birthday: EditText
 
-    private var register: Button? = null
-    private var pickImage: Button? = null
-    private var cancel: Button? = null
-    private var loginImage: ImageView? = null
+    private lateinit var register: Button
+    private lateinit var pickImage: Button
+    private lateinit var cancel: Button
+    private lateinit var loginImage: ImageView
     private var mImageUri: Uri? = null
 
-    private var pd: ProgressDialog? = null
+    private lateinit var pd: ProgressDialog
 
-    private var mAuth: FirebaseAuth? = null
-    private var mDatabase: DatabaseReference? = null
+    private lateinit var mAuth: FirebaseAuth
+    private lateinit var mDatabase: DatabaseReference
 
-    private var mValidator: Validator? = null
+    private lateinit var mValidator: Validator
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -87,7 +87,7 @@ class RegisterActivity : AppCompatActivity(), Validator.ValidationListener {
         mDatabase = FirebaseDatabase.getInstance().reference
 
         mValidator = Validator(this)
-        mValidator!!.setValidationListener(this)
+        mValidator.setValidationListener(this)
 
         datePickerFragment = DatePickerFragment()
         username = findViewById(R.id.register_et_username) as EditText
@@ -103,21 +103,21 @@ class RegisterActivity : AppCompatActivity(), Validator.ValidationListener {
         configProgressDialog()
 
         // Set datePicker widget for birthday editText field:
-        birthday!!.inputType = InputType.TYPE_NULL
-        birthday!!.onFocusChangeListener = View.OnFocusChangeListener { v, hasFocus ->
+        birthday.inputType = InputType.TYPE_NULL
+        birthday.onFocusChangeListener = View.OnFocusChangeListener { v, hasFocus ->
             if (hasFocus) {
                 val fragmentManager = fragmentManager
-                datePickerFragment!!.show(fragmentManager, "datePicker")
+                datePickerFragment.show(fragmentManager, "datePicker")
             }
         }
-        birthday!!.setOnClickListener {
+        birthday.setOnClickListener {
             val fragmentManager = fragmentManager
-            datePickerFragment!!.show(fragmentManager, "datePicker")
+            datePickerFragment.show(fragmentManager, "datePicker")
         }
 
-        register!!.setOnClickListener { mValidator!!.validate() }
+        register.setOnClickListener { mValidator.validate() }
 
-        pickImage!!.setOnClickListener {
+        pickImage.setOnClickListener {
             // TODO: Add picture select and change the present imageView showing the AppLogo.
             val intent = Intent(Intent.ACTION_GET_CONTENT)
             intent.type = "image/*"
@@ -130,7 +130,7 @@ class RegisterActivity : AppCompatActivity(), Validator.ValidationListener {
             }
         }
 
-        cancel!!.setOnClickListener {
+        cancel.setOnClickListener {
             setResult(Activity.RESULT_CANCELED)
             finish()
         }
@@ -142,7 +142,7 @@ class RegisterActivity : AppCompatActivity(), Validator.ValidationListener {
                 if (resultCode == Activity.RESULT_OK) {
                     if (data != null) {
                         mImageUri = data.data
-                        Glide.with(this).load(mImageUri).into(loginImage!!)
+                        Glide.with(this).load(mImageUri).into(loginImage)
                     }
                 }
             }
@@ -151,22 +151,22 @@ class RegisterActivity : AppCompatActivity(), Validator.ValidationListener {
 
     private fun configProgressDialog() {
         pd = ProgressDialog(this, R.style.TransparentProgressDialogStyle)
-        pd!!.setProgressStyle(android.R.style.Widget_ProgressBar_Small)
-        pd!!.isIndeterminate = true
-        pd!!.setCancelable(false)
+        pd.setProgressStyle(android.R.style.Widget_ProgressBar_Small)
+        pd.isIndeterminate = true
+        pd.setCancelable(false)
     }
 
     private fun registerUser() {
-        val emailReg = email!!.text.toString()
-        val passwordReg = password!!.text.toString()
-        mAuth!!.createUserWithEmailAndPassword(emailReg, passwordReg)
+        val emailReg = email.text.toString()
+        val passwordReg = password.text.toString()
+        mAuth.createUserWithEmailAndPassword(emailReg, passwordReg)
                 .addOnCompleteListener(this) { task ->
                     window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
-                    pd!!.dismiss()
+                    pd.dismiss()
 
                     if (task.isSuccessful) {
                         Log.d(TAG, "createUserWithEmail:success")
-                        val user = mAuth!!.currentUser
+                        val user = mAuth.currentUser
                         createUserProfile(user)
                         uploadProfilePhoto(user!!.uid)
                     } else {
@@ -179,26 +179,27 @@ class RegisterActivity : AppCompatActivity(), Validator.ValidationListener {
 
     private fun createUserProfile(user: FirebaseUser?) {
         val dbUser = User(
-                name!!.text.toString(),
-                username!!.text.toString(),
-                email!!.text.toString(),
-                birthday!!.text.toString()
+                name.text.toString(),
+                username.text.toString(),
+                email.text.toString(),
+                birthday.text.toString()
         )
 
-        mDatabase!!.child("users").child(user!!.uid).setValue(dbUser)
+        mDatabase.child("users").child(user!!.uid).setValue(dbUser)
 
         setResult(Activity.RESULT_OK)
         finish()
     }
 
     private fun uploadProfilePhoto(userId: String) {
-        val imageUrl = String.format("images/users/%s.jpg", userId)
-        val imageRef = FirebaseStorage.getInstance().getReference(imageUrl)
+        val imageRef = FirebaseStorage.getInstance().getReference("images/users/$userId.jpg")
         val uploadTask = imageRef.putFile(mImageUri!!)
 
-        uploadTask.addOnFailureListener { Toast.makeText(this@RegisterActivity, "Upload failed!", Toast.LENGTH_SHORT).show() }.addOnSuccessListener { taskSnapshot ->
+        uploadTask.addOnFailureListener {
+            Toast.makeText(this@RegisterActivity, "Upload failed!", Toast.LENGTH_SHORT).show()
+        }.addOnSuccessListener { taskSnapshot ->
             val imageUrl = taskSnapshot.downloadUrl!!.toString()
-            mDatabase!!.child("users").child(userId).child("profileUrl").setValue(imageUrl)
+            mDatabase.child("users").child(userId).child("profileUrl").setValue(imageUrl)
         }
     }
 
@@ -208,7 +209,7 @@ class RegisterActivity : AppCompatActivity(), Validator.ValidationListener {
             return
         }
         window.addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
-        pd!!.show()
+        pd.show()
         registerUser()
     }
 

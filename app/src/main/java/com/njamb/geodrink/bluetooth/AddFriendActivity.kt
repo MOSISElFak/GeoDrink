@@ -1,5 +1,6 @@
 package com.njamb.geodrink.bluetooth
 
+import android.app.Activity
 import android.app.ProgressDialog
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
@@ -59,7 +60,7 @@ class AddFriendActivity : AppCompatActivity() {
         // Get User ID & User's username
         mUserId = intent.extras.getString("userId")
         FirebaseDatabase.getInstance()
-                .getReference(String.format("users/%s/username", mUserId))
+                .getReference("users/$mUserId/username")
                 .addListenerForSingleValueEvent(object : ValueEventListener {
                     override fun onDataChange(dataSnapshot: DataSnapshot) {
                         mUsername = dataSnapshot.value as String?
@@ -170,7 +171,7 @@ class AddFriendActivity : AppCompatActivity() {
         mPairedAdapter!!.clear()
         if (pairedDevices.size > 0) {
             for (device in pairedDevices) {
-                mPairedAdapter!!.add(device.name + "\n" + device.address)
+                mPairedAdapter!!.add("${device.name}\n${device.address}")
             }
         } else {
             mPairedAdapter!!.add(getString(R.string.no_devices))
@@ -186,13 +187,13 @@ class AddFriendActivity : AppCompatActivity() {
         mBtService!!.connect(device)
 
         mProgressDialog = ProgressDialog.show(this, "Connecting",
-                                              "Trying to connect to " + device.name, true, false)
+                                              "Trying to connect to ${device.name}", true, false)
     }
 
     private fun displayAddFriendDialog(userId: String, username: String) {
         val builder = AlertDialog.Builder(this)
         builder.setTitle("Add friend")
-                .setMessage(String.format("Do you want to make %s your friend?", username))
+                .setMessage("Do you want to make $username your friend?")
                 .setNegativeButton("No") { dialog, which -> mBtService!!.write("no".toByteArray()) }
                 .setPositiveButton("Yes") { dialog, which ->
                     mBtService!!.write(mUserId!!.toByteArray())
@@ -204,7 +205,7 @@ class AddFriendActivity : AppCompatActivity() {
 
     private fun addFriend(friendId: String) {
         FirebaseDatabase.getInstance()
-                .getReference(String.format("users/%s/friends/%s", mUserId, friendId))
+                .getReference("users/$mUserId/friends/$friendId")
                 .setValue(true)
         showToast("You are now friends")
         finish()
@@ -234,7 +235,8 @@ class AddFriendActivity : AppCompatActivity() {
                     * After that, other user accepts request & sends reply with his userId,
                     * or refuses & sends "no".
                     */
-                    val userIdUsername = (msg.obj as String).split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+                    val userIdUsername = (msg.obj as String).split(":".toRegex())
+                            .dropLastWhile { it.isEmpty() }.toTypedArray()
                     val userId = userIdUsername[0]
                     if (userIdUsername.size == 2) {
                         displayAddFriendDialog(userId, userIdUsername[1])
@@ -251,7 +253,7 @@ class AddFriendActivity : AppCompatActivity() {
                     showToast("Wait for user to respond")
 
                     // send string 'userId:username'
-                    mBtService!!.write(String.format("%s:%s", mUserId, mUsername).toByteArray())
+                    mBtService!!.write("$mUserId:$mUsername".toByteArray())
                 }
                 Constants.MESSAGE_CONNECTION_FAILED -> {
                     mProgressDialog!!.dismiss()
@@ -272,7 +274,7 @@ class AddFriendActivity : AppCompatActivity() {
                 val device = intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
                 // If it's already paired, skip it, because it's been listed already
                 if (device.bondState != BluetoothDevice.BOND_BONDED) {
-                    mOtherAdapter!!.add(device.name + "\n" + device.address)
+                    mOtherAdapter!!.add("${device.name}\n${device.address}")
                 }
                 // When discovery is finished, change the Activity title
             } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED == action) {

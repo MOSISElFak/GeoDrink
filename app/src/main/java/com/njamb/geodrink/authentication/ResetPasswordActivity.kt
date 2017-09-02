@@ -20,39 +20,39 @@ import com.njamb.geodrink.R
 
 class ResetPasswordActivity : AppCompatActivity(), Validator.ValidationListener {
 
-    private var pd: ProgressDialog? = null
+    private lateinit var pd: ProgressDialog
 
     @NotEmpty
     @Email
-    private var email: EditText? = null
-    private var mValidator: Validator? = null
+    private lateinit var email: EditText
+    private lateinit var mValidator: Validator
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_reset_password)
 
         pd = ProgressDialog(this, R.style.TransparentProgressDialogStyle)
-        pd!!.setProgressStyle(android.R.style.Widget_ProgressBar_Small)
-        pd!!.isIndeterminate = true
-        pd!!.setCancelable(false)
+        pd.setProgressStyle(android.R.style.Widget_ProgressBar_Small)
+        pd.isIndeterminate = true
+        pd.setCancelable(false)
 
         mValidator = Validator(this)
-        mValidator!!.setValidationListener(this)
+        mValidator.setValidationListener(this)
 
         email = findViewById(R.id.edit_rst_email) as EditText
 
         val btnSend = findViewById(R.id.btn_send_rst_pass) as Button
-        btnSend.setOnClickListener { mValidator!!.validate() }
+        btnSend.setOnClickListener { mValidator.validate() }
     }
 
     private fun sendResetPasswordEmail() {
         window.addFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
-        pd!!.show()
+        pd.show()
         FirebaseAuth.getInstance()
-                .sendPasswordResetEmail(email!!.text.toString())
+                .sendPasswordResetEmail(email.text.toString())
                 .addOnCompleteListener { task ->
                     window.clearFlags(WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE)
-                    pd!!.dismiss()
+                    pd.dismiss()
                     if (task.isSuccessful) {
                         Toast.makeText(this@ResetPasswordActivity,
                                        "Email sent", Toast.LENGTH_SHORT).show()
