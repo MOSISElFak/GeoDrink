@@ -20,20 +20,22 @@ class FilterDialogFragment : DialogFragment() {
     private val mCheckedItems = ArrayList<String>()
 
 
-    override fun onCreateDialog(savedInstanceState: Bundle): Dialog {
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         mListener = activity as OnCompleteListener
 
         val filterItems = resources.getStringArray(R.array.df_filter_items)
         val cnt = filterItems.size
-        mInitVals = BooleanArray(cnt)
-        Arrays.fill(mInitVals, true)
+        if (mInitVals == null) {
+            mInitVals = BooleanArray(cnt)
+            Arrays.fill(mInitVals, true)
+        }
         filterItems.indices
-                .filter { mInitVals[it] }
+                .filter { mInitVals!![it] }
                 .mapTo(mCheckedItems) { filterItems[it] }
         val builder = AlertDialog.Builder(activity)
         builder.setTitle("Filter by")
                 .setMultiChoiceItems(R.array.df_filter_items, mInitVals) { dialog, which, isChecked ->
-                    mInitVals[which] = isChecked
+                    mInitVals!![which] = isChecked
                     if (isChecked) {
                         mCheckedItems.add(filterItems[which])
                     } else if (mCheckedItems.contains(filterItems[which])) {
@@ -47,6 +49,7 @@ class FilterDialogFragment : DialogFragment() {
     }
 
     companion object {
-        private lateinit var mInitVals: BooleanArray
+        @JvmStatic
+        private var mInitVals: BooleanArray? = null
     }
 }
