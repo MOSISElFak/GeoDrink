@@ -67,8 +67,8 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, FilterDialogFragmen
     private lateinit var mDatabase: FirebaseDatabase
 
     // Map
-    private lateinit var mMap: GoogleMap
-    private lateinit var mCircle: Circle
+    private var mMap: GoogleMap? = null
+    private var mCircle: Circle? = null
     private val mPoiMarkers = HashBiMap.create<String, Marker>()
     private var mRange = DEFAULT_RANGE_VALUE
 
@@ -108,7 +108,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, FilterDialogFragmen
         mSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
                 mRange = progress + SEEKBAR_STEP
-                mCircle.radius = mRange
+                mCircle?.radius = mRange
             }
 
             override fun onStartTrackingTouch(seekBar: SeekBar) {}
@@ -293,8 +293,8 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, FilterDialogFragmen
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
-        mMap.mapType = GoogleMap.MAP_TYPE_NORMAL
-        mMap.setOnMarkerClickListener { marker ->
+        mMap?.mapType = GoogleMap.MAP_TYPE_NORMAL
+        mMap?.setOnMarkerClickListener { marker ->
             val tag = (marker.tag as MarkerTagModel?)!!
             if (tag.isUser || tag.isFriend) {
                 startProfileActivity(tag.id)
@@ -314,7 +314,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, FilterDialogFragmen
 
     private fun setMapMyLocationEnabled() {
         try {
-            mMap.isMyLocationEnabled = true
+            mMap?.isMyLocationEnabled = true
         } catch (e: SecurityException) { // covers NPE
             Log.e(TAG, e.message)
         }
@@ -324,13 +324,13 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, FilterDialogFragmen
     private fun drawCircleOnMap(center: LatLng, radius: Double) {
         if (mMap == null || !FilterHelper.rangeQueryEnabled) return
 
-        mCircle = mMap.addCircle(
+        mCircle = mMap?.addCircle(
                 CircleOptions()
                         .center(center)
                         .radius(radius)
         )
-        mCircle.fillColor = Color.argb(30, 255, 0, 0)
-        mCircle.strokeColor = Color.argb(50, 255, 0, 0)
+        mCircle?.fillColor = Color.argb(30, 255, 0, 0)
+        mCircle?.strokeColor = Color.argb(50, 255, 0, 0)
     }
 
     private fun startLoginActivity() {
@@ -356,7 +356,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, FilterDialogFragmen
         val markerOptions = MarkerOptions()
         markerOptions.position(position)
         if (mMap != null) {
-            val marker = mMap.addMarker(markerOptions)
+            val marker = mMap!!.addMarker(markerOptions)
             marker.tag = MarkerTagModel.createUserTag(key, name="", isFriend=false)
             marker.isVisible = FilterHelper.usersVisible
             setUserMarkerTitle(marker)
@@ -417,7 +417,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, FilterDialogFragmen
         val markerOptions = MarkerOptions()
         markerOptions.position(position)
         if (mMap != null) {
-            val marker = mMap.addMarker(markerOptions)
+            val marker = mMap!!.addMarker(markerOptions)
             marker.tag = MarkerTagModel.createPlaceTag(key, name=""/*at this moment*/)
             marker.isVisible = FilterHelper.placesVisible
             mPoiMarkers.put(key, marker)
@@ -468,7 +468,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, FilterDialogFragmen
     private fun turnOnRangeFilter() {
         FilterHelper.rangeQueryEnabled = true
         if (mCircle != null)
-            mCircle.isVisible = true
+            mCircle!!.isVisible = true
         else
             drawCircleOnMap(LatLng(mLocation.latitude, mLocation.longitude), mRange)
         mSeekBar.visibility = View.VISIBLE
@@ -477,7 +477,7 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, FilterDialogFragmen
 
     private fun turnOffRangeFilter() {
         FilterHelper.rangeQueryEnabled = false
-        mCircle.isVisible = false
+        mCircle?.isVisible = false
         mSeekBar.visibility = View.GONE
         sendBroadcastForRadiusChange(RANGE_QUERY_DISABLED_DISTANCE) // set to something big
     }
@@ -485,34 +485,38 @@ class MapActivity : AppCompatActivity(), OnMapReadyCallback, FilterDialogFragmen
     private val mReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val action = intent.action
-            if (PoiService.ACTION_USER_IN_RANGE == action) {
-                val c = Coordinates.getCoordinatesFromIntent(intent)
-                val key = intent.getStringExtra("key")
-                addUserMarkerOnMap(key, c.toGoogleCoords())
-            } else if (PoiService.ACTION_PLACE_IN_RANGE == action) {
-                val c = Coordinates.getCoordinatesFromIntent(intent)
-                val key = intent.getStringExtra("key")
-                addPlaceMarkerOnMap(key, c.toGoogleCoords())
-            } else if (PoiService.ACTION_POI_OUT_OF_RANGE == action) {
-                removeMarkerFromMap(intent.getStringExtra("key"))
-            } else if (PoiService.ACTION_REPOSITION_POI == action) {
-                val c = Coordinates.getCoordinatesFromIntent(intent)
-                val key = intent.getStringExtra("key")
-                repositionMarkerOnMap(key, c.toGoogleCoords())
-            } else if (MapActivity.ACTION_SET_CENTER == action) {
-                val c = Coordinates.getCoordinatesFromIntent(intent)
-                val center = c.toGoogleCoords()
+            when (action) {
+                PoiService.ACTION_USER_IN_RANGE    -> {
+                    val c = Coordinates.getCoordinatesFromIntent(intent)
+                    val key = intent.getStringExtra("key")
+                    addUserMarkerOnMap(key, c.toGoogleCoords())
+                }
+                PoiService.ACTION_PLACE_IN_RANGE   -> {
+                    val c = Coordinates.getCoordinatesFromIntent(intent)
+                    val key = intent.getStringExtra("key")
+                    addPlaceMarkerOnMap(key, c.toGoogleCoords())
+                }
+                PoiService.ACTION_POI_OUT_OF_RANGE -> removeMarkerFromMap(intent.getStringExtra("key"))
+                PoiService.ACTION_REPOSITION_POI   -> {
+                    val c = Coordinates.getCoordinatesFromIntent(intent)
+                    val key = intent.getStringExtra("key")
+                    repositionMarkerOnMap(key, c.toGoogleCoords())
+                }
+                MapActivity.ACTION_SET_CENTER      -> {
+                    val c = Coordinates.getCoordinatesFromIntent(intent)
+                    val center = c.toGoogleCoords()
 
-                if (mCircle != null)
-                    mCircle.center = center
-                else
-                    drawCircleOnMap(center, mRange)
+                    if (mCircle != null)
+                        mCircle!!.center = center
+                    else
+                        drawCircleOnMap(center, mRange)
 
-                mLocation = GeoLocation(c.lat, c.lng)
+                    mLocation = GeoLocation(c.lat, c.lng)
 
-                if (!isCameraAnimated && mMap != null) {
-                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(center, 15.0f))
-                    isCameraAnimated = true
+                    if (!isCameraAnimated && mMap != null) {
+                        mMap!!.animateCamera(CameraUpdateFactory.newLatLngZoom(center, 15.0f))
+                        isCameraAnimated = true
+                    }
                 }
             }
         }

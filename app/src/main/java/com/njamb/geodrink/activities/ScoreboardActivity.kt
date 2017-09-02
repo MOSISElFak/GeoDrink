@@ -30,7 +30,7 @@ fun Activity.toast(msg: String, len: Int = Toast.LENGTH_SHORT)
         = Toast.makeText(this, msg, len).show()
 
 @BindingAdapter("android:src")
-fun setImageUri(view: ImageView, uri: String) {
+fun setImageUri(view: ImageView, uri: String?) {
     Glide.with(view.context)
             .load(uri)
             .apply(RequestOptions.circleCropTransform())
