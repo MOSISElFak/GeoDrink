@@ -29,11 +29,49 @@ import java.util.Collections
 fun Activity.toast(msg: String, len: Int = Toast.LENGTH_SHORT)
         = Toast.makeText(this, msg, len).show()
 
+@BindingAdapter("android:src")
+fun setImageUri(view: ImageView, uri: String) {
+    Glide.with(view.context)
+            .load(uri)
+            .apply(RequestOptions.circleCropTransform())
+            .apply(RequestOptions.errorOf(R.mipmap.geodrink_blue_logo))
+            .into(view)
+}
+
 class ScoreboardActivity : AppCompatActivity() {
 
     private val listOfUsers = ObservableArrayList<User>()
-    private var mChildEventListener: ChildEventListener? = null
+    private lateinit var mChildEventListener: ChildEventListener
     private lateinit var mLastAdapter: LastAdapter
+
+    private val childEventListener = object : ChildEventListener {
+        override fun onChildAdded(dataSnapshot: DataSnapshot, s: String?) {
+            listOfUsers.add(dataSnapshot.getValue(User::class.java))
+            Collections.sort(listOfUsers)
+        }
+
+        override fun onChildChanged(dataSnapshot: DataSnapshot, s: String?) {
+            val user = dataSnapshot.getValue(User::class.java)!!
+            val i = listOfUsers.indexOf(user)
+            if (listOfUsers[i].points != user.points) {
+                listOfUsers[i] = user
+                Collections.sort(listOfUsers)
+            }
+        }
+
+        override fun onChildRemoved(dataSnapshot: DataSnapshot) {
+            val user = dataSnapshot.getValue(User::class.java)
+            listOfUsers.removeAt(listOfUsers.indexOf(user))
+        }
+
+        override fun onChildMoved(dataSnapshot: DataSnapshot, s: String?) {
+            toast("onChildMoved")
+        }
+
+        override fun onCancelled(databaseError: DatabaseError) {
+            toast("onCancelled")
+        }
+    }
 
     override fun onSupportNavigateUp(): Boolean {
         onBackPressed()
@@ -54,47 +92,5 @@ class ScoreboardActivity : AppCompatActivity() {
         mLastAdapter = LastAdapter(listOfUsers, BR.user)
                 .map(User::class.java, R.layout.list_item_user)
                 .into(rv_scoreboard)
-    }
-
-    private val childEventListener: ChildEventListener
-        get() = object : ChildEventListener {
-            override fun onChildAdded(dataSnapshot: DataSnapshot, s: String) {
-                listOfUsers.add(dataSnapshot.getValue(User::class.java))
-                Collections.sort(listOfUsers)
-            }
-
-            override fun onChildChanged(dataSnapshot: DataSnapshot, s: String) {
-                val user = dataSnapshot.getValue(User::class.java)!!
-                val i = listOfUsers.indexOf(user)
-                if (listOfUsers[i].points != user.points) {
-                    listOfUsers[i] = user
-                    Collections.sort(listOfUsers)
-                }
-            }
-
-            override fun onChildRemoved(dataSnapshot: DataSnapshot) {
-                val user = dataSnapshot.getValue(User::class.java)
-                listOfUsers.removeAt(listOfUsers.indexOf(user))
-            }
-
-            override fun onChildMoved(dataSnapshot: DataSnapshot, s: String) {
-                toast("onChildMoved")
-            }
-
-            override fun onCancelled(databaseError: DatabaseError) {
-                toast("onCancelled")
-            }
-        }
-
-    companion object {
-
-        @BindingAdapter("android:src")
-        fun setImageUri(view: ImageView, uri: String) {
-            Glide.with(view.context)
-                    .load(uri)
-                    .apply(RequestOptions.circleCropTransform())
-                    .apply(RequestOptions.errorOf(R.mipmap.geodrink_blue_logo))
-                    .into(view)
-        }
     }
 }
